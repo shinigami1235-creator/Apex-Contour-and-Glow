@@ -287,12 +287,25 @@
 
   // a line is spoken word by word; open vowels drop the jaw, closed consonants and pauses bring it back
   let talking = 0;
+  // glide: the cameo slides up the right edge to sit level with what it is talking about, then settles back in its corner
+  const GLIDE = { card: '.dance-card h2', fitting: '#fitting .fitting-intro', entrance: '#entrance h2', rsvp: '.rsvp-card h2' };
+  const wide = matchMedia('(min-width: 701px)');
+  const setGlide = dy => { document.documentElement.style.setProperty('--gy', dy + 'px'); };
+  const glideTo = el => {
+    if (!el || !wide.matches || still) return;
+    const c = cameo.getBoundingClientRect(), dockTop = c.top - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gy')) || 0);
+    const t = el.getBoundingClientRect(), want = t.top + t.height / 2 - c.height / 2;
+    const top = Math.max(110, Math.min(innerHeight - c.height - 70, want));
+    setGlide(Math.round(top - dockTop));
+  };
+  const dock = () => setGlide(0);
+  addEventListener('scroll', () => { if (!say.classList.contains('on')) dock(); }, { passive: true });
   const speak = (text, onFace) => {
     const id = ++talking; speaker = onFace; say.textContent = ''; say.classList.add('on');
     const words = text.split(' '); let w = 0;
     const next = () => {
       if (id !== talking) return;
-      if (w >= words.length) { jawT = 0; setTimeout(() => { if (id === talking) say.classList.remove('on'); }, 3200); return; }
+      if (w >= words.length) { jawT = 0; setTimeout(() => { if (id === talking) { say.classList.remove('on'); dock(); } }, 3200); return; }
       const word = words[w++]; say.textContent = words.slice(0, w).join(' ');
       let c = 0;
       const syll = () => {
@@ -381,7 +394,7 @@
   const io = new IntersectionObserver(es => es.forEach(e => {
     const id = e.target.id;
     if (id === 'mirror') { e.isIntersecting ? (window.CG_mirrorHead ? intoMirror() : document.addEventListener('cg:mirror-ready', intoMirror, { once: true })) : outOfMirror(); return; }
-    if (e.isIntersecting && !said.has(id) && !inMirror) { said.add(id); speak(LINES[id], 'cameo'); }
+    if (e.isIntersecting && !said.has(id) && !inMirror) { said.add(id); glideTo(GLIDE[id] && document.querySelector(GLIDE[id])); speak(LINES[id], 'cameo'); }
   }), { threshold: .45 });
   // treatment pages: the guide stays quiet and gives one fact each time you tap it
   const FACTS = window.CG_GUIDE || null;
