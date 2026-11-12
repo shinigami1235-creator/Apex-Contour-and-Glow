@@ -513,7 +513,7 @@ body.opened .ballroom-img,body.opening .ballroom-img{transform:scale(1)}
 @media (prefers-reduced-motion:reduce){.mirror-section [data-panel]{transition:none}}
 
 /* the guide: a cameo with a face of lights, bottom left */
-.cameo{position:fixed;right:clamp(12px,2vw,26px);bottom:calc(clamp(12px,2vw,26px) + 58px);z-index:40;width:118px;aspect-ratio:3/4;border-radius:50%;padding:5px;background:linear-gradient(135deg,var(--gold-hi),var(--gold) 45%,#8d6a35 75%,var(--gold-hi));box-shadow:0 14px 34px rgba(0,0,0,.55),0 0 24px rgba(201,160,99,.18);transition:opacity .6s ease,transform .6s ease}
+.cameo{position:fixed;right:clamp(12px,2vw,26px);bottom:calc(clamp(12px,2vw,26px) + 58px);z-index:40;width:118px;aspect-ratio:3/4;border-radius:50%;padding:5px;background:linear-gradient(135deg,var(--gold-hi),var(--gold) 45%,#8d6a35 75%,var(--gold-hi));box-shadow:0 14px 34px rgba(0,0,0,.55),0 0 24px rgba(201,160,99,.18);transition:opacity 1s ease,transform 1s ease}
 .cameo-head{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#2b1239,#0c0410 75%)}
 .cameo-head canvas{display:block;width:100%;height:100%}
 .cameo.away{opacity:0;transform:scale(.9)}

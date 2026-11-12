@@ -146,11 +146,11 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let picked = null;
   // the face follows your hand: it turns toward the area you point at, and that area lights up
-  let lookYaw = -.3, hovered = null, showing = 0;
+  let lookYaw = -.15, hovered = null, showing = 0;
   const GOLD = '#f2d49a';
   const sideOf = z => { if (!head || !verts[z]) return 0; const a = head.anchor(verts[z]), w = document.getElementById('mirror-head').clientWidth; return (a.x / w - .5) * 2; };
   const light = z => { if (!head) return; head.jumpAmount(1); head.setPlan(z && verts[z] ? [{ v: verts[z], ml: .0001, color: GOLD }] : []); };
-  const lookAt = z => { const s = z === 'skin' || !z ? 0 : sideOf(z); lookYaw = z ? (s < -.25 ? -.6 : s > .25 ? .3 : -.15) : -.3; };
+  const lookAt = z => { const s = z === 'skin' || !z ? 0 : sideOf(z); lookYaw = z ? (s < -.25 ? -.35 : s > .25 ? .05 : -.15) : -.15; };
   sec.querySelectorAll('.fz').forEach(b => {
     b.addEventListener('pointerenter', () => { hovered = b.dataset.z; lookAt(hovered); if (!showing) light(hovered); });
     b.addEventListener('pointerleave', () => { hovered = null; if (!picked) lookAt(null); if (!showing) light(picked); });
@@ -229,9 +229,9 @@
   const start = () => {
     if (head !== null) return; head = false;
     import('./../features/filler/head.js').then(m => m.createHead(host, {
-      base: 'assets/', sparkle: true, sparse: true, features: true, centre: true, wipe: 0, yaw: -.3, morph: .5, zoom: .74,
+      base: 'assets/', sparkle: true, sparse: true, features: true, noDrag: true, wipe: 0, yaw: -.15, morph: .5, zoom: .74,
       visible: () => onScreen && !sec.querySelector('[data-panel="map"]').hidden,
-      onFrame: () => { if (head) head.setYaw(lookYaw + (still ? 0 : Math.sin(performance.now() / 5000) * (hovered ? .03 : .1))); draw(); }
+      onFrame: () => { if (head) head.setYaw(lookYaw + (still ? 0 : Math.sin(performance.now() / 6000) * .05)); draw(); }
     })).then(h => { head = h; window.CG_mirrorHead = h; stage.classList.add('live'); draw(); document.dispatchEvent(new Event('cg:mirror-ready')); }).catch(() => { head = null; stage.classList.add('flat'); });
   };
   new IntersectionObserver(es => es.forEach(e => { onScreen = e.isIntersecting; if (onScreen) start(); }), { rootMargin: '200px' }).observe(stage);
@@ -299,7 +299,7 @@
         if (id !== talking) return;
         if (c >= word.length) { jawT = 0; setTimeout(next, /[.,]$/.test(word) ? 260 : 70); return; }
         const ch = word[c++].toLowerCase();
-        jawT = 'aeo'.includes(ch) ? .85 + Math.random() * .15 : 'iuy'.includes(ch) ? .45 : 'mbpfv'.includes(ch) ? 0 : .22;
+        jawT = 'aeo'.includes(ch) ? .55 + Math.random() * .15 : 'iuy'.includes(ch) ? .3 : 'mbpfv'.includes(ch) ? 0 : .12;
         setTimeout(syll, 62);
       };
       syll();
@@ -310,11 +310,11 @@
 
   // life: the jaw eases toward its target, the eyes blink every few seconds, and the head turns a little toward the pointer
   const life = now => {
-    jaw += (jawT - jaw) * .35;
+    jaw += (jawT - jaw) * .22;
     if (now > blinkAt) { blink = Math.min(1, blink + .35); if (blink >= 1) blinkAt = now + 2800 + Math.random() * 3500; } else blink = Math.max(0, blink - .25);
     const f = face();
     if (f) f.setFace({ jaw, blink });
-    if (head && !inMirror) { head.setYaw(-.35 + mouse[0] * .35); head.setPitch(.04 - mouse[1] * .12 + pitchAdd); }
+    if (head && !inMirror) { head.setYaw(-.15 + mouse[0] * .16); head.setPitch(.04 - mouse[1] * .05 + pitchAdd); }
     requestAnimationFrame(life);
   };
   addEventListener('pointermove', e => { mouse = [e.clientX / innerWidth - .5, e.clientY / innerHeight - .5]; });
@@ -323,8 +323,8 @@
   const fly = (from, to) => new Promise(res => {
     if (still) return res();
     const dpr = Math.min(2, devicePixelRatio || 1); dust.width = innerWidth * dpr; dust.height = innerHeight * dpr; dx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const P = Array.from({ length: 140 }, () => ({ d: Math.random() * .35, s: (Math.random() - .5) * 140, r: .6 + Math.random() * 1.8 }));
-    const t0 = performance.now(), T = 1300;
+    const P = Array.from({ length: 220 }, () => ({ d: Math.random() * .4, s: (Math.random() - .5) * 160, r: .4 + Math.random() * 1.5 }));
+    const t0 = performance.now(), T = 1700;
     const f = now => {
       const u = (now - t0) / T; dx.clearRect(0, 0, innerWidth, innerHeight);
       for (const p of P) {
@@ -337,35 +337,44 @@
     };
     requestAnimationFrame(f);
   });
-  const tween = (ms, fn) => new Promise(res => { if (still) { fn(1); return res(); } const t0 = performance.now(); const f = now => { const u = Math.min(1, (now - t0) / ms); fn(u); u < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+  const ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+  const tween = (ms, fn) => new Promise(res => { if (still) { fn(1); return res(); } const t0 = performance.now(); const f = now => { const u = Math.min(1, (now - t0) / ms); fn(ease(u)); u < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
   const centre = el => { let r = el.getBoundingClientRect(); if (!r.width) r = document.getElementById('mirror').getBoundingClientRect(); return [r.left + r.width / 2, Math.max(60, Math.min(innerHeight - 60, r.top + r.height / 2))]; };
 
+  // the guide's face comes apart into light, drifts across the page as gold dust, and gathers again in the mirror.
+  // Each step starts before the last one ends, so the move reads as one motion
+  const wait = ms => new Promise(r => setTimeout(r, still ? 0 : ms));
   const intoMirror = async () => {
     const m = window.CG_mirrorHead, glass = document.querySelector('.mirror-stage .vanity');
     if (!m || !glass || moving || inMirror) return; moving = true; inMirror = true;
-    m.setFace({ scatter: .55 });
-    await tween(450, u => head && head.setFace({ scatter: u * .6 }));
+    m.setFace({ scatter: .8, fade: 0 });
+    tween(1000, u => head && head.setFace({ scatter: u * .8, fade: 1 - u }));
     cameo.classList.add('away');
-    await fly(centre(cameo), centre(glass));
-    await tween(900, u => m.setFace({ scatter: (1 - u) * .55 }));
-    moving = false;
+    await wait(300);
+    const trip = fly(centre(cameo), centre(glass));
+    await wait(950);
+    await tween(1500, u => m.setFace({ scatter: (1 - u) * .8, fade: u }));
+    await trip; moving = false;
     if (!said.has('mirror')) { said.add('mirror'); speak(LINES.mirror, 'mirror'); }
   };
   const outOfMirror = async () => {
     const m = window.CG_mirrorHead, glass = document.querySelector('.mirror-stage .vanity');
     if (!m || moving || !inMirror) return; moving = true;
-    await tween(450, u => m.setFace({ scatter: u * .55 }));
-    await fly(centre(glass), centre(cameo));
-    m.setFace({ scatter: 0 });
+    tween(1000, u => m.setFace({ scatter: u * .8, fade: 1 - u }));
+    await wait(300);
+    const trip = fly(centre(glass), centre(cameo));
+    await wait(950);
     cameo.classList.remove('away');
-    await tween(700, u => head && head.setFace({ scatter: (1 - u) * .6 }));
+    if (head) head.setFace({ scatter: .8, fade: 0 });
+    await tween(1300, u => head && head.setFace({ scatter: (1 - u) * .8, fade: u }));
+    await trip; m.setFace({ scatter: 0, fade: 1 });
     inMirror = false; moving = false;
   };
 
   const start = () => {
     cameo.hidden = false;
     import('./../features/filler/head.js').then(m => m.createHead(document.getElementById('cameo-head'), {
-      base: 'assets/', sparkle: true, sparse: true, features: true, centre: true, wipe: 0, yaw: -.35, morph: .5, zoom: .7
+      base: 'assets/', sparkle: true, sparse: true, features: true, noDrag: true, wipe: 0, yaw: -.15, morph: .5, zoom: .7
     })).then(h => { head = h; requestAnimationFrame(life); if (!FACTS && !said.has('open')) { said.add('open'); setTimeout(() => speak(OPEN, 'cameo'), 600); } }).catch(() => { cameo.hidden = true; });
     ['card', 'fitting', 'mirror', 'entrance', 'rsvp'].map(id => document.getElementById(id)).filter(Boolean).forEach(p => io.observe(p));
   };

@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 from tx_art import icon
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CSS_V = 19; JS_V = 13
+CSS_V = 20; JS_V = 14
 E = html.escape
 ROMAN = ['I','II','III','IV','V','VI','VII']
 CASES = {'botox': 7}

@@ -16,7 +16,7 @@ const RADIUS = .16;             // spread of one injection on the skin, decimetr
 const VS = `
 attribute vec3 aPosB; attribute vec3 aNrmA; attribute vec3 aNrmB; attribute float aRnd; attribute float aEdge;
 attribute float aKind; attribute float aAo; attribute float aDispA; attribute float aDispB; attribute vec3 aCol; attribute float aHeat;
-uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark, uCalm, uJaw, uBlink, uMouth, uEye, uScatter, uBrow, uFrown, uSquint, uSmile;
+uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark, uCalm, uJaw, uBlink, uMouth, uEye, uScatter, uBrow, uFrown, uSquint, uSmile, uFade;
 varying float vA; varying vec3 vC; varying float vH; varying float vR; varying float vF;
 float is(float v, float t){ return 1. - step(.1, abs(v - t)); }
 void main(){
@@ -26,12 +26,16 @@ void main(){
   float a = max(uAfter, 0.);
   p += n * mix(aDispA, aDispB, m) * a;
   /* speech: the lower face turns on a hinge near the ear, the upper lip lifts a little */
-  float below = 1. - smoothstep(uMouth - .025, uMouth + .012, p.y);
-  float jw = below * smoothstep(.2, .75, p.z) * smoothstep(5.2, 5.5, p.y);
-  float ang = -uJaw * .3 * jw;
-  vec2 hz = vec2(uMouth + .42, .3), yz = p.yz - hz;
+  /* the jaw: only the jawbone turns, on a hinge in front of the ear. The lower lip and chin go with it in full,
+     the skin over the jaw's sides follows below the mouth, and the cheeks above stay put */
+  float drop = uMouth - p.y;
+  float below = clamp((drop + .008) / .09, 0., 1.);
+  float side = 1. - smoothstep(.2, .44, abs(p.x)) * (1. - smoothstep(.12, .3, drop));
+  float jw = below * side * smoothstep(.15, .6, p.z) * smoothstep(5.22, 5.48, p.y);
+  float ang = -uJaw * .13 * jw;
+  vec2 hz = vec2(uMouth + .4, .35), yz = p.yz - hz;
   p.yz = hz + vec2(yz.x * cos(ang) - yz.y * sin(ang), yz.x * sin(ang) + yz.y * cos(ang));
-  p.y += uJaw * .014 * is(aKind, 1.) * (1. - below);
+  p.y += uJaw * .006 * is(aKind, 1.) * step(0., -drop);
   /* expressions: raised brows, a frown, a squint, a smile. Each moves only the points of its own muscles */
   float ax = abs(p.x), sx = sign(p.x);
   float front = smoothstep(.95, 1.12, p.z);
@@ -82,7 +86,7 @@ void main(){
   tw = mix(tw, twc * shape, uCalm); fl = mix(fl, rare, uCalm);
   vR = aRnd; vF = fl * uSpark;
   vA *= 1. - uBlink * is(aKind, 2.);
-  vA *= 1. - uScatter * .35;
+  vA *= (1. - uScatter * .35) * uFade;
   vA *= mix(1., tw + fl * 2.2, uSpark);
   vA *= mix(1., aEdge < .5 ? 1. : .8, uCalm * uSpark);
   float big = mix(1., (.7 + fl * 2.6) * mix(1.15, 1.1, uCalm), uSpark);
@@ -185,7 +189,7 @@ export async function createHead(host, opts = {}){
   host.prepend(renderer.domElement);
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(26, 1, .05, 100);
   const U = {uMorph:{value:opts.morph ?? (opts.gender === 'male' ? 1 : 0)}, uAfter:{value:1}, uPix:{value:pix}, uSize:{value:2.6}, uCut:{value:H.cutF},
-    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}, uCalm:{value:opts.sparkle ? 1 : 0}, uJaw:{value:0}, uBlink:{value:0}, uBrow:{value:0}, uFrown:{value:0}, uSquint:{value:0}, uSmile:{value:0}, uMouth:{value:5.866}, uEye:{value:6.47}, uScatter:{value:0}};
+    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}, uCalm:{value:opts.sparkle ? 1 : 0}, uJaw:{value:0}, uBlink:{value:0}, uBrow:{value:0}, uFrown:{value:0}, uSquint:{value:0}, uSmile:{value:0}, uFade:{value:1}, uMouth:{value:5.866}, uEye:{value:6.47}, uScatter:{value:0}};
   const mat = (isLine, feat) => new THREE.ShaderMaterial({uniforms:{...U, uIsLine:{value:isLine ? 1 : 0}, uFeat:{value:feat ? 1 : 0}}, vertexShader:VS, fragmentShader:FS, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending});
   const pmat = mat(false), lmat = mat(true);
   const points = new THREE.Points(pg, pmat), lines = new THREE.LineSegments(lg, lmat);
@@ -341,7 +345,7 @@ export async function createHead(host, opts = {}){
   // drag to turn the head
   const cv = renderer.domElement;
   cv.style.touchAction = 'pan-y';
-  cv.addEventListener('pointerdown', e => { drag = {x:e.clientX, y:e.clientY, yaw:state.yaw, on:e.pointerType === 'mouse'}; });
+  if (!opts.noDrag) cv.addEventListener('pointerdown', e => { drag = {x:e.clientX, y:e.clientY, yaw:state.yaw, on:e.pointerType === 'mouse'}; });
   cv.addEventListener('pointermove', e => {
     if (!drag) return;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
@@ -371,7 +375,7 @@ export async function createHead(host, opts = {}){
     setYaw(y){ state.yawT = y; state.dirty = true; },
     setPitch(p){ state.pitch = p; state.dirty = true; },
     /* speech and life: jaw 0 to 1, blink 0 to 1, scatter 0 (whole) to about .6 (dust) */
-    setFace(f = {}){ const K = {jaw:'uJaw', blink:'uBlink', scatter:'uScatter', brow:'uBrow', frown:'uFrown', squint:'uSquint', smile:'uSmile'}; for (const k in f) if (K[k] && f[k] != null) U[K[k]].value = f[k]; state.dirty = true; },
+    setFace(f = {}){ const K = {fade:'uFade', jaw:'uJaw', blink:'uBlink', scatter:'uScatter', brow:'uBrow', frown:'uFrown', squint:'uSquint', smile:'uSmile'}; for (const k in f) if (K[k] && f[k] != null) U[K[k]].value = f[k]; state.dirty = true; },
     getFace(k){ return ({jaw:U.uJaw, brow:U.uBrow, frown:U.uFrown, squint:U.uSquint, smile:U.uSmile, scatter:U.uScatter})[k].value; },
     resize(){ size(); },
     /* a still of the head with no filler (0) or the chosen amount, for the saved image */
