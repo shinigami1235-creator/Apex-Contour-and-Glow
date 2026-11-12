@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=11">
+<link rel="stylesheet" href="assets/css/site.css?v=13">
 </head>
 <body class="has-curtain">
 
@@ -112,15 +112,27 @@
   </div>
 </section>
 
+<!-- mirror:start (built by tools/build_mirror.py) -->
 <section id="mirror" class="mirror-section">
-  <div class="vanity">
-    <div class="vanity-glass">
-      <p class="kicker">The vanity mirror</p>
-      <h2>Try the look before the ball</h2>
-      <p>Tap your forehead, lips or jaw to see which treatments we use there and the results from those areas. The filler simulator from Apex Surgery shows the change on a 3D face.</p>
+  <div class="tx-head"><p class="kicker">The vanity mirror</p><h2>Try the look <em>before the ball</em></h2>
+  <p class="sub">Tap an area of the face to see which treatments work there, or open the 3D head to see where filler goes and how much.</p></div>
+  <div class="mirror-tabs" role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-tab="map">Face map</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="sim">Filler on a 3D head</button>
+  </div>
+  <div class="mirror-map" data-panel="map">
+    <div class="vanity"><div class="vanity-glass"><span class="face-line" aria-hidden="true"></span><button type="button" class="fz" data-z="forehead" style="left:50%;top:17%">Forehead</button><button type="button" class="fz" data-z="temples" style="left:20%;top:27%">Temples</button><button type="button" class="fz" data-z="brows" style="left:50%;top:29%">Between the brows</button><button type="button" class="fz" data-z="eyes" style="left:80%;top:36%">Around the eyes</button><button type="button" class="fz" data-z="undereyes" style="left:26%;top:42%">Under-eyes</button><button type="button" class="fz" data-z="cheeks" style="left:18%;top:55%">Cheeks</button><button type="button" class="fz" data-z="smile" style="left:80%;top:56%">Smile lines</button><button type="button" class="fz" data-z="lips" style="left:50%;top:66%">Lips and mouth</button><button type="button" class="fz" data-z="jaw" style="left:22%;top:72%">Jawline</button><button type="button" class="fz" data-z="chin" style="left:50%;top:78%">Chin</button><button type="button" class="fz" data-z="neck" style="left:50%;top:91%">Neck</button>
+      <button type="button" class="fz fz-skin" data-z="skin">The whole face</button></div></div>
+    <div class="mirror-out" aria-live="polite">
+      <p class="mo-empty">Which area bothers you most? Tap it in the mirror.</p>
+      <div class="mo-list" hidden><h3 class="mo-title"></h3><ul></ul></div>
     </div>
   </div>
+  <div class="mirror-sim" data-panel="sim" hidden><div id="filler-sim"></div>
+    <p class="note center">This simulator also runs on the Apex Surgery website.</p></div>
 </section>
+<script>window.CG_ZONES = {"zones": {"forehead": [{"slug": "botox", "name": "Botox", "half": "Contour", "note": "10 to 20 units"}, {"slug": "filler", "name": "Filler", "half": "Contour", "note": "2 to 4 cc"}, {"slug": "juvelook", "name": "Juvelook", "half": "Contour", "note": "fine lines"}, {"slug": "profhilo", "name": "Profhilo", "half": "Glow", "note": ""}, {"slug": "celeb-skin", "name": "Celeb Skin", "half": "Glow", "note": ""}, {"slug": "meso", "name": "Meso", "half": "Glow", "note": ""}], "temples": [{"slug": "filler", "name": "Filler", "half": "Contour", "note": "1 to 2 cc a side"}, {"slug": "radiesse", "name": "Radiesse", "half": "Contour", "note": "0.5 to 1 cc a side"}, {"slug": "sculptra", "name": "Sculptra", "half": "Contour", "note": "in some cases"}, {"slug": "profhilo", "name": "Profhilo", "half": "Glow", "note": ""}, {"slug": "skinvive", "name": "Skinvive", "half": "Glow", "note": "1 to 2 cc"}], "brows": [{"slug": "botox", "name": "Botox", "half": "Contour", "note": "15 to 25"}], "eyes": [{"slug": "botox", "name": "Botox", "half": "Contour", "note": "5 to 15 a side"}, {"slug": "juvelook", "name": "Juvelook", "half": "Contour", "note": "fine lines"}, {"slug": "vitaran", "name": "Vitaran", "half": "Glow", "note": "about 1 cc"}, {"slug": "nucleofill", "name": "Nucleofill", "half": "Glow", "note": "Eyes gel"}], "undereyes": [{"slug": "filler", "name": "Filler", "half": "Contour", "note": "1 to 2 cc for both"}, {"slug": "juvelook", "name": "Juvelook", "half": "Contour", "note": "thin, lined skin"}, {"slug": "profhilo", "name": "Profhilo", "half": "Glow", "note": ""}, {"slug": "skinvive", "name": "Skinvive", "half": "Glow", "note": "1 to 2 cc"}, {"slug": "vitaran", "name": "Vitaran", "half": "Glow", "note": "Vitaran Eyes"}, {"slug": "nucleofill", "name": "Nucleofill", "half": "Glow", "note": "Eyes gel"}], "cheeks": [{"slug": "filler", "name": "Filler", "half": "Contour", "note": "1 to 2 cc a side"}, {"slug": "harmonyca", "name": "HArmonyCa", "half": "Contour", "note": ""}, {"slug": "radiesse", "name": "Radiesse", "half": "Contour", "note": "0.5 to 1 cc a side"}, {"slug": "sculptra", "name": "Sculptra", "half": "Contour", "note": ""}, {"slug": "juvelook", "name": "Juvelook", "half": "Contour", "note": "texture and pores"}, {"slug": "profhilo", "name": "Profhilo", "half": "Glow", "note": ""}, {"slug": "skinvive", "name": "Skinvive", "half": "Glow", "note": "1 to 2 cc"}, {"slug": "nucleofill", "name": "Nucleofill", "half": "Glow", "note": "Medium or Strong"}, {"slug": "celeb-skin", "name": "Celeb Skin", "half": "Glow", "note": ""}, {"slug": "meso", "name": "Meso", "half": "Glow", "note": ""}], "smile": [{"slug": "filler", "name": "Filler", "half": "Contour", "note": "1 to 2 cc for both"}, {"slug": "radiesse", "name": "Radiesse", "half": "Contour", "note": "0.5 to 1 cc a side"}, {"slug": "juvelook", "name": "Juvelook", "half": "Contour", "note": "in some cases"}, {"slug": "profhilo", "name": "Profhilo", "half": "Glow", "note": ""}, {"slug": "skinvive", "name": "Skinvive", "half": "Glow", "note": "1 to 2 cc"}], "lips": [{"slug": "botox", "name": "Botox", "half": "Contour", "note": "2 to 5 a side"}, {"slug": "filler", "name": "Filler", "half": "Contour", "note": "0.5 to 1 cc"}, {"slug": "celeb-skin", "name": "Celeb Skin", "half": "Glow", "note": ""}, {"slug": "meso", "name": "Meso", "half": "Glow", "note": ""}], "jaw": [{"slug": "botox", "name": "Botox", "half": "Contour", "note": "20 to 30 a side"}, {"slug": "filler", "name": "Filler", "half": "Contour", "note": "1 to 2 cc a side"}, {"slug": "harmonyca", "name": "HArmonyCa", "half": "Contour", "note": ""}, {"slug": "radiesse", "name": "Radiesse", "half": "Contour", "note": "0.5 to 1 cc a side"}, {"slug": "sculptra", "name": "Sculptra", "half": "Contour", "note": "in some plans"}, {"slug": "profhilo", "name": "Profhilo", "half": "Glow", "note": ""}], "chin": [{"slug": "botox", "name": "Botox", "half": "Contour", "note": "4 to 8"}, {"slug": "filler", "name": "Filler", "half": "Contour", "note": "1 to 2 cc"}, {"slug": "harmonyca", "name": "HArmonyCa", "half": "Contour", "note": "in some cases"}, {"slug": "radiesse", "name": "Radiesse", "half": "Contour", "note": "0.5 to 1.5 cc"}, {"slug": "profhilo", "name": "Profhilo", "half": "Glow", "note": ""}, {"slug": "skinvive", "name": "Skinvive", "half": "Glow", "note": "1 to 2 cc"}, {"slug": "celeb-skin", "name": "Celeb Skin", "half": "Glow", "note": ""}, {"slug": "meso", "name": "Meso", "half": "Glow", "note": ""}], "neck": [{"slug": "botox", "name": "Botox", "half": "Contour", "note": "about 20 to 40"}, {"slug": "radiesse", "name": "Radiesse", "half": "Contour", "note": "1 to 1.5 cc a session"}, {"slug": "skinvive", "name": "Skinvive", "half": "Glow", "note": "1 to 2 cc"}, {"slug": "vitaran", "name": "Vitaran", "half": "Glow", "note": "Vitaran II"}, {"slug": "nucleofill", "name": "Nucleofill", "half": "Glow", "note": ""}, {"slug": "celeb-skin", "name": "Celeb Skin", "half": "Glow", "note": ""}, {"slug": "meso", "name": "Meso", "half": "Glow", "note": ""}], "skin": [{"slug": "radiesse", "name": "Radiesse", "half": "Contour", "note": "1 to 1.5 cc a session"}, {"slug": "juvelook", "name": "Juvelook", "half": "Contour", "note": "some types"}, {"slug": "vitaran", "name": "Vitaran", "half": "Glow", "note": "2 to 4 cc a session"}, {"slug": "nucleofill", "name": "Nucleofill", "half": "Glow", "note": "Medium or Strong"}]}, "names": {"forehead": "Forehead", "temples": "Temples", "brows": "Between the brows", "eyes": "Around the eyes", "undereyes": "Under-eyes", "cheeks": "Cheeks", "smile": "Smile lines", "lips": "Lips and mouth", "jaw": "Jawline", "chin": "Chin", "neck": "Neck", "skin": "The whole face"}};</script>
+<!-- mirror:end -->
 
 <section id="entrance" class="entrance">
   <div class="entrance-head">
@@ -172,6 +184,6 @@
   <p class="fine">Individual results vary. Treatments are done by licensed doctors after a consultation.</p>
 </footer>
 
-<script src="assets/js/site.js?v=5"></script>
+<script src="assets/js/site.js?v=6"></script>
 </body>
 </html>

@@ -111,3 +111,30 @@
       if (e.key === 'Escape') lb.classList.remove('on'); if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
   }
 })();
+
+// ---- vanity mirror: face map and the 3D filler head (home page) ----
+(() => {
+  const sec = document.getElementById('mirror');
+  if (!sec || !window.CG_ZONES) return;
+  const { zones, names } = window.CG_ZONES;
+  const out = sec.querySelector('.mo-list'), empty = sec.querySelector('.mo-empty');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  sec.querySelectorAll('.fz').forEach(b => b.addEventListener('click', () => {
+    sec.querySelectorAll('.fz').forEach(x => x.setAttribute('aria-pressed', x === b));
+    const list = zones[b.dataset.z] || [];
+    out.querySelector('.mo-title').textContent = names[b.dataset.z];
+    out.querySelector('ul').innerHTML = list.map(e =>
+      `<li class="${e.half.toLowerCase()}"><a href="${e.slug}.html"><b>${esc(e.name)}</b><span>${esc(e.half)}</span></a>${e.note ? `<em>${esc(e.note)}</em>` : ''}</li>`).join('');
+    empty.hidden = true; out.hidden = false;
+  }));
+  let mounted = false;
+  sec.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => {
+    sec.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === t));
+    sec.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== t.dataset.tab);
+    if (t.dataset.tab === 'sim' && !mounted) {
+      mounted = true;
+      import('./../features/filler/index.js').then(m => m.mount(document.getElementById('filler-sim'),
+        { lang: 'en', base: 'assets/', noPlan: true, consult: 'index.html#rsvp' })).catch(() => { mounted = false; });
+    }
+  }));
+})();
