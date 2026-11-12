@@ -10,7 +10,22 @@
   };
 
   // ---- music ----
-  let ctx, buffer, src, playing = false;
+  // the waltz starts at half volume, then after a minute eases down to a quiet background level.
+  // It goes silent while you are in another tab or app and comes back when you return
+  let ctx, buffer, src, gain, playing = false, startedAt = 0;
+  const LOUD = .4, SOFT = .14, SOFT_AFTER = 60, SOFT_OVER = 25;
+  const level = () => { const t = (performance.now() - startedAt) / 1000; return t < SOFT_AFTER ? LOUD : LOUD + (SOFT - LOUD) * Math.min(1, (t - SOFT_AFTER) / SOFT_OVER); };
+  const rampTo = (v, sec) => { if (!gain) return; const g = gain.gain, now = ctx.currentTime; g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(v, now + sec); };
+  let away = false;
+  const awayNow = () => document.hidden || !document.hasFocus();
+  const onAway = () => {
+    const a = awayNow(); if (a === away || !playing) { away = a; return; } away = a;
+    if (a) { rampTo(0, .25); setTimeout(() => { if (away && ctx) ctx.suspend(); }, 300); }
+    else ctx.resume().then(() => { rampTo(level(), 1); fadeLater(); });
+  };
+  document.addEventListener('visibilitychange', onAway); addEventListener('blur', onAway); addEventListener('focus', onAway); addEventListener('pagehide', onAway);
+  let softT = 0;
+  const fadeLater = () => { clearTimeout(softT); const t = (performance.now() - startedAt) / 1000; if (t < SOFT_AFTER + SOFT_OVER) softT = setTimeout(() => { if (playing && !away) rampTo(SOFT, Math.max(1, SOFT_OVER - Math.max(0, t - SOFT_AFTER))); }, Math.max(0, SOFT_AFTER - t) * 1000); };
   const soundBtn = document.getElementById('sound');
   async function loadMusic() {
     if (buffer) return buffer;
@@ -25,14 +40,15 @@
     stop();
     src = ctx.createBufferSource(); src.buffer = buffer;
     src.loop = true; src.loopStart = LOOP_START; src.loopEnd = LOOP_END;
-    const gain = ctx.createGain(); gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 1.2);
+    gain = ctx.createGain(); gain.gain.setValueAtTime(0, ctx.currentTime);
+    if (!startedAt) startedAt = performance.now();
+    gain.gain.linearRampToValueAtTime(level(), ctx.currentTime + 1.2); fadeLater();
     src.connect(gain).connect(ctx.destination);
     src.start(0, fromStart ? 0 : LOOP_START);
     playing = true; soundBtn.setAttribute('aria-pressed', 'true'); store.set('cg-music', 'on');
   }
   function stop() {
-    if (src) { try { src.stop(); } catch (e) {} src = null; }
+    if (src) { try { src.stop(); } catch (e) {} src = null; } clearTimeout(softT);
     playing = false; soundBtn.setAttribute('aria-pressed', 'false');
   }
   if (soundBtn) soundBtn.addEventListener('click', () => {
@@ -151,10 +167,19 @@
   const GOLD = '#f2d49a';
   const sideOf = z => { if (!head || !verts[z]) return 0; const a = head.anchor(verts[z]), w = document.getElementById('mirror-head').clientWidth; return (a.x / w - .5) * 2; };
   const light = z => { if (!head) return; head.jumpAmount(1); head.setPlan(z && verts[z] ? [{ v: verts[z], ml: .0001, color: GOLD }] : []); };
-  const lookAt = z => { const s = z === 'skin' || !z ? 0 : sideOf(z); lookYaw = z ? (s < -.25 ? -.35 : s > .25 ? .05 : -.15) : -.15; };
+  // each area has the angle that shows it best: temples and the jawline from the side, the chin in profile,
+  // the forehead and brows from the front. The head turns toward whichever side the area sits on
+  const BEST = { forehead: [0, .1], brows: [0, .05], eyes: [.6, 0], temples: [.95, .02], undereyes: [.3, .05], cheeks: [.65, 0],
+    smile: [.4, 0], lips: [.35, 0], chin: [1.25, -.02], jaw: [.85, -.04], neck: [.6, -.14], skin: [.15, .04] };
+  let lookPitch = .04, pitchNow = .04;
+  const lookAt = z => {
+    const b = z && BEST[z]; if (!b) { lookPitch = .04; return; }
+    const x = head && verts[z] != null ? head.sideX(verts[z]) : -1;
+    lookYaw = b[0] ? b[0] * (x > .04 ? 1 : -1) : 0; lookPitch = .04 + b[1];
+  };
   sec.querySelectorAll('.fz').forEach(b => {
     b.addEventListener('pointerenter', () => { hovered = b.dataset.z; lookAt(hovered); if (!showing) light(hovered); });
-    b.addEventListener('pointerleave', () => { hovered = null; if (!picked) lookAt(null); if (!showing) light(picked); });
+    b.addEventListener('pointerleave', () => { hovered = null; lookAt(picked); if (!showing) light(picked); });
   });
   // picking an area shows the treatment on the face: the muscle Botox relaxes moves and then lets go, and a filler area fills out in gold
   const ACT = { forehead: 'brow', brows: 'frown', eyes: 'squint', lips: 'smile' };
@@ -229,10 +254,11 @@
   };
   const start = () => {
     if (head !== null) return; head = false;
-    import('./../features/filler/head.js?v=16').then(m => m.createHead(host, {
-      base: 'assets/', sparkle: true, sparse: true, features: true, noDrag: true, wipe: 0, yaw: -.15, morph: .5, zoom: .74,
+    import('./../features/filler/head.js?v=17').then(m => m.createHead(host, {
+      base: 'assets/', sparkle: true, sparse: true, features: true, wipe: 0, yaw: -.15, morph: .5, zoom: .74,
+      onTurn: y => { lookYaw = y; },
       visible: () => onScreen && !sec.querySelector('[data-panel="map"]').hidden,
-      onFrame: () => { if (head) head.setYaw(lookYaw + (still ? 0 : Math.sin(performance.now() / 6000) * .05)); draw(); }
+      onFrame: () => { if (head) { head.setYaw(lookYaw + (still ? 0 : Math.sin(performance.now() / 6000) * .05)); pitchNow += (lookPitch - pitchNow) * .06; head.setPitch(pitchNow); } draw(); }
     })).then(h => { head = h; window.CG_mirrorHead = h; stage.classList.add('live'); draw(); document.dispatchEvent(new Event('cg:mirror-ready')); }).catch(() => { head = null; stage.classList.add('flat'); });
   };
   new IntersectionObserver(es => es.forEach(e => { onScreen = e.isIntersecting; if (onScreen) start(); }), { rootMargin: '200px' }).observe(stage);
@@ -257,7 +283,7 @@
     setTimeout(() => { busy = false; }, 300);
     if (t.dataset.tab === 'sim' && !mounted) {
       mounted = true;
-      import('./../features/filler/index.js?v=16').then(m => m.mount(document.getElementById('filler-sim'),
+      import('./../features/filler/index.js?v=17').then(m => m.mount(document.getElementById('filler-sim'),
         { lang: 'en', base: 'assets/', noPlan: true, sparkle: true, soft: true, maleMorph: .8, fadeOnScroll: true, consult: 'index.html#rsvp' })).catch(() => { mounted = false; });
     }
   }));
@@ -286,8 +312,7 @@
   let head = null, speaker = null, jawT = 0, jaw = 0, blinkAt = performance.now() + 2500, blink = 0, mouse = [0, 0], inMirror = false, moving = false;
   const said = new Set();
 
-  // a line is spoken at an easy pace of about four syllables a second. Each syllable opens the jaw once and lets it close,
-  // wider on a and o than on i and u, and the mouth rests shut at commas and full stops
+  // a line appears all at once in the bubble, its words fading in one after another, and stays long enough to read
   let talking = 0;
   // glide: the cameo slides up the right edge to sit level with what it is talking about, then settles back in its corner
   const GLIDE = { card: '.dance-card h2', fitting: '#fitting .fitting-intro', entrance: '#entrance h2', rsvp: '.rsvp-card h2' };
@@ -302,41 +327,23 @@
   };
   const dock = () => setGlide(0);
   addEventListener('scroll', () => { if (!say.classList.contains('on')) dock(); }, { passive: true });
-  let keys = [], k0 = 0;
-  const OPEN_V = { a: .45, o: .4, e: .32, i: .2, u: .22, y: .2 };
-  const SYL = 260;
-  const jawAt = now => {
-    const t = now - k0; if (!keys.length || t >= keys[keys.length - 1][0]) return 0;
-    let i = 0; while (i < keys.length - 1 && t > keys[i + 1][0]) i++;
-    const [ta, va] = keys[i], [tb, vb] = keys[i + 1] || keys[i], u = tb > ta ? (t - ta) / (tb - ta) : 1;
-    return va + (vb - va) * (u * u * (3 - 2 * u));
-  };
+  const escH = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const speak = (text, onFace) => {
-    const id = ++talking; speaker = onFace; say.textContent = ''; say.classList.add('on');
-    const words = text.split(' '), shown = [];
-    let t = 120; keys = [[0, 0]];
-    words.forEach((word, w) => {
-      shown.push([t, w + 1]);
-      const syl = word.toLowerCase().match(/[aeiouy]+/g) || ['e'];
-      syl.forEach(g => {
-        const v = OPEN_V[g[0]] || .3;
-        keys.push([t + SYL * .4, v], [t + SYL * .85, .04]);
-        t += SYL;
-      });
-      if (/[.,?!]$/.test(word)) { keys.push([t + 60, 0]); t += 420; } else t += 40;
-    });
-    keys.push([t, 0]); k0 = performance.now();
-    shown.forEach(([at, n]) => setTimeout(() => { if (id === talking) say.textContent = words.slice(0, n).join(' '); }, at));
-    setTimeout(() => { if (id !== talking) return; keys = []; setTimeout(() => { if (id === talking) { say.classList.remove('on'); dock(); } }, 3200); }, t);
+    const id = ++talking; speaker = onFace;
+    const words = text.split(' ');
+    say.classList.remove('on');
+    say.innerHTML = words.map((w, i) => `<span style="--i:${i}">${escH(w)}</span>`).join(' ');
+    void say.offsetWidth; say.classList.add('on');
+    setTimeout(() => { if (id === talking) { say.classList.remove('on'); dock(); } }, 2600 + words.length * 260);
   };
+  say.addEventListener('click', () => { talking++; say.classList.remove('on'); dock(); });
   const face = () => speaker === 'mirror' ? window.CG_mirrorHead : head;
 
   // life: the jaw eases toward its target, the eyes blink every few seconds, and the head turns a little toward the pointer
   const life = now => {
-    jawT = still ? 0 : jawAt(now); jaw += (jawT - jaw) * .35;
     if (now > blinkAt) { blink = Math.min(1, blink + .35); if (blink >= 1) blinkAt = now + 2800 + Math.random() * 3500; } else blink = Math.max(0, blink - .25);
     const f = face();
-    if (f) f.setFace({ jaw, blink });
+    if (f) f.setFace({ jaw: 0, blink });
     if (head && !inMirror) { head.setYaw(-.15 + mouse[0] * .16); head.setPitch(.04 - mouse[1] * .05 + pitchAdd); }
     requestAnimationFrame(life);
   };
@@ -350,9 +357,11 @@
     const t0 = performance.now(), T = 1700;
     const f = now => {
       const u = (now - t0) / T; dx.clearRect(0, 0, innerWidth, innerHeight);
+      // both ends are measured again every frame, so the dust still lands on the mirror if the page scrolls on the way
+      const A = typeof from === 'function' ? from() : from, B = typeof to === 'function' ? to() : to;
       for (const p of P) {
         const v = Math.min(1, Math.max(0, (u - p.d) / .65)); if (v <= 0 || v >= 1) continue;
-        const e = v * v * (3 - 2 * v), x = from[0] + (to[0] - from[0]) * e + Math.sin(e * Math.PI) * p.s, y = from[1] + (to[1] - from[1]) * e - Math.sin(e * Math.PI) * 90;
+        const e = v * v * (3 - 2 * v), x = A[0] + (B[0] - A[0]) * e + Math.sin(e * Math.PI) * p.s, y = A[1] + (B[1] - A[1]) * e - Math.sin(e * Math.PI) * 90;
         const g = dx.createRadialGradient(x, y, 0, x, y, p.r * 4); g.addColorStop(0, `rgba(255,240,205,${(1 - Math.abs(v - .5) * 1.6) * .9})`); g.addColorStop(1, 'rgba(230,200,143,0)');
         dx.fillStyle = g; dx.beginPath(); dx.arc(x, y, p.r * 4, 0, 7); dx.fill();
       }
@@ -362,7 +371,7 @@
   });
   const ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
   const tween = (ms, fn) => new Promise(res => { if (still) { fn(1); return res(); } const t0 = performance.now(); const f = now => { const u = Math.min(1, (now - t0) / ms); fn(ease(u)); u < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
-  const centre = el => { let r = el.getBoundingClientRect(); if (!r.width) r = document.getElementById('mirror').getBoundingClientRect(); return [r.left + r.width / 2, Math.max(60, Math.min(innerHeight - 60, r.top + r.height / 2))]; };
+  const centre = el => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
 
   // the guide's face comes apart into light, drifts across the page as gold dust, and gathers again in the mirror.
   // Each step starts before the last one ends, so the move reads as one motion
@@ -372,13 +381,13 @@
   const settle = () => { if (want && !inMirror) intoMirror(); else if (!want && inMirror) outOfMirror(); };
   const intoMirror = async () => {
     want = true;
-    const m = window.CG_mirrorHead, glass = document.querySelector('.mirror-stage .vanity');
+    const m = window.CG_mirrorHead, glass = document.querySelector('.mirror-stage .vanity-glass');
     if (!m || !glass || moving || inMirror) return; moving = true; inMirror = true;
     m.setFace({ scatter: .8, fade: 0 });
     tween(1000, u => head && head.setFace({ scatter: u * .8, fade: 1 - u }));
     cameo.classList.add('away');
     await wait(300);
-    const trip = fly(centre(cameo), centre(glass));
+    const trip = fly(centre(cameo), () => centre(glass));
     await wait(950);
     await tween(1500, u => m.setFace({ scatter: (1 - u) * .8, fade: u }));
     await trip; moving = false;
@@ -387,12 +396,12 @@
   };
   const outOfMirror = async () => {
     want = false;
-    const m = window.CG_mirrorHead, glass = document.querySelector('.mirror-stage .vanity');
+    const m = window.CG_mirrorHead, glass = document.querySelector('.mirror-stage .vanity-glass');
     if (!m || moving || !inMirror) return; moving = true;
-    if (speaker === 'mirror') { talking++; keys = []; say.classList.remove('on'); }
+    if (speaker === 'mirror') { talking++; say.classList.remove('on'); }
     tween(1000, u => m.setFace({ scatter: u * .8, fade: 1 - u }));
     await wait(300);
-    const trip = fly(centre(glass), centre(cameo));
+    const trip = fly(() => centre(glass), () => centre(cameo));
     await wait(950);
     cameo.classList.remove('away');
     if (head) head.setFace({ scatter: .8, fade: 0 });
@@ -404,16 +413,22 @@
 
   const start = () => {
     cameo.hidden = false;
-    import('./../features/filler/head.js?v=16').then(m => m.createHead(document.getElementById('cameo-head'), {
+    import('./../features/filler/head.js?v=17').then(m => m.createHead(document.getElementById('cameo-head'), {
       base: 'assets/', sparkle: true, sparse: true, features: true, noDrag: true, wipe: 0, yaw: -.15, morph: .5, zoom: .7
     })).then(h => { head = h; requestAnimationFrame(life); if (!FACTS && !said.has('open')) { said.add('open'); setTimeout(() => speak(OPEN, 'cameo'), 600); } }).catch(() => { cameo.hidden = true; });
-    ['card', 'fitting', 'mirror', 'entrance', 'rsvp'].map(id => document.getElementById(id)).filter(Boolean).forEach(p => io.observe(p));
+    ['card', 'fitting', 'entrance', 'rsvp'].map(id => document.getElementById(id)).filter(Boolean).forEach(p => io.observe(p));
+    const vg = document.querySelector('.mirror-stage .vanity-glass'); if (vg) mio.observe(vg);
   };
   const onView = new Set();
   const sayFor = id => { if (said.has(id) || inMirror || moving || !LINES[id]) return; said.add(id); glideTo(GLIDE[id] && document.querySelector(GLIDE[id])); speak(LINES[id], 'cameo'); };
+  // the guide goes into the mirror once most of the mirror's glass is on screen, and comes back out once it is nearly gone
+  const mio = new IntersectionObserver(es => es.forEach(e => {
+    if (e.intersectionRatio >= .6) window.CG_mirrorHead ? intoMirror() : document.addEventListener('cg:mirror-ready', () => { if (want) intoMirror(); }, { once: true });
+    else if (e.intersectionRatio < .2) outOfMirror();
+    if (e.intersectionRatio >= .6) want = true;
+  }), { threshold: [0, .2, .6] });
   const io = new IntersectionObserver(es => es.forEach(e => {
     const id = e.target.id;
-    if (id === 'mirror') { e.isIntersecting ? (window.CG_mirrorHead ? intoMirror() : document.addEventListener('cg:mirror-ready', intoMirror, { once: true })) : outOfMirror(); return; }
     e.isIntersecting ? onView.add(id) : onView.delete(id);
     if (e.isIntersecting) sayFor(id);
   }), { threshold: .45 });

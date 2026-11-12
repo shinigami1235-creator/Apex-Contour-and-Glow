@@ -542,3 +542,16 @@ body.opened .ballroom-img,body.opening .ballroom-img{transform:scale(1)}
 .cameo-say{right:calc(clamp(12px,2vw,26px) + 146px)}
 @media (max-width:700px){.mirror-stage .vanity{width:min(92vw,420px)}.cameo{width:96px}.cameo-say{right:108px}}
 .credit{font-size:12px;opacity:.7}.credit a{color:inherit}
+
+/* guide bubble: smaller, the words fade in one after another, a tap closes it */
+.cameo-say{max-width:min(290px,calc(100vw - 200px));font-size:16.5px;padding:11px 15px}
+.cameo-say.on{pointer-events:auto;cursor:pointer}
+.cameo-say span{opacity:0;filter:blur(4px);transition:opacity .6s ease,filter .6s ease;transition-delay:calc(var(--i) * 70ms + 120ms)}
+.cameo-say.on span{opacity:1;filter:none}
+.cameo-say:not(.on) span{transition-delay:0s}
+@media (prefers-reduced-motion:reduce){.cameo-say span{transition:none;opacity:1;filter:none}}
+@media (max-width:700px){
+  .cameo-say{left:auto;right:12px;bottom:calc(70px + 96px * 4 / 3 + 14px);max-width:min(250px,68vw);font-size:14px;padding:9px 13px;border-radius:14px 14px 4px 14px;translate:0 0}
+  .cameo-say::after{right:22px;bottom:-9px;transform:rotate(45deg);border-right:1px solid var(--gold);border-bottom:1px solid var(--gold)}
+}
+.mirror-head canvas{cursor:grab}.mirror-head canvas:active{cursor:grabbing}

@@ -8,7 +8,7 @@
    mount(container, opts) -> {destroy()}
    opts: lang 'en' | 'th', base (assets/ URL), onEvent(name, data). Testing only: threeUrl */
 import {CODES, CONCERNS, STEPS, PER_SESSION, planFor, HEAD_AT, PRODUCTS, productsFor, syringesFor} from './codes.js';
-import {createHead} from './head.js?v=16';
+import {createHead} from './head.js?v=17';
 
 const REF = 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8012343/';
 // where the wipe line starts in each view: on the profile in the side view, since that is where the change shows

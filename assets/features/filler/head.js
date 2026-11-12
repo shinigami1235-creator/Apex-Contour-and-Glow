@@ -372,6 +372,7 @@ export async function createHead(host, opts = {}){
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     if (!drag.on) { if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) { drag.on = true; try { cv.setPointerCapture(e.pointerId); } catch (er) {} } else if (Math.abs(dy) > 10) { drag = null; return; } else return; }
     state.yaw = state.yawT = Math.max(-1.6, Math.min(1.6, drag.yaw - dx / (cv.clientWidth || 400) * 3)); state.dirty = true;
+    if (opts.onTurn) opts.onTurn(state.yaw);
   });
   const end = () => { drag = null; };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
@@ -394,6 +395,8 @@ export async function createHead(host, opts = {}){
       return {x:(s.x + 1) / 2 * host.clientWidth, y:(1 - s.y) / 2 * host.clientHeight, front:Math.max(0, Math.min(1, (f + .1) / .5))};
     },
     setYaw(y){ state.yawT = y; state.dirty = true; },
+    /* which side of the face vertex v is on: below 0 is the side the camera sees at a negative yaw */
+    sideX(v){ return H.pf[v * 3] + (H.pm[v * 3] - H.pf[v * 3]) * state.g; },
     setPitch(p){ state.pitch = p; state.dirty = true; },
     /* speech and life: jaw 0 to 1, blink 0 to 1, scatter 0 (whole) to about .6 (dust) */
     setFace(f = {}){ const K = {fade:'uFade', jaw:'uJaw', blink:'uBlink', scatter:'uScatter', brow:'uBrow', frown:'uFrown', squint:'uSquint', smile:'uSmile'}; for (const k in f) if (K[k] && f[k] != null) U[K[k]].value = f[k]; state.dirty = true; },
