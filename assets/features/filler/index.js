@@ -483,7 +483,7 @@ export function mount(container, opts = {}){
 
   /* ---------- the head ---------- */
   let alive = true;
-  createHead(R('host'), {threeUrl:opts.threeUrl, base:opts.base || '', gender:state.gender}).then(h => {
+  createHead(R('host'), {threeUrl:opts.threeUrl, base:opts.base || '', gender:state.gender, sparkle:!!opts.sparkle}).then(h => {
     if (!alive) { h.destroy(); return; }
     state.head = h; R('load').hidden = true;
     h.setView(state.view);

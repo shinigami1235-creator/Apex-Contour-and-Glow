@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 from tx_art import icon
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CSS_V = 13; JS_V = 6
+CSS_V = 16; JS_V = 9
 E = html.escape
 ROMAN = ['I','II','III','IV','V','VI','VII']
 CASES = {'botox': 7}
@@ -48,17 +48,21 @@ def page(slug, t):
     if not R:
         results = ''
     elif R['mode'] == 'slider':
-        thumbs = ''.join(f'<button data-i="{i}" class="{"on" if i == 1 else ""}"><img src="assets/img/{R["set"]}-{i}-after.webp" alt="Case {i}" loading="lazy"></button>' for i in range(1, R['n'] + 1))
         lb, la = R.get('labels', ('Before', 'After'))
+        thumbs = ''.join(f'<button data-i="{i}" class="{"on" if i == 1 else ""}"><img src="assets/img/{R["set"]}-{i}-after.webp" alt="Case {i}" loading="lazy"></button>' for i in range(1, R['n'] + 1)) if R['n'] > 1 else ''
         results = f'''<section id="entrance" class="entrance">
-  <div class="entrance-head"><p class="kicker">The grand entrance</p><h2>Before and after</h2><p>{E(R.get("caption", t["name"] + " at Apex. Drag the line to compare."))}</p></div>
-  <div class="compare" id="compare" data-set="{R["set"]}" style="--ar:{R.get("ar", "540/860")}">
-    <img src="assets/img/{R["set"]}-1-after.webp" alt="After {E(t["name"])}" class="after">
-    <div class="before-wrap"><img src="assets/img/{R["set"]}-1-before.webp" alt="Before {E(t["name"])}" class="before"></div>
-    <input type="range" min="0" max="100" value="50" aria-label="Compare before and after">
-    <span class="tag tag-before">{E(lb)}</span><span class="tag tag-after">{E(la)}</span>
+  <div class="entrance-head"><p class="kicker">The grand entrance</p><h2>Before and after</h2><p>{E(R.get("caption", t["name"] + " at Apex. Wipe the mist off the mirror to see the after."))}</p></div>
+  <div class="fogmirror" id="compare" data-set="{R["set"]}" style="--ar:{R.get("ar", "540/860")}">
+    <div class="fm-frame"><div class="fm-glass">
+      <img src="assets/img/{R["set"]}-1-after.webp" alt="After {E(t["name"])}" class="after">
+      <img src="assets/img/{R["set"]}-1-before.webp" alt="Before {E(t["name"])}" class="before">
+      <canvas class="fm-fog" aria-hidden="true"></canvas>
+      <span class="fm-sheen" aria-hidden="true"></span>
+    </div></div>
+    <p class="fm-plaque"><span>{E(lb)}</span> in the mist, <span>{E(la)}</span> where you wipe</p>
+    <div class="fm-tools"><button type="button" data-fm="clear">Clear the mirror</button><button type="button" data-fm="fog">Mist it again</button></div>
   </div>
-  <div class="thumbs" id="thumbs">{thumbs if R["n"] > 1 else ""}</div>
+  <div class="thumbs" id="thumbs">{thumbs}</div>
   <p class="fine">Individual results vary.</p>
 </section>'''
     else:

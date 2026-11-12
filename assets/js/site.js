@@ -78,19 +78,93 @@
     new IntersectionObserver((es, ob) => es.forEach(e => { if (e.isIntersecting) { fit.classList.add('in'); ob.disconnect(); } }), { threshold: 0.25 }).observe(fit);
   } else if (fit) fit.classList.add('in');
 
-  // ---- before and after ----
+  // ---- before and after: a misted mirror. The before shows through the mist, and wiping it shows the after. ----
   const cmp = document.getElementById('compare');
-  if (cmp) {
-    const range = cmp.querySelector('input'), wrap = cmp.querySelector('.before-wrap');
-    const set = v => { wrap.style.clipPath = `inset(0 ${100 - v}% 0 0)`; cmp.style.setProperty('--x', v + '%'); };
-    range.addEventListener('input', () => set(range.value)); set(50);
-    const kind = cmp.dataset.set || 'profhilo';
+  if (cmp && cmp.classList.contains('fogmirror')) {
+    const glass = cmp.querySelector('.fm-glass'), after = cmp.querySelector('.after'), before = cmp.querySelector('.before');
+    const cv = cmp.querySelector('.fm-fog'), ctx = cv.getContext('2d'), fog = document.createElement('canvas'), fx = fog.getContext('2d');
+    const kind = cmp.dataset.set || 'profhilo', still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let W = 0, H = 0, dpr = 1, last = 0, held = false, prev = null, raf = 0, demoed = false, wiped = 0;
+    const cover = (c, img, w, h) => {
+      const r = Math.max(w / img.naturalWidth, h / img.naturalHeight), iw = img.naturalWidth * r, ih = img.naturalHeight * r;
+      c.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih);
+    };
+    // the mist: the before photo under a pale haze, uneven like breath on glass, with a few drops
+    const buildFog = () => {
+      fog.width = W; fog.height = H;
+      fx.save(); fx.filter = 'blur(' + (1.2 * dpr) + 'px)'; cover(fx, before, W, H); fx.restore();
+      fx.fillStyle = 'rgba(236,230,243,.30)'; fx.fillRect(0, 0, W, H);
+      let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 26; i++) {
+        const x = rnd() * W, y = rnd() * H, r = (.12 + rnd() * .3) * W, g = fx.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, `rgba(245,240,250,${.05 + rnd() * .09})`); g.addColorStop(1, 'rgba(245,240,250,0)');
+        fx.fillStyle = g; fx.fillRect(0, 0, W, H);
+      }
+      for (let i = 0; i < 70; i++) {
+        const x = rnd() * W, y = rnd() * H, r = (.6 + rnd() * 2.2) * dpr;
+        fx.fillStyle = 'rgba(255,255,255,.35)'; fx.beginPath(); fx.arc(x, y, r, 0, 7); fx.fill();
+        fx.fillStyle = 'rgba(60,40,70,.18)'; fx.beginPath(); fx.arc(x + r * .4, y + r * .5, r * .7, 0, 7); fx.fill();
+      }
+    };
+    const mist = () => { ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.clearRect(0, 0, W, H); ctx.drawImage(fog, 0, 0); wiped = 0; };
+    const size = () => {
+      const r = glass.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1);
+      W = cv.width = Math.round(r.width * dpr); H = cv.height = Math.round(r.height * dpr);
+      if (before.complete && before.naturalWidth) { buildFog(); mist(); cmp.classList.add('ready'); }
+    };
+    const wipe = (x0, y0, x1, y1) => {
+      const R = W * .11, d = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.ceil(d / (R * .25)));
+      ctx.globalCompositeOperation = 'destination-out'; ctx.globalAlpha = 1;
+      for (let i = 0; i <= n; i++) {
+        const x = x0 + (x1 - x0) * i / n, y = y0 + (y1 - y0) * i / n, g = ctx.createRadialGradient(x, y, R * .35, x, y, R);
+        g.addColorStop(0, 'rgba(0,0,0,.9)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R, 0, 7); ctx.fill();
+      }
+      last = performance.now(); wiped += d; tick();
+    };
+    // the mist creeps back a few seconds after you stop, unless the mirror was cleared on purpose
+    const tick = () => {
+      if (raf) return;
+      const step = now => {
+        raf = 0;
+        if (held || !wiped) return;
+        if (now - last > 4000) {
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = .018; ctx.drawImage(fog, 0, 0); ctx.globalAlpha = 1;
+          if (now - last > 9000) { mist(); return; }
+        }
+        raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    };
+    const at = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr]; };
+    cv.addEventListener('pointerdown', e => { held = false; prev = at(e); try { cv.setPointerCapture(e.pointerId); } catch (er) {} wipe(...prev, ...prev); cmp.classList.add('touched'); });
+    cv.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse' && !e.buttons) return;
+      const p = at(e); if (!prev) prev = p;
+      held = false; wipe(...prev, ...p); prev = p; cmp.classList.add('touched');
+    });
+    cv.addEventListener('pointerleave', () => prev = null);
+    cv.addEventListener('pointerup', () => prev = null);
+    cmp.querySelector('[data-fm="clear"]').addEventListener('click', () => {
+      held = true; let k = 0;
+      const sweep = () => { ctx.globalCompositeOperation = 'destination-out'; ctx.globalAlpha = .14; ctx.fillRect(0, 0, W, H); if (++k < 30) requestAnimationFrame(sweep); else ctx.clearRect(0, 0, W, H); };
+      still ? ctx.clearRect(0, 0, W, H) : sweep();
+    });
+    cmp.querySelector('[data-fm="fog"]').addEventListener('click', () => { held = false; mist(); });
+    // on first sight, one slow wipe across the glass shows what to do
+    const demo = () => {
+      if (demoed || still || cmp.classList.contains('touched')) return; demoed = true;
+      const t0 = performance.now(), pts = t => [W * (.18 + .64 * t), H * (.42 + .1 * Math.sin(t * 6.3))];
+      let p = pts(0);
+      const go = now => { const t = Math.min(1, (now - t0) / 1400), q = pts(t); wipe(...p, ...q); p = q; if (t < 1) requestAnimationFrame(go); };
+      requestAnimationFrame(go);
+    };
+    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && cmp.classList.contains('ready')) setTimeout(demo, 500); }), { threshold: .6 }).observe(cv);
+    before.addEventListener('load', size); new ResizeObserver(size).observe(glass); size();
     document.querySelectorAll('#thumbs button').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('#thumbs button').forEach(x => x.classList.toggle('on', x === b));
-      const i = b.dataset.i;
-      cmp.querySelector('.after').src = `assets/img/${kind}-${i}-after.webp`;
-      cmp.querySelector('.before').src = `assets/img/${kind}-${i}-before.webp`;
-      range.value = 50; set(50);
+      const i = b.dataset.i; held = false;
+      after.src = `assets/img/${kind}-${i}-after.webp`; before.src = `assets/img/${kind}-${i}-before.webp`;
     }));
   }
 
@@ -112,21 +186,76 @@
   }
 })();
 
-// ---- vanity mirror: face map and the 3D filler head (home page) ----
+// ---- vanity mirror: a face of sparkling lights, the areas beside it, and the 3D filler head (home page) ----
 (() => {
   const sec = document.getElementById('mirror');
   if (!sec || !window.CG_ZONES) return;
-  const { zones, names } = window.CG_ZONES;
+  const { zones, names, verts } = window.CG_ZONES;
   const out = sec.querySelector('.mo-list'), empty = sec.querySelector('.mo-empty');
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let picked = null;
   sec.querySelectorAll('.fz').forEach(b => b.addEventListener('click', () => {
+    picked = b.dataset.z;
     sec.querySelectorAll('.fz').forEach(x => x.setAttribute('aria-pressed', x === b));
-    const list = zones[b.dataset.z] || [];
-    out.querySelector('.mo-title').textContent = names[b.dataset.z];
+    const list = zones[picked] || [];
+    out.querySelector('.mo-title').textContent = names[picked];
     out.querySelector('ul').innerHTML = list.map(e =>
       `<li class="${e.half.toLowerCase()}"><a href="${e.slug}.html"><b>${esc(e.name)}</b><span>${esc(e.half)}</span></a>${e.note ? `<em>${esc(e.note)}</em>` : ''}</li>`).join('');
     empty.hidden = true; out.hidden = false;
   }));
+
+  // the sparkling face, with a gold thread from each area name to its place on the face
+  const stage = sec.querySelector('.mirror-stage'), host = document.getElementById('mirror-head');
+  const leads = sec.querySelector('.mirror-leads'), ctx = leads.getContext('2d');
+  const btn = {}; sec.querySelectorAll('.fz-col .fz').forEach(b => btn[b.dataset.z] = b);
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches, narrow = matchMedia('(max-width: 700px)');
+  narrow.addEventListener('change', () => sec.querySelectorAll('.fz-col .fz').forEach(b => b.style.top = ''));
+  let head = null, onScreen = false;
+  const draw = () => {
+    if (!head) return;
+    const sr = stage.getBoundingClientRect(), hr = host.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+    if (leads.width !== Math.round(sr.width * dpr) || leads.height !== Math.round(sr.height * dpr)) { leads.width = Math.round(sr.width * dpr); leads.height = Math.round(sr.height * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, sr.width, sr.height);
+    if (narrow.matches) {
+      if (!picked || !verts[picked]) return;
+      const a = head.anchor(verts[picked]), x = a.x + hr.left - sr.left, y = a.y + hr.top - sr.top, r = 14 + 4 * Math.sin(performance.now() / 300);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(255,240,205,.95)'); g.addColorStop(1, 'rgba(230,200,143,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+      return;
+    }
+    for (const side of ['l', 'r']) {
+      const items = Object.keys(btn).filter(k => btn[k].parentElement.classList.contains('fz-' + side)).map(k => {
+        const a = head.anchor(verts[k]); return { k, a, x: a.x + hr.left - sr.left, y: a.y + hr.top - sr.top };
+      }).sort((p, q) => p.y - q.y);
+      // labels follow their area up and down, never closer than one label height
+      let last = -1e9;
+      for (const it of items) {
+        const b = btn[it.k], h = b.offsetHeight + 6;
+        const y = Math.max(it.y, last + h); last = y;
+        b.style.top = (y - b.offsetHeight / 2) + 'px';
+        const br = b.getBoundingClientRect();
+        const lx = side === 'l' ? br.right - sr.left + 4 : br.left - sr.left - 4, ly = y;
+        const on = it.k === picked, al = (.25 + .55 * it.a.front) * (on ? 1.6 : 1);
+        ctx.strokeStyle = `rgba(230,200,143,${Math.min(1, al)})`; ctx.lineWidth = on ? 1.4 : .8;
+        ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + (side === 'l' ? 14 : -14), ly); ctx.lineTo(it.x, it.y); ctx.stroke();
+        const g = ctx.createRadialGradient(it.x, it.y, 0, it.x, it.y, on ? 12 : 7);
+        g.addColorStop(0, `rgba(255,240,205,${.9 * it.a.front + .1})`); g.addColorStop(1, 'rgba(230,200,143,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(it.x, it.y, on ? 12 : 7, 0, 7); ctx.fill();
+      }
+    }
+  };
+  const start = () => {
+    if (head !== null) return; head = false;
+    import('./../features/filler/head.js').then(m => m.createHead(host, {
+      base: 'assets/', sparkle: true, wipe: 0, yaw: 0, gender: 'female', zoom: .74,
+      visible: () => onScreen && !sec.querySelector('[data-panel="map"]').hidden,
+      onFrame: () => { if (!still && head) head.setYaw(Math.sin(performance.now() / 4000) * .22); draw(); }
+    })).then(h => { head = h; stage.classList.add('live'); draw(); }).catch(() => { head = null; stage.classList.add('flat'); });
+  };
+  new IntersectionObserver(es => es.forEach(e => { onScreen = e.isIntersecting; if (onScreen) start(); }), { rootMargin: '200px' }).observe(stage);
+  addEventListener('resize', draw);
+
   let mounted = false;
   sec.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => {
     sec.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === t));
@@ -134,7 +263,7 @@
     if (t.dataset.tab === 'sim' && !mounted) {
       mounted = true;
       import('./../features/filler/index.js').then(m => m.mount(document.getElementById('filler-sim'),
-        { lang: 'en', base: 'assets/', noPlan: true, consult: 'index.html#rsvp' })).catch(() => { mounted = false; });
+        { lang: 'en', base: 'assets/', noPlan: true, sparkle: true, consult: 'index.html#rsvp' })).catch(() => { mounted = false; });
     }
   }));
 })();

@@ -4,7 +4,7 @@
    decimetres), and the skin lifts by that same volume, true to size.
    The view is a wipe: before on the left of the line, after on the right.
 
-   createHead(host, {threeUrl, base, gender}) -> {setPlan(points), setAmount(f), jumpAmount(f), setWipe(x),
+   createHead(host, {threeUrl, base, gender, sparkle, wipe, yaw, onFrame}) -> {setPlan(points), setAmount(f), jumpAmount(f), setWipe(x),
      setGender(g), setView(name), setPoints(on), snapshot(amount, w, h, yaw) -> canvas, destroy()}
    f scales every point's mL (1 = the paper's minimum). x is the wipe line, 0 to 1 across the view.
    points: [{v:vertex index, ml:mL at this point, color:'#hex'}] */
@@ -16,8 +16,8 @@ const RADIUS = .16;             // spread of one injection on the skin, decimetr
 const VS = `
 attribute vec3 aPosB; attribute vec3 aNrmA; attribute vec3 aNrmB; attribute float aRnd; attribute float aEdge;
 attribute float aKind; attribute float aAo; attribute float aDispA; attribute float aDispB; attribute vec3 aCol; attribute float aHeat;
-uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR;
-varying float vA; varying vec3 vC; varying float vH;
+uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark;
+varying float vA; varying vec3 vC; varying float vH; varying float vR; varying float vF;
 float is(float v, float t){ return 1. - step(.1, abs(v - t)); }
 void main(){
   float m = smoothstep(0., 1., uMorph);
@@ -39,12 +39,28 @@ void main(){
   vA = back * tone * keep * depth * (uIsLine > .5 ? mix(uLine, .5, h) : 1.);
   float ew = aEdge < .5 ? 1. : (aEdge < 1.5 ? .75 : .55);
   vA *= uIsLine > .5 ? 1. : ew;
-  gl_PointSize = clamp(uSize * (1. + h * .9) * (.75 + aRnd * .5) * 3.4 / -mv.z, 1., 8.) * uPix;
+  /* sparkle: every point twinkles at its own pace, and a few flare bright at a time */
+  float tw = .45 + .55 * (.5 + .5 * sin(uTime * (1.1 + aRnd * 2.6) + aRnd * 37.));
+  float fl = pow(max(0., sin(uTime * (.35 + aRnd * .5) + aRnd * 91.)), 28.);
+  vR = aRnd; vF = fl * uSpark;
+  vA *= mix(1., tw + fl * 2.2, uSpark);
+  float big = mix(1., (.7 + fl * 2.6) * 1.15, uSpark);
+  gl_PointSize = clamp(uSize * big * (1. + h * .9) * (.75 + aRnd * .5) * 3.4 / -mv.z, 1., mix(8., 22., uSpark)) * uPix;
 }`;
 const FS = `
-varying float vA; varying vec3 vC; varying float vH;
-uniform float uIsLine;
+varying float vA; varying vec3 vC; varying float vH; varying float vR; varying float vF;
+uniform float uIsLine, uSpark;
 void main(){
+  if (uSpark > .5 && uIsLine < .5) {
+    vec2 c = gl_PointCoord - .5; float d = length(c);
+    if (d > .5) discard;
+    /* a bright core, a soft halo, and a thin cross on the points that flare */
+    float a = exp(-d * d * 60.) + .35 * exp(-d * d * 9.) + vF * .6 * (exp(-abs(c.x) * 40.) + exp(-abs(c.y) * 40.)) * (1. - d * 2.);
+    vec3 base = mix(vec3(1., .95, .99), vec3(.98, .80, .50), smoothstep(.35, .9, vR));
+    vec3 col = mix(base, vC, min(1., vH * 1.4));
+    gl_FragColor = vec4(col, a * vA * (.5 + vH * .6));
+    return;
+  }
   float d = 0.;
   if (uIsLine < .5) { vec2 c = gl_PointCoord - .5; d = length(c); if (d > .5) discard; }
   float a = uIsLine > .5 ? 1. : 1. - smoothstep(0., .5, d);
@@ -127,12 +143,13 @@ export async function createHead(host, opts = {}){
   host.prepend(renderer.domElement);
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(26, 1, .05, 100);
   const U = {uMorph:{value:opts.gender === 'male' ? 1 : 0}, uAfter:{value:1}, uPix:{value:pix}, uSize:{value:2.6}, uCut:{value:H.cutF},
-    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}};
+    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}};
   const mat = (isLine) => new THREE.ShaderMaterial({uniforms:{...U, uIsLine:{value:isLine ? 1 : 0}}, vertexShader:VS, fragmentShader:FS, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending});
   const pmat = mat(false), lmat = mat(true);
   const points = new THREE.Points(pg, pmat), lines = new THREE.LineSegments(lg, lmat);
   points.frustumCulled = lines.frustumCulled = false;
   scene.add(lines, points);
+  if (opts.sparkle) lines.visible = false;   // sparkle look: lights only, no net
   const drops = new THREE.Group(); scene.add(drops);
   const dropGeo = new THREE.SphereGeometry(1, 20, 14);
 
@@ -143,7 +160,8 @@ export async function createHead(host, opts = {}){
     for (let i = 0; i < n; i++) { const y = p[i * 3 + 1]; if (y < cut) continue; x0 = Math.min(x0, p[i * 3]); x1 = Math.max(x1, p[i * 3]); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
     return {x:(x0 + x1) / 2, y:y0 + (y1 - y0) * .5, z:.45, h:y1 - y0};
   };
-  const state = {g:opts.gender === 'male' ? 1 : 0, gT:opts.gender === 'male' ? 1 : 0, after:1, afterT:1, wipe:.5, yaw:-.5, yawT:-.5, pitch:.04, plan:[], points:true, dirty:true};
+  const yaw0 = opts.yaw ?? -.5;
+  const state = {g:opts.gender === 'male' ? 1 : 0, gT:opts.gender === 'male' ? 1 : 0, after:1, afterT:1, wipe:opts.wipe ?? .5, yaw:yaw0, yawT:yaw0, pitch:.04, plan:[], points:true, dirty:true};
   const VIEWS = {front:0, q:-.62, side:-1.45};
 
   function computeDisp(){
@@ -208,20 +226,24 @@ export async function createHead(host, opts = {}){
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); state.dirty = true;
   }
   function place(cam = camera, yaw = state.yaw){
-    const C = centre(state.g > .5 ? 1 : 0), d = C.h * 2.55 / Math.min(1, cam.aspect) ;
+    const C = centre(state.g > .5 ? 1 : 0), d = C.h * 2.55 / Math.min(1, cam.aspect) * (opts.zoom || 1);
     cam.position.set(C.x + Math.sin(yaw) * d * Math.cos(state.pitch), C.y + Math.sin(state.pitch) * d, C.z + Math.cos(yaw) * d * Math.cos(state.pitch));
     cam.lookAt(C.x, C.y, C.z);
     U.uFocus.value = d - 1.05;   // the front of the face
   }
   const setAmt = a => { U.uAfter.value = a; };
   let raf = 0, t0 = performance.now(), alive = true, drag = null;
+  const still = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+  if (opts.sparkle && still) U.uTime.value = 12;
   function frame(now){
     if (!alive) return;
     raf = requestAnimationFrame(frame);
+    if (opts.visible && !opts.visible()) { t0 = now; return; }
     const dt = Math.min(.05, (now - t0) / 1000); t0 = now;
     let moving = false;
     const ap = (k, kT, s) => { const d = state[kT] - state[k]; if (Math.abs(d) > 1e-4) { state[k] += d * Math.min(1, dt * s); moving = true; } else state[k] = state[kT]; };
     ap('g', 'gT', 5); ap('after', 'afterT', 3.2); if (!drag) ap('yaw', 'yawT', 4);
+    if (opts.sparkle && !still) { U.uTime.value = now / 1000; state.dirty = true; }
     if (!moving && !state.dirty) return;
     U.uMorph.value = state.g; U.uCut.value = H.cutF + (H.cutM - H.cutF) * state.g;
     place();
@@ -232,6 +254,7 @@ export async function createHead(host, opts = {}){
     renderer.setScissor(wx, 0, w - wx, h); setAmt(state.after); drops.visible = true; placeDrops(); renderer.render(scene, camera);
     renderer.setScissorTest(false);
     state.dirty = false;
+    if (opts.onFrame) opts.onFrame();
   }
   const ro = new ResizeObserver(size); ro.observe(host); size();
   // drag to turn the head
@@ -256,6 +279,15 @@ export async function createHead(host, opts = {}){
     setGender(g){ state.gT = g === 'male' ? 1 : 0; state.dirty = true; },
     setView(v){ state.yawT = VIEWS[v] ?? state.yawT; state.dirty = true; },
     setPoints(on){ state.points = on; state.dirty = true; },
+    /* where vertex v sits on screen (CSS px inside host), and how much it faces the camera (0 to 1) */
+    anchor(v){
+      const g = state.g, P3 = c => H.pf[v * 3 + c] + (H.pm[v * 3 + c] - H.pf[v * 3 + c]) * g, N3 = c => H.nf[v * 3 + c] + (H.nm[v * 3 + c] - H.nf[v * 3 + c]) * g;
+      const w = new THREE.Vector3(P3(0), P3(1), P3(2)), s = w.clone().project(camera);
+      const cx = camera.position.x - w.x, cy = camera.position.y - w.y, cz = camera.position.z - w.z, cl = Math.hypot(cx, cy, cz) || 1;
+      const f = (N3(0) * cx + N3(1) * cy + N3(2) * cz) / cl;
+      return {x:(s.x + 1) / 2 * host.clientWidth, y:(1 - s.y) / 2 * host.clientHeight, front:Math.max(0, Math.min(1, (f + .1) / .5))};
+    },
+    setYaw(y){ state.yawT = y; state.dirty = true; },
     /* a still of the head with no filler (0) or the chosen amount, for the saved image */
     snapshot(after, w = 700, h = 840, yaw = 0){
       const keep = {after:state.after, yaw:state.yaw};

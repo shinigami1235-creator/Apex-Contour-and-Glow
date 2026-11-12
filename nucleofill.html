@@ -8,7 +8,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=13">
+<link rel="stylesheet" href="assets/css/site.css?v=16">
 </head>
 <body class="tx-page glow">
 <button class="sound" id="sound" aria-pressed="false" aria-label="Music"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span>Music</span></button>
@@ -47,12 +47,16 @@
   <ol class="timeline" style="--n:4"><li><b>Day 1 to 2</b><span>Bruising and swelling settle</span></li><li><b>Week 2 to 4</b><span>Next session</span></li><li><b>After 2 to 4 sessions</b><span>The course is done</span></li><li><b>Month 6 to 12</b><span>Time for a top-up</span></li></ol>
 </section>
 <section id="entrance" class="entrance">
-  <div class="entrance-head"><p class="kicker">The grand entrance</p><h2>Before and after</h2><p>Nucleofill at Apex. Drag the line to compare.</p></div>
-  <div class="compare" id="compare" data-set="nucleofill" style="--ar:600/900">
-    <img src="assets/img/nucleofill-1-after.webp" alt="After Nucleofill" class="after">
-    <div class="before-wrap"><img src="assets/img/nucleofill-1-before.webp" alt="Before Nucleofill" class="before"></div>
-    <input type="range" min="0" max="100" value="50" aria-label="Compare before and after">
-    <span class="tag tag-before">Before</span><span class="tag tag-after">After</span>
+  <div class="entrance-head"><p class="kicker">The grand entrance</p><h2>Before and after</h2><p>Nucleofill at Apex. Wipe the mist off the mirror to see the after.</p></div>
+  <div class="fogmirror" id="compare" data-set="nucleofill" style="--ar:600/900">
+    <div class="fm-frame"><div class="fm-glass">
+      <img src="assets/img/nucleofill-1-after.webp" alt="After Nucleofill" class="after">
+      <img src="assets/img/nucleofill-1-before.webp" alt="Before Nucleofill" class="before">
+      <canvas class="fm-fog" aria-hidden="true"></canvas>
+      <span class="fm-sheen" aria-hidden="true"></span>
+    </div></div>
+    <p class="fm-plaque"><span>Before</span> in the mist, <span>After</span> where you wipe</p>
+    <div class="fm-tools"><button type="button" data-fm="clear">Clear the mirror</button><button type="button" data-fm="fog">Mist it again</button></div>
   </div>
   <div class="thumbs" id="thumbs"><button data-i="1" class="on"><img src="assets/img/nucleofill-1-after.webp" alt="Case 1" loading="lazy"></button><button data-i="2" class=""><img src="assets/img/nucleofill-2-after.webp" alt="Case 2" loading="lazy"></button><button data-i="3" class=""><img src="assets/img/nucleofill-3-after.webp" alt="Case 3" loading="lazy"></button></div>
   <p class="fine">Individual results vary.</p>
@@ -72,6 +76,6 @@
 <section class="sources"><h3>Sources</h3><ol><li>Promoitalia, Nucleofill range, webpromoitalia.com/nucleofill-range</li><li>Promoitalia UK, Nucleofill Medium, Strong, Soft Plus and Medium Plus product pages</li><li>Fox Pharma (UK distributor), Nucleofill Eyes, Face and Hair protocols</li></ol></section>
 </main>
 <footer class="foot"><p class="mark">Apex <span>Contour and Glow</span></p><p>Apex Hospital &amp; Clinics · LINE @apexbeauty · 080-500-0123</p><p class="fine">Individual results vary. Treatments are done by licensed doctors after a consultation.</p></footer>
-<script src="assets/js/site.js?v=6"></script>
+<script src="assets/js/site.js?v=9"></script>
 </body>
 </html>
