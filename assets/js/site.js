@@ -140,10 +140,42 @@
   const sec = document.getElementById('mirror');
   if (!sec || !window.CG_ZONES) return;
   const { zones, names, verts } = window.CG_ZONES;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let head = null;
   const out = sec.querySelector('.mo-list'), empty = sec.querySelector('.mo-empty');
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let picked = null;
+  // the face follows your hand: it turns toward the area you point at, and that area lights up
+  let lookYaw = -.3, hovered = null, showing = 0;
+  const GOLD = '#f2d49a';
+  const sideOf = z => { if (!head || !verts[z]) return 0; const a = head.anchor(verts[z]), w = document.getElementById('mirror-head').clientWidth; return (a.x / w - .5) * 2; };
+  const light = z => { if (!head) return; head.jumpAmount(1); head.setPlan(z && verts[z] ? [{ v: verts[z], ml: .0001, color: GOLD }] : []); };
+  const lookAt = z => { const s = z === 'skin' || !z ? 0 : sideOf(z); lookYaw = z ? (s < -.25 ? -.6 : s > .25 ? .3 : -.15) : -.3; };
+  sec.querySelectorAll('.fz').forEach(b => {
+    b.addEventListener('pointerenter', () => { hovered = b.dataset.z; lookAt(hovered); if (!showing) light(hovered); });
+    b.addEventListener('pointerleave', () => { hovered = null; if (!picked) lookAt(null); if (!showing) light(picked); });
+  });
+  // picking an area shows the treatment on the face: the muscle Botox relaxes moves and then lets go, and a filler area fills out in gold
+  const ACT = { forehead: 'brow', brows: 'frown', eyes: 'squint', lips: 'smile' };
+  const FILL = { temples: 1.5, undereyes: .6, cheeks: 1.6, smile: 1, lips: .8, chin: 1.2, jaw: 1.6, neck: .8 };
+  const tw = (ms, fn) => new Promise(res => { if (still) { fn(1); return res(); } const t0 = performance.now(); const f = now => { const u = Math.min(1, (now - t0) / ms); fn(u * u * (3 - 2 * u)); u < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+  const show = async z => {
+    if (!head) return; const id = ++showing; lookAt(z);
+    const act = ACT[z];
+    if (act) {
+      light(null);
+      await tw(650, u => head.setFace({ [act]: u })); await new Promise(r => setTimeout(r, 700));
+      if (id !== showing) return;
+      await tw(1100, u => head.setFace({ [act]: 1 - u }));
+    }
+    if (id !== showing) return;
+    if (FILL[z]) { head.setPlan([{ v: verts[z], ml: FILL[z], color: GOLD }]); head.jumpAmount(0); head.setAmount(1); }
+    else if (z === 'skin') head.setPlan(Object.values(verts).map(v => ({ v, ml: .0001, color: GOLD })));
+    else light(z);
+    showing = 0;
+  };
   sec.querySelectorAll('.fz').forEach(b => b.addEventListener('click', () => {
+    show(b.dataset.z);
     picked = b.dataset.z;
     sec.querySelectorAll('.fz').forEach(x => x.setAttribute('aria-pressed', x === b));
     const list = zones[picked] || [];
@@ -157,9 +189,9 @@
   const stage = sec.querySelector('.mirror-stage'), host = document.getElementById('mirror-head');
   const leads = sec.querySelector('.mirror-leads'), ctx = leads.getContext('2d');
   const btn = {}; sec.querySelectorAll('.fz-col .fz').forEach(b => btn[b.dataset.z] = b);
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches, narrow = matchMedia('(max-width: 700px)');
+  const narrow = matchMedia('(max-width: 700px)');
   narrow.addEventListener('change', () => sec.querySelectorAll('.fz-col .fz').forEach(b => b.style.top = ''));
-  let head = null, onScreen = false;
+  let onScreen = false;
   const draw = () => {
     if (!head) return;
     const sr = stage.getBoundingClientRect(), hr = host.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
@@ -197,9 +229,9 @@
   const start = () => {
     if (head !== null) return; head = false;
     import('./../features/filler/head.js').then(m => m.createHead(host, {
-      base: 'assets/', sparkle: true, sparse: true, features: true, centre: true, wipe: 0, yaw: -.4, gender: 'female', zoom: .74,
+      base: 'assets/', sparkle: true, sparse: true, features: true, centre: true, wipe: 0, yaw: -.3, morph: .5, zoom: .74,
       visible: () => onScreen && !sec.querySelector('[data-panel="map"]').hidden,
-      onFrame: () => { if (!still && head) head.setYaw(-.4 + Math.sin(performance.now() / 5000) * .12); draw(); }
+      onFrame: () => { if (head) head.setYaw(lookYaw + (still ? 0 : Math.sin(performance.now() / 5000) * (hovered ? .03 : .1))); draw(); }
     })).then(h => { head = h; window.CG_mirrorHead = h; stage.classList.add('live'); draw(); document.dispatchEvent(new Event('cg:mirror-ready')); }).catch(() => { head = null; stage.classList.add('flat'); });
   };
   new IntersectionObserver(es => es.forEach(e => { onScreen = e.isIntersecting; if (onScreen) start(); }), { rootMargin: '200px' }).observe(stage);
@@ -236,7 +268,9 @@
   if (!cameo || !window.IntersectionObserver) return;
   const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
   if (store.get('cg-guide') === 'off') return;
-  const say = document.getElementById('cameo-say'), dust = document.getElementById('dust'), dx = dust.getContext('2d');
+  let dust = document.getElementById('dust');
+  if (!dust) { dust = document.createElement('canvas'); dust.className = 'dust'; dust.setAttribute('aria-hidden', 'true'); document.body.append(dust); }
+  const say = document.getElementById('cameo-say'), dx = dust.getContext('2d');
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const LINES = {
     card: "Each dance is one treatment. Contour shapes the face, and Glow works on the skin.",
@@ -246,6 +280,8 @@
     rsvp: "Tell us what you'd like to try, and we reply on LINE or by phone."
   };
   const OPEN = "Good evening. I'll take you through tonight's programme.";
+  const BYE = "Thank you. See you at the clinic.";
+  let pitchAdd = 0;
   let head = null, speaker = null, jawT = 0, jaw = 0, blinkAt = performance.now() + 2500, blink = 0, mouse = [0, 0], inMirror = false, moving = false;
   const said = new Set();
 
@@ -278,7 +314,7 @@
     if (now > blinkAt) { blink = Math.min(1, blink + .35); if (blink >= 1) blinkAt = now + 2800 + Math.random() * 3500; } else blink = Math.max(0, blink - .25);
     const f = face();
     if (f) f.setFace({ jaw, blink });
-    if (head && !inMirror) { head.setYaw(-.35 + mouse[0] * .35); head.setPitch(.04 - mouse[1] * .12); }
+    if (head && !inMirror) { head.setYaw(-.35 + mouse[0] * .35); head.setPitch(.04 - mouse[1] * .12 + pitchAdd); }
     requestAnimationFrame(life);
   };
   addEventListener('pointermove', e => { mouse = [e.clientX / innerWidth - .5, e.clientY / innerHeight - .5]; });
@@ -329,8 +365,8 @@
   const start = () => {
     cameo.hidden = false;
     import('./../features/filler/head.js').then(m => m.createHead(document.getElementById('cameo-head'), {
-      base: 'assets/', sparkle: true, sparse: true, features: true, centre: true, wipe: 0, yaw: -.35, gender: 'female', zoom: .7
-    })).then(h => { head = h; requestAnimationFrame(life); if (!said.has('open')) { said.add('open'); setTimeout(() => speak(OPEN, 'cameo'), 600); } }).catch(() => { cameo.hidden = true; });
+      base: 'assets/', sparkle: true, sparse: true, features: true, centre: true, wipe: 0, yaw: -.35, morph: .5, zoom: .7
+    })).then(h => { head = h; requestAnimationFrame(life); if (!FACTS && !said.has('open')) { said.add('open'); setTimeout(() => speak(OPEN, 'cameo'), 600); } }).catch(() => { cameo.hidden = true; });
     ['card', 'fitting', 'mirror', 'entrance', 'rsvp'].map(id => document.getElementById(id)).filter(Boolean).forEach(p => io.observe(p));
   };
   const io = new IntersectionObserver(es => es.forEach(e => {
@@ -338,8 +374,28 @@
     if (id === 'mirror') { e.isIntersecting ? (window.CG_mirrorHead ? intoMirror() : document.addEventListener('cg:mirror-ready', intoMirror, { once: true })) : outOfMirror(); return; }
     if (e.isIntersecting && !said.has(id) && !inMirror) { said.add(id); speak(LINES[id], 'cameo'); }
   }), { threshold: .45 });
+  // treatment pages: the guide stays quiet and gives one fact each time you tap it
+  const FACTS = window.CG_GUIDE || null;
+  if (FACTS) {
+    let k = 0;
+    cameo.setAttribute('role', 'button'); cameo.tabIndex = 0; cameo.title = 'Tap for a quick fact';
+    const ask = e => { if (e.target.closest('.cameo-x')) return; speak(FACTS[k++ % FACTS.length], 'cameo'); if (head) nod(); };
+    cameo.addEventListener('click', ask); cameo.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ask(e); } });
+  }
+  // a small nod: the head dips and comes back up
+  let nodding = false;
+  const nod = () => { if (nodding || still) return; nodding = true; const t0 = performance.now(); const f = now => { const u = Math.min(1, (now - t0) / 700); pitchAdd = Math.sin(u * Math.PI) * .12; u < 1 ? requestAnimationFrame(f) : (pitchAdd = 0, nodding = false); }; requestAnimationFrame(f); };
+  // RSVP: the guide thanks you, nods and drifts away as dust
+  const form = document.querySelector('.rsvp-card');
+  if (form) form.addEventListener('submit', async () => {
+    if (!head || inMirror) return;
+    speak(BYE, 'cameo'); nod();
+    await new Promise(r => setTimeout(r, 3200));
+    await tween(1400, u => head.setFace({ scatter: u * .7 }));
+    cameo.classList.add('away'); setTimeout(() => say.classList.remove('on'), 1600);
+  });
   cameo.querySelector('.cameo-x').addEventListener('click', () => { store.set('cg-guide', 'off'); cameo.hidden = true; say.classList.remove('on'); talking++; });
   // the guide arrives once the curtain has opened
   const go = () => { start(); };
-  document.body.classList.contains('opened') ? setTimeout(go, 400) : new MutationObserver((m, o) => { if (document.body.classList.contains('opened')) { o.disconnect(); setTimeout(go, 1200); } }).observe(document.body, { attributes: true });
+  !document.getElementById('curtain') || document.body.classList.contains('opened') ? setTimeout(go, 400) : new MutationObserver((m, o) => { if (document.body.classList.contains('opened')) { o.disconnect(); setTimeout(go, 1200); } }).observe(document.body, { attributes: true });
 })();

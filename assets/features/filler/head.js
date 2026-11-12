@@ -16,7 +16,7 @@ const RADIUS = .16;             // spread of one injection on the skin, decimetr
 const VS = `
 attribute vec3 aPosB; attribute vec3 aNrmA; attribute vec3 aNrmB; attribute float aRnd; attribute float aEdge;
 attribute float aKind; attribute float aAo; attribute float aDispA; attribute float aDispB; attribute vec3 aCol; attribute float aHeat;
-uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark, uCalm, uJaw, uBlink, uMouth, uEye, uScatter;
+uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark, uCalm, uJaw, uBlink, uMouth, uEye, uScatter, uBrow, uFrown, uSquint, uSmile;
 varying float vA; varying vec3 vC; varying float vH; varying float vR; varying float vF;
 float is(float v, float t){ return 1. - step(.1, abs(v - t)); }
 void main(){
@@ -32,6 +32,23 @@ void main(){
   vec2 hz = vec2(uMouth + .42, .3), yz = p.yz - hz;
   p.yz = hz + vec2(yz.x * cos(ang) - yz.y * sin(ang), yz.x * sin(ang) + yz.y * cos(ang));
   p.y += uJaw * .014 * is(aKind, 1.) * (1. - below);
+  /* expressions: raised brows, a frown, a squint, a smile. Each moves only the points of its own muscles */
+  float ax = abs(p.x), sx = sign(p.x);
+  float front = smoothstep(.95, 1.12, p.z);
+  float browW = exp(-pow((p.y - (uEye + .16)) / .06, 2.)) * smoothstep(.05, .15, ax) * (1. - smoothstep(.48, .62, ax)) * front;
+  float foreW = smoothstep(uEye + .1, uEye + .28, p.y) * (1. - smoothstep(uEye + .42, uEye + .6, p.y)) * (1. - smoothstep(.45, .6, ax)) * front;
+  float cheekW = exp(-pow((p.y - (uEye - .14)) / .08, 2.)) * smoothstep(.14, .28, ax) * (1. - smoothstep(.55, .7, ax)) * front;
+  float cornerW = exp(-pow((ax - .18) / .07, 2.)) * exp(-pow((p.y - uMouth) / .06, 2.)) * smoothstep(1.08, 1.22, p.z);
+  float crowW = exp(-pow((ax - .5) / .08, 2.)) * exp(-pow((p.y - uEye) / .09, 2.));
+  p.y += uBrow * (.085 * browW + .03 * foreW);
+  p.y -= uFrown * .07 * browW * (1. - smoothstep(.18, .42, ax));
+  p.x -= sx * uFrown * .05 * browW * (1. - smoothstep(.15, .4, ax));
+  p.y += uSquint * (.05 * is(aKind, 6.) + .045 * cheekW) - uSquint * .03 * is(aKind, 5.);
+  p.x -= sx * uSquint * .03 * crowW;
+  p.y += uSmile * (.08 * cornerW + .04 * cheekW);
+  p.x += sx * uSmile * .05 * cornerW;
+  /* the working muscles glow while they move, so the change is easy to see */
+  float hx = clamp(uBrow * (browW + .6 * foreW) + uFrown * browW * (1. - smoothstep(.18, .42, ax)) + uSquint * (cheekW + crowW + is(aKind, 6.)) + uSmile * (cornerW + .7 * cheekW), 0., 1.);
   /* blink: the upper lid comes down over the eye */
   p.y -= uBlink * .085 * is(aKind, 5.) * smoothstep(-.1, .05, p.y - uEye);
   /* dust: the points drift apart along a slow swirl */
@@ -48,6 +65,7 @@ void main(){
   /* nearer is brighter, so the shape of the head reads in depth */
   float depth = 1. - smoothstep(0., 1., (-mv.z - uFocus) / uDepthR) * .72;
   vH = h; vC = aCol;
+  if (hx > vH) { vH = hx; vC = vec3(1.5, 1.18, .72); }
   vA = back * tone * keep * depth * (uIsLine > .5 ? mix(uLine, .5, h) : 1.);
   float ew = aEdge < .5 ? 1. : (aEdge < 1.5 ? .75 : .55);
   vA *= uIsLine > .5 ? 1. : ew;
@@ -68,7 +86,7 @@ void main(){
   vA *= mix(1., tw + fl * 2.2, uSpark);
   vA *= mix(1., aEdge < .5 ? 1. : .8, uCalm * uSpark);
   float big = mix(1., (.7 + fl * 2.6) * mix(1.15, 1.1, uCalm), uSpark);
-  gl_PointSize = clamp(uSize * big * (1. + h * .9) * (.75 + aRnd * .5) * 3.4 / -mv.z, 1., mix(8., 22., uSpark)) * uPix;
+  gl_PointSize = clamp(uSize * big * (1. + max(h, hx * 1.3) * .9) * (.75 + aRnd * .5) * 3.4 / -mv.z, 1., mix(8., 22., uSpark)) * uPix;
 }`;
 const FS = `
 varying float vA; varying vec3 vC; varying float vH; varying float vR; varying float vF;
@@ -166,8 +184,8 @@ export async function createHead(host, opts = {}){
   renderer.setClearColor(0x000000, 0); renderer.setPixelRatio(pix);
   host.prepend(renderer.domElement);
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(26, 1, .05, 100);
-  const U = {uMorph:{value:opts.gender === 'male' ? 1 : 0}, uAfter:{value:1}, uPix:{value:pix}, uSize:{value:2.6}, uCut:{value:H.cutF},
-    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}, uCalm:{value:opts.sparkle ? 1 : 0}, uJaw:{value:0}, uBlink:{value:0}, uMouth:{value:5.866}, uEye:{value:6.47}, uScatter:{value:0}};
+  const U = {uMorph:{value:opts.morph ?? (opts.gender === 'male' ? 1 : 0)}, uAfter:{value:1}, uPix:{value:pix}, uSize:{value:2.6}, uCut:{value:H.cutF},
+    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}, uCalm:{value:opts.sparkle ? 1 : 0}, uJaw:{value:0}, uBlink:{value:0}, uBrow:{value:0}, uFrown:{value:0}, uSquint:{value:0}, uSmile:{value:0}, uMouth:{value:5.866}, uEye:{value:6.47}, uScatter:{value:0}};
   const mat = (isLine, feat) => new THREE.ShaderMaterial({uniforms:{...U, uIsLine:{value:isLine ? 1 : 0}, uFeat:{value:feat ? 1 : 0}}, vertexShader:VS, fragmentShader:FS, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending});
   const pmat = mat(false), lmat = mat(true);
   const points = new THREE.Points(pg, pmat), lines = new THREE.LineSegments(lg, lmat);
@@ -202,14 +220,19 @@ export async function createHead(host, opts = {}){
   const dropGeo = new THREE.SphereGeometry(1, 20, 14);
 
   /* framing: the face of the current gender */
-  const centre = g => {
+  const CEN = [], centre = g => {
+    if (!CEN[0]) CEN[0] = cen(0), CEN[1] = cen(1);
+    const a = CEN[0], b = CEN[1], t = Math.max(0, Math.min(1, g));
+    return {x:a.x + (b.x - a.x) * t, y:a.y + (b.y - a.y) * t, z:a.z, h:a.h + (b.h - a.h) * t};
+  };
+  const cen = g => {
     const p = g ? H.pm : H.pf, cut = g ? H.cutM : H.cutF;
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
     for (let i = 0; i < n; i++) { const y = p[i * 3 + 1]; if (y < cut) continue; x0 = Math.min(x0, p[i * 3]); x1 = Math.max(x1, p[i * 3]); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
     return {x:(x0 + x1) / 2, y:y0 + (y1 - y0) * .5, z:.45, h:y1 - y0};
   };
-  const yaw0 = opts.yaw ?? -.5;
-  const state = {g:opts.gender === 'male' ? 1 : 0, gT:opts.gender === 'male' ? 1 : 0, after:1, afterT:1, wipe:opts.wipe ?? .5, yaw:yaw0, yawT:yaw0, pitch:.04, plan:[], points:true, dirty:true};
+  const yaw0 = opts.yaw ?? -.5, g0 = opts.morph ?? (opts.gender === 'male' ? 1 : 0);
+  const state = {g:g0, gT:g0, after:1, afterT:1, wipe:opts.wipe ?? .5, yaw:yaw0, yawT:yaw0, pitch:.04, plan:[], points:true, dirty:true};
   const VIEWS = {front:0, q:-.62, side:-1.45};
 
   function computeDisp(){
@@ -274,7 +297,7 @@ export async function createHead(host, opts = {}){
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); state.dirty = true;
   }
   function place(cam = camera, yaw = state.yaw){
-    const C = centre(state.g > .5 ? 1 : 0), d = C.h * 2.55 / Math.min(1, cam.aspect) * (opts.zoom || 1);
+    const C = centre(state.g), d = C.h * 2.55 / Math.min(1, cam.aspect) * (opts.zoom || 1);
     cam.position.set(C.x + Math.sin(yaw) * d * Math.cos(state.pitch), C.y + Math.sin(state.pitch) * d, C.z + Math.cos(yaw) * d * Math.cos(state.pitch));
     cam.lookAt(C.x, C.y, C.z);
     if (opts.centre) {
@@ -348,7 +371,8 @@ export async function createHead(host, opts = {}){
     setYaw(y){ state.yawT = y; state.dirty = true; },
     setPitch(p){ state.pitch = p; state.dirty = true; },
     /* speech and life: jaw 0 to 1, blink 0 to 1, scatter 0 (whole) to about .6 (dust) */
-    setFace({jaw, blink, scatter} = {}){ if (jaw != null) U.uJaw.value = jaw; if (blink != null) U.uBlink.value = blink; if (scatter != null) U.uScatter.value = scatter; state.dirty = true; },
+    setFace(f = {}){ const K = {jaw:'uJaw', blink:'uBlink', scatter:'uScatter', brow:'uBrow', frown:'uFrown', squint:'uSquint', smile:'uSmile'}; for (const k in f) if (K[k] && f[k] != null) U[K[k]].value = f[k]; state.dirty = true; },
+    getFace(k){ return ({jaw:U.uJaw, brow:U.uBrow, frown:U.uFrown, squint:U.uSquint, smile:U.uSmile, scatter:U.uScatter})[k].value; },
     resize(){ size(); },
     /* a still of the head with no filler (0) or the chosen amount, for the saved image */
     snapshot(after, w = 700, h = 840, yaw = 0){

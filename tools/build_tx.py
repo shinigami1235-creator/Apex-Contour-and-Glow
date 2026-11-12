@@ -1,10 +1,10 @@
 # Builds one page per treatment from tools/tx_content.py. Edit the content file, then run: python3 tools/build_tx.py
-import html, os, sys
+import html, json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 from tx_art import icon
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CSS_V = 18; JS_V = 12
+CSS_V = 19; JS_V = 13
 E = html.escape
 ROMAN = ['I','II','III','IV','V','VI','VII']
 CASES = {'botox': 7}
@@ -76,6 +76,9 @@ def page(slug, t):
   <p class="fine">Individual results vary.</p>
 </section>'''
     nav_results = '<a href="#entrance">Results</a>' if t.get('results') else ''
+    lines = [f'{t["name"]} at Apex starts at {t["price_from"]} ({t["price_note"]}).'] if t.get('price_from') else [f'{t["price_note"]}.']
+    lines += [f'{k}: {v}.' for k, v in t['facts']]
+    guide_json = json.dumps(lines).replace('</', '<\\/')
     src = ''.join(f'<li>{E(s)}</li>' for s in t['sources'])
     return f'''<!DOCTYPE html>
 <html lang="en">
@@ -133,6 +136,9 @@ def page(slug, t):
 <section class="sources"><h3>Sources</h3><ol>{src}</ol></section>
 </main>
 <footer class="foot"><p class="mark">Apex <span>Contour and Glow</span></p><p>Apex Hospital &amp; Clinics · LINE @apexbeauty · 080-500-0123</p><p class="fine">Individual results vary. Treatments are done by licensed doctors after a consultation.</p></footer>
+<div class="cameo" id="cameo" hidden><div class="cameo-head" id="cameo-head"></div><button type="button" class="cameo-x" aria-label="Hide the guide">&times;</button></div>
+<p class="cameo-say" id="cameo-say" aria-live="polite"></p>
+<script>window.CG_GUIDE = {guide_json};</script>
 <script src="assets/js/site.js?v={JS_V}"></script>
 </body>
 </html>'''
