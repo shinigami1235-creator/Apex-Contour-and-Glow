@@ -16,7 +16,7 @@ const RADIUS = .16;             // spread of one injection on the skin, decimetr
 const VS = `
 attribute vec3 aPosB; attribute vec3 aNrmA; attribute vec3 aNrmB; attribute float aRnd; attribute float aEdge;
 attribute float aKind; attribute float aAo; attribute float aDispA; attribute float aDispB; attribute vec3 aCol; attribute float aHeat;
-uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark;
+uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark, uCalm;
 varying float vA; varying vec3 vC; varying float vH; varying float vR; varying float vF;
 float is(float v, float t){ return 1. - step(.1, abs(v - t)); }
 void main(){
@@ -42,14 +42,23 @@ void main(){
   /* sparkle: every point twinkles at its own pace, and a few flare bright at a time */
   float tw = .45 + .55 * (.5 + .5 * sin(uTime * (1.1 + aRnd * 2.6) + aRnd * 37.));
   float fl = pow(max(0., sin(uTime * (.35 + aRnd * .5) + aRnd * 91.)), 28.);
+  /* calm: the face is lit from one side so its shape reads, the outline glows, and only a few lights flare at a time */
+  vec3 nv = normalize(normalMatrix * n);
+  float lam = max(0., dot(nv, normalize(vec3(-.55, .45, .7))));
+  float rim = pow(1. - clamp(f, 0., 1.), 2.2);
+  float shape = .45 + 1.5 * lam + 1.6 * rim;
+  float rare = step(.93, fract(aRnd * 7.31)) * pow(max(0., sin(uTime * (.25 + aRnd * .3) + aRnd * 53.)), 40.);
+  float twc = .85 + .15 * sin(uTime * (.8 + aRnd) + aRnd * 29.);
+  tw = mix(tw, twc * shape, uCalm); fl = mix(fl, rare, uCalm);
   vR = aRnd; vF = fl * uSpark;
   vA *= mix(1., tw + fl * 2.2, uSpark);
-  float big = mix(1., (.7 + fl * 2.6) * 1.15, uSpark);
+  vA *= mix(1., aEdge < .5 ? 1. : .8, uCalm * uSpark);
+  float big = mix(1., (.7 + fl * 2.6) * mix(1.15, 1.1, uCalm), uSpark);
   gl_PointSize = clamp(uSize * big * (1. + h * .9) * (.75 + aRnd * .5) * 3.4 / -mv.z, 1., mix(8., 22., uSpark)) * uPix;
 }`;
 const FS = `
 varying float vA; varying vec3 vC; varying float vH; varying float vR; varying float vF;
-uniform float uIsLine, uSpark;
+uniform float uIsLine, uSpark, uCalm;
 void main(){
   if (uSpark > .5 && uIsLine < .5) {
     vec2 c = gl_PointCoord - .5; float d = length(c);
@@ -58,7 +67,7 @@ void main(){
     float a = exp(-d * d * 60.) + .35 * exp(-d * d * 9.) + vF * .6 * (exp(-abs(c.x) * 40.) + exp(-abs(c.y) * 40.)) * (1. - d * 2.);
     vec3 base = mix(vec3(1., .95, .99), vec3(.98, .80, .50), smoothstep(.35, .9, vR));
     vec3 col = mix(base, vC, min(1., vH * 1.4));
-    gl_FragColor = vec4(col, a * vA * (.5 + vH * .6));
+    gl_FragColor = vec4(col, a * vA * (mix(.5, 1.1, uCalm) + vH * .6));
     return;
   }
   float d = 0.;
@@ -143,7 +152,7 @@ export async function createHead(host, opts = {}){
   host.prepend(renderer.domElement);
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(26, 1, .05, 100);
   const U = {uMorph:{value:opts.gender === 'male' ? 1 : 0}, uAfter:{value:1}, uPix:{value:pix}, uSize:{value:2.6}, uCut:{value:H.cutF},
-    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}};
+    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}, uCalm:{value:opts.sparkle ? 1 : 0}};
   const mat = (isLine) => new THREE.ShaderMaterial({uniforms:{...U, uIsLine:{value:isLine ? 1 : 0}}, vertexShader:VS, fragmentShader:FS, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending});
   const pmat = mat(false), lmat = mat(true);
   const points = new THREE.Points(pg, pmat), lines = new THREE.LineSegments(lg, lmat);

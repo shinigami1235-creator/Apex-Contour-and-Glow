@@ -78,93 +78,84 @@
     new IntersectionObserver((es, ob) => es.forEach(e => { if (e.isIntersecting) { fit.classList.add('in'); ob.disconnect(); } }), { threshold: 0.25 }).observe(fit);
   } else if (fit) fit.classList.add('in');
 
-  // ---- before and after: a misted mirror. The before shows through the mist, and wiping it shows the after. ----
+  // ---- before and after: an ornate mirror shows the before, smoke fills it, and as the smoke clears the after is there ----
   const cmp = document.getElementById('compare');
-  if (cmp && cmp.classList.contains('fogmirror')) {
-    const glass = cmp.querySelector('.fm-glass'), after = cmp.querySelector('.after'), before = cmp.querySelector('.before');
-    const cv = cmp.querySelector('.fm-fog'), ctx = cv.getContext('2d'), fog = document.createElement('canvas'), fx = fog.getContext('2d');
-    const kind = cmp.dataset.set || 'profhilo', still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let W = 0, H = 0, dpr = 1, last = 0, held = false, prev = null, raf = 0, demoed = false, wiped = 0;
-    const cover = (c, img, w, h) => {
-      const r = Math.max(w / img.naturalWidth, h / img.naturalHeight), iw = img.naturalWidth * r, ih = img.naturalHeight * r;
-      c.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih);
-    };
-    // the mist: the before photo under a pale haze, uneven like breath on glass, with a few drops
-    const buildFog = () => {
-      fog.width = W; fog.height = H;
-      fx.save(); fx.filter = 'blur(' + (1.2 * dpr) + 'px)'; cover(fx, before, W, H); fx.restore();
-      fx.fillStyle = 'rgba(236,230,243,.30)'; fx.fillRect(0, 0, W, H);
-      let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-      for (let i = 0; i < 26; i++) {
-        const x = rnd() * W, y = rnd() * H, r = (.12 + rnd() * .3) * W, g = fx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, `rgba(245,240,250,${.05 + rnd() * .09})`); g.addColorStop(1, 'rgba(245,240,250,0)');
-        fx.fillStyle = g; fx.fillRect(0, 0, W, H);
+  if (cmp && cmp.classList.contains('smokemirror')) {
+    const before = cmp.querySelector('.before'), after = cmp.querySelector('.after'), cv = cmp.querySelector('.sm-smoke');
+    const state = cmp.querySelector('.sm-state'), flipBtn = cmp.querySelector('[data-sm="flip"]');
+    const LB = cmp.dataset.lb || 'Before', LA = cmp.dataset.la || 'After', kind = cmp.dataset.set || 'profhilo';
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let showing = 'before', run = 0;
+    const show = w => { showing = w; after.style.opacity = w === 'after' ? 1 : 0; state.textContent = w === 'after' ? LA : LB; flipBtn.textContent = w === 'after' ? 'Show the before' : 'Show the after'; };
+    const gl = still ? null : cv.getContext('webgl', { premultipliedAlpha: false, alpha: true });
+    let prog = null, uP, uT, uR;
+    if (gl) {
+      const vs = 'attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
+      const fs = `precision mediump float;varying vec2 v;uniform float uP,uT;uniform vec2 uR;
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<6;i++){s+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return s;}
+void main(){
+  vec2 p=v*vec2(uR.x/uR.y,1.)*2.4;
+  vec2 q=vec2(fbm(p+vec2(0.,uT*.12)),fbm(p+vec2(5.2,1.3)-vec2(uT*.07,0.)));
+  vec2 r=vec2(fbm(p+3.*q+vec2(1.7,9.2)+uT*.09),fbm(p+3.*q+vec2(8.3,2.8)-uT*.06));
+  float f=fbm(p+3.2*r+vec2(0.,-uT*.2));
+  float e=length((v-.5)*vec2(1.,.8))*2.;
+  float d=f+(uP*1.9-1.05)+(.5-v.y)*.5*(1.-uP)+e*.18;
+  /* thin bright strands curling through a softer body, like smoke in still air */
+  float w=pow(1.-abs(2.*fbm(p*1.1+2.*r-vec2(0.,uT*.14))-1.),2.5);
+  float body=smoothstep(.32,.8,d);
+  float lead=smoothstep(.05,.45,d)*(1.-body);
+  float dens=clamp(.2+.5*f+.6*w,0.,1.);
+  float a=body*mix(dens,1.,smoothstep(.85,1.,uP))+lead*w*.55;
+  vec3 c=mix(vec3(.6,.55,.66),vec3(.99,.97,1.),clamp(w*.7+f*.4,0.,1.));
+  gl_FragColor=vec4(c,min(a,.98));
+}`;
+      const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
+      prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) prog = null;
+      else {
+        gl.useProgram(prog); const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+        const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+        uP = gl.getUniformLocation(prog, 'uP'); uT = gl.getUniformLocation(prog, 'uT'); uR = gl.getUniformLocation(prog, 'uR');
+        gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       }
-      for (let i = 0; i < 70; i++) {
-        const x = rnd() * W, y = rnd() * H, r = (.6 + rnd() * 2.2) * dpr;
-        fx.fillStyle = 'rgba(255,255,255,.35)'; fx.beginPath(); fx.arc(x, y, r, 0, 7); fx.fill();
-        fx.fillStyle = 'rgba(60,40,70,.18)'; fx.beginPath(); fx.arc(x + r * .4, y + r * .5, r * .7, 0, 7); fx.fill();
-      }
+    }
+    const draw = (p, t) => {
+      const w = cv.clientWidth, hh = cv.clientHeight, d = Math.min(1.5, devicePixelRatio || 1);
+      if (cv.width !== Math.round(w * d)) { cv.width = Math.round(w * d); cv.height = Math.round(hh * d); }
+      gl.viewport(0, 0, cv.width, cv.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.uniform1f(uP, p); gl.uniform1f(uT, t); gl.uniform2f(uR, cv.width, cv.height); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
-    const mist = () => { ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.clearRect(0, 0, W, H); ctx.drawImage(fog, 0, 0); wiped = 0; };
-    const size = () => {
-      const r = glass.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1);
-      W = cv.width = Math.round(r.width * dpr); H = cv.height = Math.round(r.height * dpr);
-      if (before.complete && before.naturalWidth) { buildFog(); mist(); cmp.classList.add('ready'); }
-    };
-    const wipe = (x0, y0, x1, y1) => {
-      const R = W * .11, d = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.ceil(d / (R * .25)));
-      ctx.globalCompositeOperation = 'destination-out'; ctx.globalAlpha = 1;
-      for (let i = 0; i <= n; i++) {
-        const x = x0 + (x1 - x0) * i / n, y = y0 + (y1 - y0) * i / n, g = ctx.createRadialGradient(x, y, R * .35, x, y, R);
-        g.addColorStop(0, 'rgba(0,0,0,.9)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R, 0, 7); ctx.fill();
-      }
-      last = performance.now(); wiped += d; tick();
-    };
-    // the mist creeps back a few seconds after you stop, unless the mirror was cleared on purpose
-    const tick = () => {
-      if (raf) return;
+    const ease = x => x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+    // the before for a moment, smoke rolls in, the after is swapped in behind it, and the smoke drifts away
+    const play = () => {
+      const id = ++run; show('before');
+      if (!prog) { setTimeout(() => { if (id === run) show('after'); }, 1200); return; }
+      const t0 = performance.now(), IN = [900, 3100], HOLD = 3700, OUT = 6400;
+      let swapped = false;
       const step = now => {
-        raf = 0;
-        if (held || !wiped) return;
-        if (now - last > 4000) {
-          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = .018; ctx.drawImage(fog, 0, 0); ctx.globalAlpha = 1;
-          if (now - last > 9000) { mist(); return; }
-        }
-        raf = requestAnimationFrame(step);
+        if (id !== run) return;
+        const t = now - t0, s = t / 1000;
+        let p = 0;
+        if (t < IN[0]) p = 0; else if (t < IN[1]) p = ease((t - IN[0]) / (IN[1] - IN[0])); else if (t < HOLD) p = 1; else p = 1 - ease(Math.min(1, (t - HOLD) / (OUT - HOLD)));
+        if (!swapped && t >= IN[1]) { swapped = true; show('after'); }
+        draw(p, s + 3);
+        if (t < OUT + 50) requestAnimationFrame(step); else draw(0, s);
       };
-      raf = requestAnimationFrame(step);
+      requestAnimationFrame(step);
     };
-    const at = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr]; };
-    cv.addEventListener('pointerdown', e => { held = false; prev = at(e); try { cv.setPointerCapture(e.pointerId); } catch (er) {} wipe(...prev, ...prev); cmp.classList.add('touched'); });
-    cv.addEventListener('pointermove', e => {
-      if (e.pointerType !== 'mouse' && !e.buttons) return;
-      const p = at(e); if (!prev) prev = p;
-      held = false; wipe(...prev, ...p); prev = p; cmp.classList.add('touched');
-    });
-    cv.addEventListener('pointerleave', () => prev = null);
-    cv.addEventListener('pointerup', () => prev = null);
-    cmp.querySelector('[data-fm="clear"]').addEventListener('click', () => {
-      held = true; let k = 0;
-      const sweep = () => { ctx.globalCompositeOperation = 'destination-out'; ctx.globalAlpha = .14; ctx.fillRect(0, 0, W, H); if (++k < 30) requestAnimationFrame(sweep); else ctx.clearRect(0, 0, W, H); };
-      still ? ctx.clearRect(0, 0, W, H) : sweep();
-    });
-    cmp.querySelector('[data-fm="fog"]').addEventListener('click', () => { held = false; mist(); });
-    // on first sight, one slow wipe across the glass shows what to do
-    const demo = () => {
-      if (demoed || still || cmp.classList.contains('touched')) return; demoed = true;
-      const t0 = performance.now(), pts = t => [W * (.18 + .64 * t), H * (.42 + .1 * Math.sin(t * 6.3))];
-      let p = pts(0);
-      const go = now => { const t = Math.min(1, (now - t0) / 1400), q = pts(t); wipe(...p, ...q); p = q; if (t < 1) requestAnimationFrame(go); };
-      requestAnimationFrame(go);
-    };
-    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && cmp.classList.contains('ready')) setTimeout(demo, 500); }), { threshold: .6 }).observe(cv);
-    before.addEventListener('load', size); new ResizeObserver(size).observe(glass); size();
+    show('before');
+    let seen = false;
+    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && !seen) { seen = true; setTimeout(play, 400); } }), { threshold: .55 }).observe(cmp.querySelector('.sm-frame'));
+    cmp.querySelector('[data-sm="play"]').addEventListener('click', play);
+    cmp.querySelector('.sm-glass').addEventListener('click', play);
+    flipBtn.addEventListener('click', () => { run++; if (prog) draw(0, 0); show(showing === 'after' ? 'before' : 'after'); });
     document.querySelectorAll('#thumbs button').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('#thumbs button').forEach(x => x.classList.toggle('on', x === b));
-      const i = b.dataset.i; held = false;
-      after.src = `assets/img/${kind}-${i}-after.webp`; before.src = `assets/img/${kind}-${i}-before.webp`;
+      const i = b.dataset.i; run++;
+      Promise.all([before, after].map((img, k) => new Promise(r => { img.onload = r; img.onerror = r; img.src = `assets/img/${kind}-${i}-${k ? 'after' : 'before'}.webp`; }))).then(play);
     }));
   }
 
@@ -248,9 +239,9 @@
   const start = () => {
     if (head !== null) return; head = false;
     import('./../features/filler/head.js').then(m => m.createHead(host, {
-      base: 'assets/', sparkle: true, wipe: 0, yaw: 0, gender: 'female', zoom: .74,
+      base: 'assets/', sparkle: true, wipe: 0, yaw: -.55, gender: 'female', zoom: .74,
       visible: () => onScreen && !sec.querySelector('[data-panel="map"]').hidden,
-      onFrame: () => { if (!still && head) head.setYaw(Math.sin(performance.now() / 4000) * .22); draw(); }
+      onFrame: () => { if (!still && head) head.setYaw(-.55 + Math.sin(performance.now() / 5000) * .12); draw(); }
     })).then(h => { head = h; stage.classList.add('live'); draw(); }).catch(() => { head = null; stage.classList.add('flat'); });
   };
   new IntersectionObserver(es => es.forEach(e => { onScreen = e.isIntersecting; if (onScreen) start(); }), { rootMargin: '200px' }).observe(stage);

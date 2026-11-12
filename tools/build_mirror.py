@@ -7,10 +7,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 E = html.escape
 # zone key, button label, vertex on the 3D head (heads.bin, female), which side its label sits
 ZONES = [
- ('forehead', 'Forehead', 463, 'l'), ('temples', 'Temples', 456, 'l'), ('undereyes', 'Under-eyes', 1739, 'l'),
- ('smile', 'Smile lines', 2081, 'l'), ('chin', 'Chin', 527, 'l'), ('neck', 'Neck', 2497, 'l'),
- ('brows', 'Between the brows', 84, 'r'), ('eyes', 'Around the eyes', 2397, 'r'), ('cheeks', 'Cheeks', 2545, 'r'),
- ('lips', 'Lips and mouth', 1429, 'r'), ('jaw', 'Jawline', 1721, 'r'),
+ ('forehead', 'Forehead', 93, 'l'), ('temples', 'Temples', 456, 'l'), ('brows', 'Between the brows', 84, 'r'),
+ ('eyes', 'Around the eyes', 1775, 'l'), ('undereyes', 'Under-eyes', 1739, 'r'), ('cheeks', 'Cheeks', 1920, 'l'),
+ ('smile', 'Smile lines', 2081, 'r'), ('lips', 'Lips and mouth', 1429, 'r'), ('jaw', 'Jawline', 1550, 'l'),
+ ('chin', 'Chin', 527, 'r'), ('neck', 'Neck', 2497, 'l'),
 ]
 MAP = {
  'Forehead': 'forehead', 'Between the brows': 'brows', "Crow's feet": 'eyes', 'Around the eyes': 'eyes',

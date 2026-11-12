@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 from tx_art import icon
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CSS_V = 16; JS_V = 9
+CSS_V = 17; JS_V = 11
 E = html.escape
 ROMAN = ['I','II','III','IV','V','VI','VII']
 CASES = {'botox': 7}
@@ -51,16 +51,18 @@ def page(slug, t):
         lb, la = R.get('labels', ('Before', 'After'))
         thumbs = ''.join(f'<button data-i="{i}" class="{"on" if i == 1 else ""}"><img src="assets/img/{R["set"]}-{i}-after.webp" alt="Case {i}" loading="lazy"></button>' for i in range(1, R['n'] + 1)) if R['n'] > 1 else ''
         results = f'''<section id="entrance" class="entrance">
-  <div class="entrance-head"><p class="kicker">The grand entrance</p><h2>Before and after</h2><p>{E(R.get("caption", t["name"] + " at Apex. Wipe the mist off the mirror to see the after."))}</p></div>
-  <div class="fogmirror" id="compare" data-set="{R["set"]}" style="--ar:{R.get("ar", "540/860")}">
-    <div class="fm-frame"><div class="fm-glass">
-      <img src="assets/img/{R["set"]}-1-after.webp" alt="After {E(t["name"])}" class="after">
-      <img src="assets/img/{R["set"]}-1-before.webp" alt="Before {E(t["name"])}" class="before">
-      <canvas class="fm-fog" aria-hidden="true"></canvas>
-      <span class="fm-sheen" aria-hidden="true"></span>
-    </div></div>
-    <p class="fm-plaque"><span>{E(lb)}</span> in the mist, <span>{E(la)}</span> where you wipe</p>
-    <div class="fm-tools"><button type="button" data-fm="clear">Clear the mirror</button><button type="button" data-fm="fog">Mist it again</button></div>
+  <div class="entrance-head"><p class="kicker">The grand entrance</p><h2>Before and after</h2><p>{E(R.get("caption", t["name"] + " at Apex. Watch the mirror as the smoke clears."))}</p></div>
+  <div class="smokemirror" id="compare" data-set="{R["set"]}" data-lb="{E(lb)}" data-la="{E(la)}" style="--ar:{R.get("ar", "540/860")}">
+    <div class="sm-frame">
+      <div class="sm-glass">
+        <img src="assets/img/{R["set"]}-1-before.webp" alt="Before {E(t["name"])}" class="before">
+        <img src="assets/img/{R["set"]}-1-after.webp" alt="After {E(t["name"])}" class="after">
+        <canvas class="sm-smoke" aria-hidden="true"></canvas><span class="sm-sheen" aria-hidden="true"></span>
+      </div>
+      <img src="assets/img/mirror-frame.webp" alt="" class="sm-ornate">
+    </div>
+    <p class="sm-state" aria-live="polite">{E(lb)}</p>
+    <div class="fm-tools"><button type="button" data-sm="play">See it again</button><button type="button" data-sm="flip">Show the before</button></div>
   </div>
   <div class="thumbs" id="thumbs">{thumbs}</div>
   <p class="fine">Individual results vary.</p>
