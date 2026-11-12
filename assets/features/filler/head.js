@@ -16,7 +16,7 @@ const RADIUS = .16;             // spread of one injection on the skin, decimetr
 const VS = `
 attribute vec3 aPosB; attribute vec3 aNrmA; attribute vec3 aNrmB; attribute float aRnd; attribute float aEdge;
 attribute float aKind; attribute float aAo; attribute float aDispA; attribute float aDispB; attribute vec3 aCol; attribute float aHeat;
-uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark, uCalm;
+uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark, uCalm, uJaw, uBlink, uMouth, uEye, uScatter;
 varying float vA; varying vec3 vC; varying float vH; varying float vR; varying float vF;
 float is(float v, float t){ return 1. - step(.1, abs(v - t)); }
 void main(){
@@ -25,6 +25,18 @@ void main(){
   vec3 n = normalize(mix(aNrmA, aNrmB, m));
   float a = max(uAfter, 0.);
   p += n * mix(aDispA, aDispB, m) * a;
+  /* speech: the lower face turns on a hinge near the ear, the upper lip lifts a little */
+  float below = 1. - smoothstep(uMouth - .025, uMouth + .012, p.y);
+  float jw = below * smoothstep(.2, .75, p.z) * smoothstep(5.2, 5.5, p.y);
+  float ang = -uJaw * .3 * jw;
+  vec2 hz = vec2(uMouth + .42, .3), yz = p.yz - hz;
+  p.yz = hz + vec2(yz.x * cos(ang) - yz.y * sin(ang), yz.x * sin(ang) + yz.y * cos(ang));
+  p.y += uJaw * .014 * is(aKind, 1.) * (1. - below);
+  /* blink: the upper lid comes down over the eye */
+  p.y -= uBlink * .085 * is(aKind, 5.) * smoothstep(-.1, .05, p.y - uEye);
+  /* dust: the points drift apart along a slow swirl */
+  vec3 sw = vec3(sin(aRnd * 91. + uTime * .7), cos(aRnd * 53. + uTime * .5), sin(aRnd * 27. - uTime * .6));
+  p += sw * uScatter * (.6 + aRnd * 1.4);
   vec4 mv = modelViewMatrix * vec4(p, 1.);
   gl_Position = projectionMatrix * mv;
   float f = dot(normalize(normalMatrix * n), normalize(-mv.xyz));
@@ -51,6 +63,8 @@ void main(){
   float twc = .85 + .15 * sin(uTime * (.8 + aRnd) + aRnd * 29.);
   tw = mix(tw, twc * shape, uCalm); fl = mix(fl, rare, uCalm);
   vR = aRnd; vF = fl * uSpark;
+  vA *= 1. - uBlink * is(aKind, 2.);
+  vA *= 1. - uScatter * .35;
   vA *= mix(1., tw + fl * 2.2, uSpark);
   vA *= mix(1., aEdge < .5 ? 1. : .8, uCalm * uSpark);
   float big = mix(1., (.7 + fl * 2.6) * mix(1.15, 1.1, uCalm), uSpark);
@@ -58,8 +72,9 @@ void main(){
 }`;
 const FS = `
 varying float vA; varying vec3 vC; varying float vH; varying float vR; varying float vF;
-uniform float uIsLine, uSpark, uCalm;
+uniform float uIsLine, uSpark, uCalm, uFeat;
 void main(){
+  if (uFeat > .5) { gl_FragColor = vec4(.98, .85, .6, min(1., vA * 1.1)); return; }
   if (uSpark > .5 && uIsLine < .5) {
     vec2 c = gl_PointCoord - .5; float d = length(c);
     if (d > .5) discard;
@@ -152,12 +167,36 @@ export async function createHead(host, opts = {}){
   host.prepend(renderer.domElement);
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(26, 1, .05, 100);
   const U = {uMorph:{value:opts.gender === 'male' ? 1 : 0}, uAfter:{value:1}, uPix:{value:pix}, uSize:{value:2.6}, uCut:{value:H.cutF},
-    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}, uCalm:{value:opts.sparkle ? 1 : 0}};
-  const mat = (isLine) => new THREE.ShaderMaterial({uniforms:{...U, uIsLine:{value:isLine ? 1 : 0}}, vertexShader:VS, fragmentShader:FS, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending});
+    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}, uCalm:{value:opts.sparkle ? 1 : 0}, uJaw:{value:0}, uBlink:{value:0}, uMouth:{value:5.866}, uEye:{value:6.47}, uScatter:{value:0}};
+  const mat = (isLine, feat) => new THREE.ShaderMaterial({uniforms:{...U, uIsLine:{value:isLine ? 1 : 0}, uFeat:{value:feat ? 1 : 0}}, vertexShader:VS, fragmentShader:FS, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending});
   const pmat = mat(false), lmat = mat(true);
   const points = new THREE.Points(pg, pmat), lines = new THREE.LineSegments(lg, lmat);
   points.frustumCulled = lines.frustumCulled = false;
   scene.add(lines, points);
+  /* constellation look: only the mesh's own points, not the extra ones along each edge */
+  if (opts.sparse) { pg.setDrawRange(0, n); U.uSize.value = 4.2; }
+  /* faint gold lines on the features: lips, the mouth line, the eyelids, and the bridge of the nose */
+  let feat = null;
+  if (opts.features) {
+    // only outlines: the lip edge (lip points that touch skin), the mouth line, and each eyelid's own row
+    const nb = Array.from({length:n}, () => []);
+    for (let q = 0; q < ne; q++) { const a = E[q * 2], b = E[q * 2 + 1]; nb[a].push(b); nb[b].push(a); }
+    const edgeOf = (i, k) => H.kind[i] === k && nb[i].some(j => H.kind[j] !== k);
+    const idx = [];
+    for (let q = 0; q < ne; q++) {
+      const a = E[q * 2], b = E[q * 2 + 1], ka = H.kind[a], kb = H.kind[b];
+      if (ka !== kb) continue;
+      const rim = i => nb[i].some(j => H.kind[j] === 2);   // a lid point on the eye opening
+      if (ka === 7 || ((ka === 5 || ka === 6) && rim(a) && rim(b)) || (ka === 1 && edgeOf(a, 1) && edgeOf(b, 1))) idx.push(a, b);
+    }
+    const fg = new THREE.BufferGeometry();
+    ['position', 'aPosB', 'aNrmA', 'aNrmB', 'aRnd', 'aEdge', 'aKind', 'aAo', 'aDispA', 'aDispB', 'aCol', 'aHeat'].forEach(k => fg.setAttribute(k, pg.getAttribute(k)));
+    fg.setIndex(new THREE.BufferAttribute(new Uint16Array(idx), 1));
+    feat = new THREE.LineSegments(fg, mat(true, true)); feat.frustumCulled = false; scene.add(feat);
+  }
+  /* where the mouth and eyes sit on each head, so speech and blinks land on the right rows */
+  const meanY = (k, p) => { let s = 0, c = 0; for (let i = 0; i < n; i++) if (H.kind[i] === k) { s += p[i * 3 + 1]; c++; } return c ? s / c : 0; };
+  const MOUTH = [meanY(7, H.pf), meanY(7, H.pm)], EYE = [meanY(2, H.pf), meanY(2, H.pm)];
   if (opts.sparkle) lines.visible = false;   // sparkle look: lights only, no net
   const drops = new THREE.Group(); scene.add(drops);
   const dropGeo = new THREE.SphereGeometry(1, 20, 14);
@@ -238,6 +277,15 @@ export async function createHead(host, opts = {}){
     const C = centre(state.g > .5 ? 1 : 0), d = C.h * 2.55 / Math.min(1, cam.aspect) * (opts.zoom || 1);
     cam.position.set(C.x + Math.sin(yaw) * d * Math.cos(state.pitch), C.y + Math.sin(state.pitch) * d, C.z + Math.cos(yaw) * d * Math.cos(state.pitch));
     cam.lookAt(C.x, C.y, C.z);
+    if (opts.centre) {
+      // keep the head's outline in the middle of the view, since a turned head carries more of its shape on the face side
+      cam.updateMatrixWorld(); const v = new THREE.Vector3(), P = state.g > .5 ? H.pm : H.pf, cut = state.g > .5 ? H.cutM : H.cutF;
+      let x0 = 9, x1 = -9;
+      for (let i = 0; i < n; i += 5) { if (P[i * 3 + 1] < cut) continue; v.set(P[i * 3], P[i * 3 + 1], P[i * 3 + 2]).project(cam); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); }
+      const off = (x0 + x1) / 2, right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0);
+      const span = 2 * d * Math.tan(cam.fov * Math.PI / 360) * cam.aspect / 2;
+      cam.position.addScaledVector(right, off * span);
+    }
     U.uFocus.value = d - 1.05;   // the front of the face
   }
   const setAmt = a => { U.uAfter.value = a; };
@@ -255,6 +303,7 @@ export async function createHead(host, opts = {}){
     if (opts.sparkle && !still) { U.uTime.value = now / 1000; state.dirty = true; }
     if (!moving && !state.dirty) return;
     U.uMorph.value = state.g; U.uCut.value = H.cutF + (H.cutM - H.cutF) * state.g;
+    U.uMouth.value = MOUTH[0] + (MOUTH[1] - MOUTH[0]) * state.g; U.uEye.value = EYE[0] + (EYE[1] - EYE[0]) * state.g;
     place();
     // the wipe: before (no filler) left of the line, after right of it
     const w = host.clientWidth || 600, h = host.clientHeight || 600, wx = Math.round(w * state.wipe);
@@ -297,6 +346,10 @@ export async function createHead(host, opts = {}){
       return {x:(s.x + 1) / 2 * host.clientWidth, y:(1 - s.y) / 2 * host.clientHeight, front:Math.max(0, Math.min(1, (f + .1) / .5))};
     },
     setYaw(y){ state.yawT = y; state.dirty = true; },
+    setPitch(p){ state.pitch = p; state.dirty = true; },
+    /* speech and life: jaw 0 to 1, blink 0 to 1, scatter 0 (whole) to about .6 (dust) */
+    setFace({jaw, blink, scatter} = {}){ if (jaw != null) U.uJaw.value = jaw; if (blink != null) U.uBlink.value = blink; if (scatter != null) U.uScatter.value = scatter; state.dirty = true; },
+    resize(){ size(); },
     /* a still of the head with no filler (0) or the chosen amount, for the saved image */
     snapshot(after, w = 700, h = 840, yaw = 0){
       const keep = {after:state.after, yaw:state.yaw};

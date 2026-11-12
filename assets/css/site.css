@@ -492,11 +492,34 @@ body.opened .ballroom-img,body.opening .ballroom-img{transform:scale(1)}
 /* the ornate smoke mirror (before and after) */
 .smokemirror{width:min(500px,90vw);margin:0 auto}
 .sm-frame{position:relative;aspect-ratio:1000/1316;filter:drop-shadow(0 30px 50px rgba(0,0,0,.6))}
-.sm-glass{position:absolute;left:23%;top:17.9%;width:54%;height:65.4%;border-radius:50%;overflow:hidden;background:#0c0410;cursor:pointer}
+.sm-glass{position:absolute;left:23%;top:17.9%;width:54%;height:65.4%;border-radius:50%;overflow:hidden;background:#0c0410;cursor:ew-resize;touch-action:pan-y;--x:50%}
 .sm-glass img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.sm-glass img.after{opacity:0}
-.sm-smoke{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .sm-sheen{position:absolute;inset:0;pointer-events:none;background:linear-gradient(122deg,rgba(255,255,255,0) 28%,rgba(255,255,255,.13) 36%,rgba(255,255,255,0) 44%),radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(10,2,14,.55) 100%)}
 .sm-ornate{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;user-select:none}
-.sm-state{margin:4px auto 0;font-family:var(--serif);font-style:italic;font-size:24px;color:var(--gold-hi)}
+.sm-state{display:flex;justify-content:space-between;width:min(300px,70%);margin:4px auto 0;font-family:var(--serif);font-style:italic;font-size:21px;color:var(--gold-hi)}
+.sm-state span:first-child::after{content:" \2039";color:var(--gold)} .sm-state span:last-child::before{content:"\203A ";color:var(--gold)}
+.sm-line{position:absolute;top:0;bottom:0;left:var(--x);width:2px;margin-left:-1px;pointer-events:none;background:linear-gradient(transparent,var(--gold-hi) 15%,#fff8e6 50%,var(--gold-hi) 85%,transparent);box-shadow:0 0 14px rgba(255,236,190,.85)}
+.sm-line i{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;rotate:45deg;background:linear-gradient(135deg,#fff6dc,var(--gold));box-shadow:0 0 16px rgba(255,236,190,.9)}
+.sm-line::before,.sm-line::after{content:"";position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:radial-gradient(#fff,rgba(255,240,200,0) 70%);animation:glint 2.4s ease-in-out infinite}
+.sm-line::before{top:22%}.sm-line::after{top:70%;animation-delay:1.2s}
+@keyframes glint{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1.3)}}
+.sm-range{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.sm-range:focus-visible + *,.sm-glass:has(.sm-range:focus-visible){outline:2px solid var(--gold-hi);outline-offset:4px}
 @media (prefers-reduced-motion:reduce){.sm-glass img.after{transition:opacity .4s}}
+
+.mirror-section [data-panel]{transition:opacity .5s ease,transform .7s cubic-bezier(.2,.8,.2,1),filter .5s ease}
+.mirror-section [data-panel].leaving{opacity:0;filter:blur(3px);transform:scale(.985)}
+.mirror-section [data-panel].arriving{opacity:0;transform:translateY(18px) scale(.985);filter:blur(4px);transition:none}
+@media (prefers-reduced-motion:reduce){.mirror-section [data-panel]{transition:none}}
+
+/* the guide: a cameo with a face of lights, bottom left */
+.cameo{position:fixed;right:clamp(12px,2vw,26px);bottom:calc(clamp(12px,2vw,26px) + 58px);z-index:40;width:118px;aspect-ratio:3/4;border-radius:50%;padding:5px;background:linear-gradient(135deg,var(--gold-hi),var(--gold) 45%,#8d6a35 75%,var(--gold-hi));box-shadow:0 14px 34px rgba(0,0,0,.55),0 0 24px rgba(201,160,99,.18);transition:opacity .6s ease,transform .6s ease}
+.cameo-head{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#2b1239,#0c0410 75%)}
+.cameo-head canvas{display:block;width:100%;height:100%}
+.cameo.away{opacity:0;transform:scale(.9)}
+.cameo-x{position:absolute;left:-4px;top:-4px;width:24px;height:24px;border-radius:50%;border:1px solid var(--gold);background:var(--night);color:var(--gold-hi);font:400 15px/1 var(--sans);cursor:pointer;opacity:0;transition:opacity .3s}
+.cameo:hover .cameo-x,.cameo-x:focus-visible{opacity:1}
+.cameo-say{position:fixed;right:calc(clamp(12px,2vw,26px) + 132px);bottom:calc(clamp(22px,3vw,40px) + 58px);text-align:right;z-index:40;max-width:min(360px,calc(100vw - 170px));margin:0;padding:12px 16px;background:rgba(13,5,16,.82);border:1px solid rgba(201,160,99,.45);font-family:var(--serif);font-style:italic;font-size:18px;line-height:1.4;color:var(--pearl);opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s;pointer-events:none}
+.cameo-say.on{opacity:1;transform:none}
+.dust{position:fixed;inset:0;width:100%;height:100%;z-index:39;pointer-events:none}
+@media (max-width:700px){.cameo{width:80px;bottom:70px}.cameo-say{right:104px;left:12px;max-width:none;font-size:15.5px;bottom:80px}}

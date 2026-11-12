@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=17">
+<link rel="stylesheet" href="assets/css/site.css?v=18">
 </head>
 <body class="has-curtain">
 
@@ -143,19 +143,20 @@
   <div class="entrance-head">
     <p class="kicker">The grand entrance</p>
     <h2>Before the ball and after</h2>
-    <p>Profhilo at Apex, one month after the first session. Watch the mirror as the smoke clears.</p>
+    <p>Profhilo at Apex, one month after the first session. Drag the line across the mirror to compare.</p>
   </div>
   <div class="smokemirror" id="compare" data-set="profhilo" data-lb="Before" data-la="After 1 month" style="--ar:540/860">
     <div class="sm-frame">
       <div class="sm-glass">
-        <img src="assets/img/profhilo-1-before.webp" alt="Before Profhilo" class="before">
         <img src="assets/img/profhilo-1-after.webp" alt="After Profhilo, one month" class="after">
-        <canvas class="sm-smoke" aria-hidden="true"></canvas><span class="sm-sheen" aria-hidden="true"></span>
+        <img src="assets/img/profhilo-1-before.webp" alt="Before Profhilo" class="before">
+        <span class="sm-line" aria-hidden="true"><i></i></span><span class="sm-sheen" aria-hidden="true"></span>
+        <input class="sm-range" type="range" min="0" max="100" value="50" aria-label="Move the line between before and after">
       </div>
       <img src="assets/img/mirror-frame.webp" alt="" class="sm-ornate">
     </div>
-    <p class="sm-state" aria-live="polite">Before</p>
-    <div class="fm-tools"><button type="button" data-sm="play">See it again</button><button type="button" data-sm="flip">Show the before</button></div>
+    <p class="sm-state"><span>Before</span><span>After 1 month</span></p>
+    <div class="fm-tools"><button type="button" data-sm="play">Play it again</button></div>
   </div>
   <div class="thumbs" id="thumbs"><button data-i="1" class="on"><img src="assets/img/profhilo-1-after.webp" alt="Case 1"></button><button data-i="2" class=""><img src="assets/img/profhilo-2-after.webp" alt="Case 2"></button><button data-i="3" class=""><img src="assets/img/profhilo-3-after.webp" alt="Case 3"></button><button data-i="4" class=""><img src="assets/img/profhilo-4-after.webp" alt="Case 4"></button><button data-i="5" class=""><img src="assets/img/profhilo-5-after.webp" alt="Case 5"></button><button data-i="6" class=""><img src="assets/img/profhilo-6-after.webp" alt="Case 6"></button></div>
   <p class="fine">Individual results vary.</p>
@@ -188,6 +189,9 @@
   <p class="fine">Individual results vary. Treatments are done by licensed doctors after a consultation.</p>
 </footer>
 
-<script src="assets/js/site.js?v=11"></script>
+<div class="cameo" id="cameo" hidden><div class="cameo-head" id="cameo-head"></div><button type="button" class="cameo-x" aria-label="Hide the guide">&times;</button></div>
+<p class="cameo-say" id="cameo-say" aria-live="polite"></p>
+<canvas class="dust" id="dust" aria-hidden="true"></canvas>
+<script src="assets/js/site.js?v=12"></script>
 </body>
 </html>

@@ -78,80 +78,38 @@
     new IntersectionObserver((es, ob) => es.forEach(e => { if (e.isIntersecting) { fit.classList.add('in'); ob.disconnect(); } }), { threshold: 0.25 }).observe(fit);
   } else if (fit) fit.classList.add('in');
 
-  // ---- before and after: an ornate mirror shows the before, smoke fills it, and as the smoke clears the after is there ----
+  // ---- before and after: the magic mirror. A gold line sweeps across on its own once, then follows your finger or mouse. ----
   const cmp = document.getElementById('compare');
   if (cmp && cmp.classList.contains('smokemirror')) {
-    const before = cmp.querySelector('.before'), after = cmp.querySelector('.after'), cv = cmp.querySelector('.sm-smoke');
-    const state = cmp.querySelector('.sm-state'), flipBtn = cmp.querySelector('[data-sm="flip"]');
-    const LB = cmp.dataset.lb || 'Before', LA = cmp.dataset.la || 'After', kind = cmp.dataset.set || 'profhilo';
+    const glass = cmp.querySelector('.sm-glass'), before = cmp.querySelector('.before'), after = cmp.querySelector('.after');
+    const range = cmp.querySelector('.sm-range'), kind = cmp.dataset.set || 'profhilo';
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let showing = 'before', run = 0;
-    const show = w => { showing = w; after.style.opacity = w === 'after' ? 1 : 0; state.textContent = w === 'after' ? LA : LB; flipBtn.textContent = w === 'after' ? 'Show the before' : 'Show the after'; };
-    const gl = still ? null : cv.getContext('webgl', { premultipliedAlpha: false, alpha: true });
-    let prog = null, uP, uT, uR;
-    if (gl) {
-      const vs = 'attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
-      const fs = `precision mediump float;varying vec2 v;uniform float uP,uT;uniform vec2 uR;
-float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
-float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<6;i++){s+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return s;}
-void main(){
-  vec2 p=v*vec2(uR.x/uR.y,1.)*2.4;
-  vec2 q=vec2(fbm(p+vec2(0.,uT*.12)),fbm(p+vec2(5.2,1.3)-vec2(uT*.07,0.)));
-  vec2 r=vec2(fbm(p+3.*q+vec2(1.7,9.2)+uT*.09),fbm(p+3.*q+vec2(8.3,2.8)-uT*.06));
-  float f=fbm(p+3.2*r+vec2(0.,-uT*.2));
-  float e=length((v-.5)*vec2(1.,.8))*2.;
-  float d=f+(uP*1.9-1.05)+(.5-v.y)*.5*(1.-uP)+e*.18;
-  /* thin bright strands curling through a softer body, like smoke in still air */
-  float w=pow(1.-abs(2.*fbm(p*1.1+2.*r-vec2(0.,uT*.14))-1.),2.5);
-  float body=smoothstep(.32,.8,d);
-  float lead=smoothstep(.05,.45,d)*(1.-body);
-  float dens=clamp(.2+.5*f+.6*w,0.,1.);
-  float a=body*mix(dens,1.,smoothstep(.85,1.,uP))+lead*w*.55;
-  vec3 c=mix(vec3(.6,.55,.66),vec3(.99,.97,1.),clamp(w*.7+f*.4,0.,1.));
-  gl_FragColor=vec4(c,min(a,.98));
-}`;
-      const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
-      prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog);
-      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) prog = null;
-      else {
-        gl.useProgram(prog); const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-        const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-        uP = gl.getUniformLocation(prog, 'uP'); uT = gl.getUniformLocation(prog, 'uT'); uR = gl.getUniformLocation(prog, 'uR');
-        gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-      }
-    }
-    const draw = (p, t) => {
-      const w = cv.clientWidth, hh = cv.clientHeight, d = Math.min(1.5, devicePixelRatio || 1);
-      if (cv.width !== Math.round(w * d)) { cv.width = Math.round(w * d); cv.height = Math.round(hh * d); }
-      gl.viewport(0, 0, cv.width, cv.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.uniform1f(uP, p); gl.uniform1f(uT, t); gl.uniform2f(uR, cv.width, cv.height); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    };
-    const ease = x => x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
-    // the before for a moment, smoke rolls in, the after is swapped in behind it, and the smoke drifts away
+    let run = 0;
+    const set = v => { v = Math.max(0, Math.min(100, v)); before.style.clipPath = `inset(0 ${100 - v}% 0 0)`; glass.style.setProperty('--x', v + '%'); range.value = v; };
+    const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+    // one slow pass: all before, across to all after, then back to the middle
     const play = () => {
-      const id = ++run; show('before');
-      if (!prog) { setTimeout(() => { if (id === run) show('after'); }, 1200); return; }
-      const t0 = performance.now(), IN = [900, 3100], HOLD = 3700, OUT = 6400;
-      let swapped = false;
+      const id = ++run; if (still) { set(50); return; }
+      const keys = [[0, 100], [700, 100], [2600, 0], [3300, 0], [4500, 50]], t0 = performance.now();
       const step = now => {
         if (id !== run) return;
-        const t = now - t0, s = t / 1000;
-        let p = 0;
-        if (t < IN[0]) p = 0; else if (t < IN[1]) p = ease((t - IN[0]) / (IN[1] - IN[0])); else if (t < HOLD) p = 1; else p = 1 - ease(Math.min(1, (t - HOLD) / (OUT - HOLD)));
-        if (!swapped && t >= IN[1]) { swapped = true; show('after'); }
-        draw(p, s + 3);
-        if (t < OUT + 50) requestAnimationFrame(step); else draw(0, s);
+        const t = now - t0; let k = 0; while (k < keys.length - 2 && t > keys[k + 1][0]) k++;
+        const [ta, va] = keys[k], [tb, vb] = keys[k + 1], u = Math.min(1, Math.max(0, (t - ta) / (tb - ta)));
+        set(va + (vb - va) * ease(u));
+        if (t < keys[keys.length - 1][0]) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
     };
-    show('before');
-    let seen = false;
-    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && !seen) { seen = true; setTimeout(play, 400); } }), { threshold: .55 }).observe(cmp.querySelector('.sm-frame'));
+    set(50);
+    const at = e => { const r = glass.getBoundingClientRect(); return (e.clientX - r.left) / r.width * 100; };
+    let drag = false;
+    glass.addEventListener('pointerdown', e => { run++; drag = true; try { glass.setPointerCapture(e.pointerId); } catch (er) {} set(at(e)); });
+    glass.addEventListener('pointermove', e => { if (drag || e.pointerType === 'mouse') { if (!drag && e.pointerType === 'mouse' && !e.buttons) return; run++; set(at(e)); } });
+    glass.addEventListener('pointerup', () => drag = false); glass.addEventListener('pointercancel', () => drag = false);
+    range.addEventListener('input', () => { run++; set(+range.value); });
     cmp.querySelector('[data-sm="play"]').addEventListener('click', play);
-    cmp.querySelector('.sm-glass').addEventListener('click', play);
-    flipBtn.addEventListener('click', () => { run++; if (prog) draw(0, 0); show(showing === 'after' ? 'before' : 'after'); });
+    let seen = false;
+    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && !seen) { seen = true; setTimeout(play, 300); } }), { threshold: .55 }).observe(glass);
     document.querySelectorAll('#thumbs button').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('#thumbs button').forEach(x => x.classList.toggle('on', x === b));
       const i = b.dataset.i; run++;
@@ -239,22 +197,149 @@ void main(){
   const start = () => {
     if (head !== null) return; head = false;
     import('./../features/filler/head.js').then(m => m.createHead(host, {
-      base: 'assets/', sparkle: true, wipe: 0, yaw: -.55, gender: 'female', zoom: .74,
+      base: 'assets/', sparkle: true, sparse: true, features: true, centre: true, wipe: 0, yaw: -.4, gender: 'female', zoom: .74,
       visible: () => onScreen && !sec.querySelector('[data-panel="map"]').hidden,
-      onFrame: () => { if (!still && head) head.setYaw(-.55 + Math.sin(performance.now() / 5000) * .12); draw(); }
-    })).then(h => { head = h; stage.classList.add('live'); draw(); }).catch(() => { head = null; stage.classList.add('flat'); });
+      onFrame: () => { if (!still && head) head.setYaw(-.4 + Math.sin(performance.now() / 5000) * .12); draw(); }
+    })).then(h => { head = h; window.CG_mirrorHead = h; stage.classList.add('live'); draw(); document.dispatchEvent(new Event('cg:mirror-ready')); }).catch(() => { head = null; stage.classList.add('flat'); });
   };
   new IntersectionObserver(es => es.forEach(e => { onScreen = e.isIntersecting; if (onScreen) start(); }), { rootMargin: '200px' }).observe(stage);
   addEventListener('resize', draw);
 
   let mounted = false;
-  sec.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => {
+  // switching tabs: the face of lights drifts apart into dust and fades, then the other panel rises in
+  let busy = false;
+  const tween = (ms, fn) => new Promise(res => { const t0 = performance.now(); const f = now => { const u = Math.min(1, (now - t0) / ms); fn(u); u < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+  sec.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', async () => {
+    const to = sec.querySelector(`[data-panel="${t.dataset.tab}"]`), from = sec.querySelector('[data-panel]:not([hidden])');
+    if (busy || to === from) return; busy = true;
     sec.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === t));
-    sec.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== t.dataset.tab);
+    if (!still) {
+      from.classList.add('leaving');
+      await tween(520, u => { if (from.dataset.panel === 'map' && head) head.setFace({ scatter: u * u * .55 }); });
+    }
+    from.hidden = true; from.classList.remove('leaving');
+    to.hidden = false; to.classList.add('arriving');
+    if (to.dataset.panel === 'map' && head) { head.resize(); if (!still) tween(900, u => head.setFace({ scatter: (1 - u) * (1 - u) * .55 })); }
+    requestAnimationFrame(() => requestAnimationFrame(() => to.classList.remove('arriving')));
+    setTimeout(() => { busy = false; }, 300);
     if (t.dataset.tab === 'sim' && !mounted) {
       mounted = true;
       import('./../features/filler/index.js').then(m => m.mount(document.getElementById('filler-sim'),
         { lang: 'en', base: 'assets/', noPlan: true, sparkle: true, consult: 'index.html#rsvp' })).catch(() => { mounted = false; });
     }
   }));
+})();
+
+// ---- the guide: a small face of lights in a cameo that speaks one line per part of the evening ----
+(() => {
+  const cameo = document.getElementById('cameo');
+  if (!cameo || !window.IntersectionObserver) return;
+  const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+  if (store.get('cg-guide') === 'off') return;
+  const say = document.getElementById('cameo-say'), dust = document.getElementById('dust'), dx = dust.getContext('2d');
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const LINES = {
+    card: "Each dance is one treatment. Contour shapes the face, and Glow works on the skin.",
+    fitting: "Every treatment follows these five steps, from the first talk to your follow-up.",
+    mirror: "Tap an area of my face to see which treatments work there.",
+    entrance: "Drag the gold line across the mirror to compare before and after.",
+    rsvp: "Tell us what you'd like to try, and we reply on LINE or by phone."
+  };
+  const OPEN = "Good evening. I'll take you through tonight's programme.";
+  let head = null, speaker = null, jawT = 0, jaw = 0, blinkAt = performance.now() + 2500, blink = 0, mouse = [0, 0], inMirror = false, moving = false;
+  const said = new Set();
+
+  // a line is spoken word by word; open vowels drop the jaw, closed consonants and pauses bring it back
+  let talking = 0;
+  const speak = (text, onFace) => {
+    const id = ++talking; speaker = onFace; say.textContent = ''; say.classList.add('on');
+    const words = text.split(' '); let w = 0;
+    const next = () => {
+      if (id !== talking) return;
+      if (w >= words.length) { jawT = 0; setTimeout(() => { if (id === talking) say.classList.remove('on'); }, 3200); return; }
+      const word = words[w++]; say.textContent = words.slice(0, w).join(' ');
+      let c = 0;
+      const syll = () => {
+        if (id !== talking) return;
+        if (c >= word.length) { jawT = 0; setTimeout(next, /[.,]$/.test(word) ? 260 : 70); return; }
+        const ch = word[c++].toLowerCase();
+        jawT = 'aeo'.includes(ch) ? .85 + Math.random() * .15 : 'iuy'.includes(ch) ? .45 : 'mbpfv'.includes(ch) ? 0 : .22;
+        setTimeout(syll, 62);
+      };
+      syll();
+    };
+    next();
+  };
+  const face = () => speaker === 'mirror' ? window.CG_mirrorHead : head;
+
+  // life: the jaw eases toward its target, the eyes blink every few seconds, and the head turns a little toward the pointer
+  const life = now => {
+    jaw += (jawT - jaw) * .35;
+    if (now > blinkAt) { blink = Math.min(1, blink + .35); if (blink >= 1) blinkAt = now + 2800 + Math.random() * 3500; } else blink = Math.max(0, blink - .25);
+    const f = face();
+    if (f) f.setFace({ jaw, blink });
+    if (head && !inMirror) { head.setYaw(-.35 + mouse[0] * .35); head.setPitch(.04 - mouse[1] * .12); }
+    requestAnimationFrame(life);
+  };
+  addEventListener('pointermove', e => { mouse = [e.clientX / innerWidth - .5, e.clientY / innerHeight - .5]; });
+
+  // dust: when the guide moves into the mirror, its lights drift across the page as gold dust and settle there
+  const fly = (from, to) => new Promise(res => {
+    if (still) return res();
+    const dpr = Math.min(2, devicePixelRatio || 1); dust.width = innerWidth * dpr; dust.height = innerHeight * dpr; dx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const P = Array.from({ length: 140 }, () => ({ d: Math.random() * .35, s: (Math.random() - .5) * 140, r: .6 + Math.random() * 1.8 }));
+    const t0 = performance.now(), T = 1300;
+    const f = now => {
+      const u = (now - t0) / T; dx.clearRect(0, 0, innerWidth, innerHeight);
+      for (const p of P) {
+        const v = Math.min(1, Math.max(0, (u - p.d) / .65)); if (v <= 0 || v >= 1) continue;
+        const e = v * v * (3 - 2 * v), x = from[0] + (to[0] - from[0]) * e + Math.sin(e * Math.PI) * p.s, y = from[1] + (to[1] - from[1]) * e - Math.sin(e * Math.PI) * 90;
+        const g = dx.createRadialGradient(x, y, 0, x, y, p.r * 4); g.addColorStop(0, `rgba(255,240,205,${(1 - Math.abs(v - .5) * 1.6) * .9})`); g.addColorStop(1, 'rgba(230,200,143,0)');
+        dx.fillStyle = g; dx.beginPath(); dx.arc(x, y, p.r * 4, 0, 7); dx.fill();
+      }
+      u < 1.4 ? requestAnimationFrame(f) : (dx.clearRect(0, 0, innerWidth, innerHeight), res());
+    };
+    requestAnimationFrame(f);
+  });
+  const tween = (ms, fn) => new Promise(res => { if (still) { fn(1); return res(); } const t0 = performance.now(); const f = now => { const u = Math.min(1, (now - t0) / ms); fn(u); u < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+  const centre = el => { let r = el.getBoundingClientRect(); if (!r.width) r = document.getElementById('mirror').getBoundingClientRect(); return [r.left + r.width / 2, Math.max(60, Math.min(innerHeight - 60, r.top + r.height / 2))]; };
+
+  const intoMirror = async () => {
+    const m = window.CG_mirrorHead, glass = document.querySelector('.mirror-stage .vanity');
+    if (!m || !glass || moving || inMirror) return; moving = true; inMirror = true;
+    m.setFace({ scatter: .55 });
+    await tween(450, u => head && head.setFace({ scatter: u * .6 }));
+    cameo.classList.add('away');
+    await fly(centre(cameo), centre(glass));
+    await tween(900, u => m.setFace({ scatter: (1 - u) * .55 }));
+    moving = false;
+    if (!said.has('mirror')) { said.add('mirror'); speak(LINES.mirror, 'mirror'); }
+  };
+  const outOfMirror = async () => {
+    const m = window.CG_mirrorHead, glass = document.querySelector('.mirror-stage .vanity');
+    if (!m || moving || !inMirror) return; moving = true;
+    await tween(450, u => m.setFace({ scatter: u * .55 }));
+    await fly(centre(glass), centre(cameo));
+    m.setFace({ scatter: 0 });
+    cameo.classList.remove('away');
+    await tween(700, u => head && head.setFace({ scatter: (1 - u) * .6 }));
+    inMirror = false; moving = false;
+  };
+
+  const start = () => {
+    cameo.hidden = false;
+    import('./../features/filler/head.js').then(m => m.createHead(document.getElementById('cameo-head'), {
+      base: 'assets/', sparkle: true, sparse: true, features: true, centre: true, wipe: 0, yaw: -.35, gender: 'female', zoom: .7
+    })).then(h => { head = h; requestAnimationFrame(life); if (!said.has('open')) { said.add('open'); setTimeout(() => speak(OPEN, 'cameo'), 600); } }).catch(() => { cameo.hidden = true; });
+    ['card', 'fitting', 'mirror', 'entrance', 'rsvp'].map(id => document.getElementById(id)).filter(Boolean).forEach(p => io.observe(p));
+  };
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    const id = e.target.id;
+    if (id === 'mirror') { e.isIntersecting ? (window.CG_mirrorHead ? intoMirror() : document.addEventListener('cg:mirror-ready', intoMirror, { once: true })) : outOfMirror(); return; }
+    if (e.isIntersecting && !said.has(id) && !inMirror) { said.add(id); speak(LINES[id], 'cameo'); }
+  }), { threshold: .45 });
+  cameo.querySelector('.cameo-x').addEventListener('click', () => { store.set('cg-guide', 'off'); cameo.hidden = true; say.classList.remove('on'); talking++; });
+  // the guide arrives once the curtain has opened
+  const go = () => { start(); };
+  document.body.classList.contains('opened') ? setTimeout(go, 400) : new MutationObserver((m, o) => { if (document.body.classList.contains('opened')) { o.disconnect(); setTimeout(go, 1200); } }).observe(document.body, { attributes: true });
 })();
