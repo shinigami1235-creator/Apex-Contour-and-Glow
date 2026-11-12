@@ -105,7 +105,7 @@ page = f'''<!DOCTYPE html>
 <main>
 {body}
 </main>
-<footer class="foot"><p class="mark">Apex <span>Contour and Glow</span></p><p>Apex Hospital &amp; Clinics · LINE @apexbeauty · 080-500-0123</p><p class="fine">Individual results vary. Treatments are done by licensed doctors after a consultation.</p></footer>
+<footer class="foot"><p class="mark">Apex <span>Contour and Glow</span></p><p>Apex Hospital &amp; Clinics · LINE @apexbeauty · 080-500-0123</p><p class="fine">Individual results vary. Treatments are done by licensed doctors after a consultation.</p><p class="fine credit">Mirror frame model by <a href="https://sketchfab.com/3d-models/ornate-filigree-cherub-tabletop-mirror-202d553c0ca64935abe4ef9f1a875ebe">michaelablanchfield</a> on Sketchfab, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</p></footer>
 <script src="assets/js/site.js?v={JS_V}"></script>
 {script}
 </body>

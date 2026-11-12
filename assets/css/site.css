@@ -527,3 +527,18 @@ body.opened .ballroom-img,body.opening .ballroom-img{transform:scale(1)}
 .cameo[role=button]{cursor:pointer}
 .dust{position:fixed;inset:0;width:100%;height:100%;z-index:39;pointer-events:none}
 @media (max-width:700px){.cameo{width:80px;bottom:70px}.cameo-say{right:104px;left:12px;max-width:none;font-size:15.5px;bottom:96px}}
+
+/* carved gold frame (Sketchfab model by michaelablanchfield, CC BY 4.0) on all three mirrors */
+.sm-frame{aspect-ratio:750/1000}
+.sm-glass{left:16.9%;top:20.1%;width:66.2%;height:69.6%;touch-action:none;-webkit-user-select:none;user-select:none}
+.sm-glass img,.sm-ornate{-webkit-user-drag:none;user-select:none;pointer-events:none}
+.mirror-stage .vanity{position:relative;width:min(480px,50vw);aspect-ratio:750/1000;padding:0;border-radius:0;background:none;box-shadow:none;filter:drop-shadow(0 30px 50px rgba(0,0,0,.6))}
+.mirror-stage .vanity::after,.cameo::after{content:"";position:absolute;inset:0;background:url(../img/mirror-frame.webp) center/100% 100% no-repeat;pointer-events:none}
+.mirror-stage .vanity-glass{position:absolute;left:16.9%;top:20.1%;width:66.2%;height:69.6%}
+.cameo{width:140px;aspect-ratio:750/1000;padding:0;border-radius:0;background:none;box-shadow:none;filter:drop-shadow(0 12px 22px rgba(0,0,0,.55))}
+.cameo::after{background-image:url(../img/mirror-frame-sm.webp)}
+.cameo-head{position:absolute;left:16.9%;top:20.1%;width:66.2%;height:69.6%}
+.cameo-x{left:6px;top:18px;z-index:2}
+.cameo-say{right:calc(clamp(12px,2vw,26px) + 146px)}
+@media (max-width:700px){.mirror-stage .vanity{width:min(92vw,420px)}.cameo{width:96px}.cameo-say{right:108px}}
+.credit{font-size:12px;opacity:.7}.credit a{color:inherit}

@@ -103,7 +103,8 @@
     set(50);
     const at = e => { const r = glass.getBoundingClientRect(); return (e.clientX - r.left) / r.width * 100; };
     let drag = false;
-    glass.addEventListener('pointerdown', e => { run++; drag = true; try { glass.setPointerCapture(e.pointerId); } catch (er) {} set(at(e)); });
+    [before, after].forEach(i => i.draggable = false); glass.addEventListener('dragstart', e => e.preventDefault());
+    glass.addEventListener('pointerdown', e => { e.preventDefault(); run++; drag = true; try { glass.setPointerCapture(e.pointerId); } catch (er) {} set(at(e)); });
     glass.addEventListener('pointermove', e => { if (drag || e.pointerType === 'mouse') { if (!drag && e.pointerType === 'mouse' && !e.buttons) return; run++; set(at(e)); } });
     glass.addEventListener('pointerup', () => drag = false); glass.addEventListener('pointercancel', () => drag = false);
     range.addEventListener('input', () => { run++; set(+range.value); });
@@ -228,7 +229,7 @@
   };
   const start = () => {
     if (head !== null) return; head = false;
-    import('./../features/filler/head.js').then(m => m.createHead(host, {
+    import('./../features/filler/head.js?v=16').then(m => m.createHead(host, {
       base: 'assets/', sparkle: true, sparse: true, features: true, noDrag: true, wipe: 0, yaw: -.15, morph: .5, zoom: .74,
       visible: () => onScreen && !sec.querySelector('[data-panel="map"]').hidden,
       onFrame: () => { if (head) head.setYaw(lookYaw + (still ? 0 : Math.sin(performance.now() / 6000) * .05)); draw(); }
@@ -256,8 +257,8 @@
     setTimeout(() => { busy = false; }, 300);
     if (t.dataset.tab === 'sim' && !mounted) {
       mounted = true;
-      import('./../features/filler/index.js').then(m => m.mount(document.getElementById('filler-sim'),
-        { lang: 'en', base: 'assets/', noPlan: true, sparkle: true, consult: 'index.html#rsvp' })).catch(() => { mounted = false; });
+      import('./../features/filler/index.js?v=16').then(m => m.mount(document.getElementById('filler-sim'),
+        { lang: 'en', base: 'assets/', noPlan: true, sparkle: true, soft: true, maleMorph: .8, fadeOnScroll: true, consult: 'index.html#rsvp' })).catch(() => { mounted = false; });
     }
   }));
 })();
@@ -277,7 +278,7 @@
     fitting: "Every treatment follows these five steps, from the first talk to your follow-up.",
     mirror: "Tap an area of my face to see which treatments work there.",
     entrance: "Drag the gold line across the mirror to compare before and after.",
-    rsvp: "Tell us what you'd like to try, and we reply on LINE or by phone."
+    rsvp: "Leave your name and phone or LINE ID so we can message you to book a day."
   };
   const OPEN = "Good evening. I'll take you through tonight's programme.";
   const BYE = "Thank you. See you at the clinic.";
@@ -285,7 +286,8 @@
   let head = null, speaker = null, jawT = 0, jaw = 0, blinkAt = performance.now() + 2500, blink = 0, mouse = [0, 0], inMirror = false, moving = false;
   const said = new Set();
 
-  // a line is spoken word by word; open vowels drop the jaw, closed consonants and pauses bring it back
+  // a line is spoken at an easy pace of about four syllables a second. Each syllable opens the jaw once and lets it close,
+  // wider on a and o than on i and u, and the mouth rests shut at commas and full stops
   let talking = 0;
   // glide: the cameo slides up the right edge to sit level with what it is talking about, then settles back in its corner
   const GLIDE = { card: '.dance-card h2', fitting: '#fitting .fitting-intro', entrance: '#entrance h2', rsvp: '.rsvp-card h2' };
@@ -300,30 +302,38 @@
   };
   const dock = () => setGlide(0);
   addEventListener('scroll', () => { if (!say.classList.contains('on')) dock(); }, { passive: true });
+  let keys = [], k0 = 0;
+  const OPEN_V = { a: .45, o: .4, e: .32, i: .2, u: .22, y: .2 };
+  const SYL = 260;
+  const jawAt = now => {
+    const t = now - k0; if (!keys.length || t >= keys[keys.length - 1][0]) return 0;
+    let i = 0; while (i < keys.length - 1 && t > keys[i + 1][0]) i++;
+    const [ta, va] = keys[i], [tb, vb] = keys[i + 1] || keys[i], u = tb > ta ? (t - ta) / (tb - ta) : 1;
+    return va + (vb - va) * (u * u * (3 - 2 * u));
+  };
   const speak = (text, onFace) => {
     const id = ++talking; speaker = onFace; say.textContent = ''; say.classList.add('on');
-    const words = text.split(' '); let w = 0;
-    const next = () => {
-      if (id !== talking) return;
-      if (w >= words.length) { jawT = 0; setTimeout(() => { if (id === talking) { say.classList.remove('on'); dock(); } }, 3200); return; }
-      const word = words[w++]; say.textContent = words.slice(0, w).join(' ');
-      let c = 0;
-      const syll = () => {
-        if (id !== talking) return;
-        if (c >= word.length) { jawT = 0; setTimeout(next, /[.,]$/.test(word) ? 260 : 70); return; }
-        const ch = word[c++].toLowerCase();
-        jawT = 'aeo'.includes(ch) ? .55 + Math.random() * .15 : 'iuy'.includes(ch) ? .3 : 'mbpfv'.includes(ch) ? 0 : .12;
-        setTimeout(syll, 62);
-      };
-      syll();
-    };
-    next();
+    const words = text.split(' '), shown = [];
+    let t = 120; keys = [[0, 0]];
+    words.forEach((word, w) => {
+      shown.push([t, w + 1]);
+      const syl = word.toLowerCase().match(/[aeiouy]+/g) || ['e'];
+      syl.forEach(g => {
+        const v = OPEN_V[g[0]] || .3;
+        keys.push([t + SYL * .4, v], [t + SYL * .85, .04]);
+        t += SYL;
+      });
+      if (/[.,?!]$/.test(word)) { keys.push([t + 60, 0]); t += 420; } else t += 40;
+    });
+    keys.push([t, 0]); k0 = performance.now();
+    shown.forEach(([at, n]) => setTimeout(() => { if (id === talking) say.textContent = words.slice(0, n).join(' '); }, at));
+    setTimeout(() => { if (id !== talking) return; keys = []; setTimeout(() => { if (id === talking) { say.classList.remove('on'); dock(); } }, 3200); }, t);
   };
   const face = () => speaker === 'mirror' ? window.CG_mirrorHead : head;
 
   // life: the jaw eases toward its target, the eyes blink every few seconds, and the head turns a little toward the pointer
   const life = now => {
-    jaw += (jawT - jaw) * .22;
+    jawT = still ? 0 : jawAt(now); jaw += (jawT - jaw) * .35;
     if (now > blinkAt) { blink = Math.min(1, blink + .35); if (blink >= 1) blinkAt = now + 2800 + Math.random() * 3500; } else blink = Math.max(0, blink - .25);
     const f = face();
     if (f) f.setFace({ jaw, blink });
@@ -357,7 +367,11 @@
   // the guide's face comes apart into light, drifts across the page as gold dust, and gathers again in the mirror.
   // Each step starts before the last one ends, so the move reads as one motion
   const wait = ms => new Promise(r => setTimeout(r, still ? 0 : ms));
+  // if the reader scrolls past while a move is still running, the guide follows once that move ends
+  let want = false;
+  const settle = () => { if (want && !inMirror) intoMirror(); else if (!want && inMirror) outOfMirror(); };
   const intoMirror = async () => {
+    want = true;
     const m = window.CG_mirrorHead, glass = document.querySelector('.mirror-stage .vanity');
     if (!m || !glass || moving || inMirror) return; moving = true; inMirror = true;
     m.setFace({ scatter: .8, fade: 0 });
@@ -368,11 +382,14 @@
     await wait(950);
     await tween(1500, u => m.setFace({ scatter: (1 - u) * .8, fade: u }));
     await trip; moving = false;
+    if (!want) return settle();
     if (!said.has('mirror')) { said.add('mirror'); speak(LINES.mirror, 'mirror'); }
   };
   const outOfMirror = async () => {
+    want = false;
     const m = window.CG_mirrorHead, glass = document.querySelector('.mirror-stage .vanity');
     if (!m || moving || !inMirror) return; moving = true;
+    if (speaker === 'mirror') { talking++; keys = []; say.classList.remove('on'); }
     tween(1000, u => m.setFace({ scatter: u * .8, fade: 1 - u }));
     await wait(300);
     const trip = fly(centre(glass), centre(cameo));
@@ -381,20 +398,24 @@
     if (head) head.setFace({ scatter: .8, fade: 0 });
     await tween(1300, u => head && head.setFace({ scatter: (1 - u) * .8, fade: u }));
     await trip; m.setFace({ scatter: 0, fade: 1 });
-    inMirror = false; moving = false;
+    inMirror = false; moving = false; settle();
+    if (!inMirror) { const id = [...onView].find(i => !said.has(i)); if (id) sayFor(id); }
   };
 
   const start = () => {
     cameo.hidden = false;
-    import('./../features/filler/head.js').then(m => m.createHead(document.getElementById('cameo-head'), {
+    import('./../features/filler/head.js?v=16').then(m => m.createHead(document.getElementById('cameo-head'), {
       base: 'assets/', sparkle: true, sparse: true, features: true, noDrag: true, wipe: 0, yaw: -.15, morph: .5, zoom: .7
     })).then(h => { head = h; requestAnimationFrame(life); if (!FACTS && !said.has('open')) { said.add('open'); setTimeout(() => speak(OPEN, 'cameo'), 600); } }).catch(() => { cameo.hidden = true; });
     ['card', 'fitting', 'mirror', 'entrance', 'rsvp'].map(id => document.getElementById(id)).filter(Boolean).forEach(p => io.observe(p));
   };
+  const onView = new Set();
+  const sayFor = id => { if (said.has(id) || inMirror || moving || !LINES[id]) return; said.add(id); glideTo(GLIDE[id] && document.querySelector(GLIDE[id])); speak(LINES[id], 'cameo'); };
   const io = new IntersectionObserver(es => es.forEach(e => {
     const id = e.target.id;
     if (id === 'mirror') { e.isIntersecting ? (window.CG_mirrorHead ? intoMirror() : document.addEventListener('cg:mirror-ready', intoMirror, { once: true })) : outOfMirror(); return; }
-    if (e.isIntersecting && !said.has(id) && !inMirror) { said.add(id); glideTo(GLIDE[id] && document.querySelector(GLIDE[id])); speak(LINES[id], 'cameo'); }
+    e.isIntersecting ? onView.add(id) : onView.delete(id);
+    if (e.isIntersecting) sayFor(id);
   }), { threshold: .45 });
   // treatment pages: the guide stays quiet and gives one fact each time you tap it
   const FACTS = window.CG_GUIDE || null;

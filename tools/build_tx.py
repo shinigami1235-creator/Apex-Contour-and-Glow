@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 from tx_art import icon
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CSS_V = 21; JS_V = 15
+CSS_V = 22; JS_V = 16
 E = html.escape
 ROMAN = ['I','II','III','IV','V','VI','VII']
 CASES = {'botox': 7}
@@ -135,7 +135,7 @@ def page(slug, t):
 <section class="faq"><div class="tx-head"><p class="kicker">Questions</p><h2>What people ask us</h2></div><div class="faq-list">{faq}</div></section>
 <section class="sources"><h3>Sources</h3><ol>{src}</ol></section>
 </main>
-<footer class="foot"><p class="mark">Apex <span>Contour and Glow</span></p><p>Apex Hospital &amp; Clinics · LINE @apexbeauty · 080-500-0123</p><p class="fine">Individual results vary. Treatments are done by licensed doctors after a consultation.</p></footer>
+<footer class="foot"><p class="mark">Apex <span>Contour and Glow</span></p><p>Apex Hospital &amp; Clinics · LINE @apexbeauty · 080-500-0123</p><p class="fine">Individual results vary. Treatments are done by licensed doctors after a consultation.</p><p class="fine credit">Mirror frame model by <a href="https://sketchfab.com/3d-models/ornate-filigree-cherub-tabletop-mirror-202d553c0ca64935abe4ef9f1a875ebe">michaelablanchfield</a> on Sketchfab, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</p></footer>
 <div class="cameo" id="cameo" hidden><div class="cameo-head" id="cameo-head"></div><button type="button" class="cameo-x" aria-label="Hide the guide">&times;</button></div>
 <p class="cameo-say" id="cameo-say" aria-live="polite"></p>
 <script>window.CG_GUIDE = {guide_json};</script>

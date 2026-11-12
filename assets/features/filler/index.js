@@ -8,7 +8,7 @@
    mount(container, opts) -> {destroy()}
    opts: lang 'en' | 'th', base (assets/ URL), onEvent(name, data). Testing only: threeUrl */
 import {CODES, CONCERNS, STEPS, PER_SESSION, planFor, HEAD_AT, PRODUCTS, productsFor, syringesFor} from './codes.js';
-import {createHead} from './head.js';
+import {createHead} from './head.js?v=16';
 
 const REF = 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8012343/';
 // where the wipe line starts in each view: on the profile in the side view, since that is where the change shows
@@ -342,7 +342,7 @@ const CSS = `
 .ff-note3{margin:0;font-size:12.5px;line-height:1.45;color:var(--ff-on-2);max-width:52ch}
 .ff-ba output{font-variant-numeric:tabular-nums;color:#F49AC1;min-width:4ch;text-align:right}
 .ff-wipe{position:absolute;inset:0;pointer-events:none}
-.ff-wline{position:absolute;top:0;bottom:0;left:var(--x);width:2px;margin-left:-1px;background:rgba(255,255,255,.85);box-shadow:0 0 0 1px rgba(31,10,48,.25)}
+.ff-wline{position:absolute;top:0;bottom:0;left:var(--x);width:32px;margin-left:-16px;pointer-events:auto;cursor:ew-resize;touch-action:none}.ff-wline::after{content:"";position:absolute;top:0;bottom:0;left:15px;width:2px;background:rgba(255,255,255,.85);box-shadow:0 0 0 1px rgba(31,10,48,.25)}
 .ff .ff-wknob{position:absolute;top:50%;left:var(--x);width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#fff;color:var(--ff-plum);display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(20,6,31,.6);cursor:ew-resize;touch-action:none;pointer-events:auto}
 .ff .ff-wknob:focus-visible{outline:2px solid var(--ff-lilac);outline-offset:3px}
 .ff-bt{top:58px}
@@ -483,7 +483,7 @@ export function mount(container, opts = {}){
 
   /* ---------- the head ---------- */
   let alive = true;
-  createHead(R('host'), {threeUrl:opts.threeUrl, base:opts.base || '', gender:state.gender, sparkle:!!opts.sparkle}).then(h => {
+  createHead(R('host'), {threeUrl:opts.threeUrl, base:opts.base || '', gender:state.gender, sparkle:!!opts.sparkle, features:!!opts.sparkle, net:!!opts.sparkle, soft:!!opts.soft, maleMorph:opts.maleMorph, fadeOnScroll:!!opts.fadeOnScroll}).then(h => {
     if (!alive) { h.destroy(); return; }
     state.head = h; R('load').hidden = true;
     h.setView(state.view);
@@ -576,10 +576,12 @@ export function mount(container, opts = {}){
   let wx = .5, wd = null;
   const setW = x => { wx = Math.max(.02, Math.min(.98, x)); wipe.style.setProperty('--x', wx * 100 + '%'); if (state.head) state.head.setWipe(wx); };
   const knob = $('.ff-wknob');
-  knob.addEventListener('pointerdown', e => { wd = e.pointerId; try { knob.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); });
-  knob.addEventListener('pointermove', e => { if (wd !== e.pointerId) return; const r = view.getBoundingClientRect(); setW((e.clientX - r.left) / r.width); });
   const wEnd = e => { if (wd === e.pointerId) wd = null; };
-  knob.addEventListener('pointerup', wEnd); knob.addEventListener('pointercancel', wEnd);
+  [knob, $('.ff-wline')].forEach(h => {
+    h.addEventListener('pointerdown', e => { wd = e.pointerId; try { h.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); e.stopPropagation(); });
+    h.addEventListener('pointermove', e => { if (wd !== e.pointerId) return; const r = view.getBoundingClientRect(); setW((e.clientX - r.left) / r.width); });
+    h.addEventListener('pointerup', wEnd); h.addEventListener('pointercancel', wEnd);
+  });
   knob.addEventListener('keydown', e => { const d = {ArrowLeft:-.05, ArrowRight:.05}[e.key]; if (d) { e.preventDefault(); setW(wx + d); } });
 
   sync(); draw();

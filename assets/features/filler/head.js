@@ -16,13 +16,19 @@ const RADIUS = .16;             // spread of one injection on the skin, decimetr
 const VS = `
 attribute vec3 aPosB; attribute vec3 aNrmA; attribute vec3 aNrmB; attribute float aRnd; attribute float aEdge;
 attribute float aKind; attribute float aAo; attribute float aDispA; attribute float aDispB; attribute vec3 aCol; attribute float aHeat;
-uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark, uCalm, uJaw, uBlink, uMouth, uEye, uScatter, uBrow, uFrown, uSquint, uSmile, uFade;
+uniform float uMorph, uAfter, uPix, uSize, uCut, uTime, uLine, uIsLine, uFocus, uDepthR, uSpark, uCalm, uJaw, uBlink, uMouth, uEye, uScatter, uBrow, uFrown, uSquint, uSmile, uFade, uSoft;
 varying float vA; varying vec3 vC; varying float vH; varying float vR; varying float vF;
 float is(float v, float t){ return 1. - step(.1, abs(v - t)); }
 void main(){
   float m = smoothstep(0., 1., uMorph);
   vec3 p = mix(position, aPosB, m);
   vec3 n = normalize(mix(aNrmA, aNrmB, m));
+  /* soft: the male side takes a lower brow ridge, a smaller nose, a narrower jaw and a shorter chin,
+     with the cheekbones a little wider (keep in step with softP in the script) */
+  float sm = uSoft * m, sax = abs(p.x), sdy = p.y - uEye, sfr = smoothstep(.9, 1.15, p.z);
+  p.z -= sm * (.05 * exp(-pow((sdy - .17) / .1, 2.)) * (1. - smoothstep(.45, .65, sax)) + .035 * exp(-pow((sdy + .35) / .18, 2.)) * (1. - smoothstep(.06, .16, sax))) * sfr;
+  p.x *= 1. - sm * (.09 * smoothstep(uMouth + .05, uMouth - .35, p.y) - .04 * exp(-pow((sdy + .2) / .18, 2.)));
+  p.y += sm * .06 * smoothstep(uMouth - .15, uMouth - .5, p.y);
   float a = max(uAfter, 0.);
   p += n * mix(aDispA, aDispB, m) * a;
   /* speech: the lower face turns on a hinge near the ear, the upper lip lifts a little */
@@ -80,7 +86,7 @@ void main(){
   vec3 nv = normalize(normalMatrix * n);
   float lam = max(0., dot(nv, normalize(vec3(-.55, .45, .7))));
   float rim = pow(1. - clamp(f, 0., 1.), 2.2);
-  float shape = .45 + 1.5 * lam + 1.6 * rim;
+  float shape = .28 + 1.75 * pow(lam, 1.3) + 1.6 * rim;
   float rare = step(.93, fract(aRnd * 7.31)) * pow(max(0., sin(uTime * (.25 + aRnd * .3) + aRnd * 53.)), 40.);
   float twc = .85 + .15 * sin(uTime * (.8 + aRnd) + aRnd * 29.);
   tw = mix(tw, twc * shape, uCalm); fl = mix(fl, rare, uCalm);
@@ -188,8 +194,8 @@ export async function createHead(host, opts = {}){
   renderer.setClearColor(0x000000, 0); renderer.setPixelRatio(pix);
   host.prepend(renderer.domElement);
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(26, 1, .05, 100);
-  const U = {uMorph:{value:opts.morph ?? (opts.gender === 'male' ? 1 : 0)}, uAfter:{value:1}, uPix:{value:pix}, uSize:{value:2.6}, uCut:{value:H.cutF},
-    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}, uCalm:{value:opts.sparkle ? 1 : 0}, uJaw:{value:0}, uBlink:{value:0}, uBrow:{value:0}, uFrown:{value:0}, uSquint:{value:0}, uSmile:{value:0}, uFade:{value:1}, uMouth:{value:5.866}, uEye:{value:6.47}, uScatter:{value:0}};
+  const U = {uMorph:{value:opts.morph ?? (opts.gender === 'male' ? (opts.maleMorph ?? 1) : 0)}, uAfter:{value:1}, uPix:{value:pix}, uSize:{value:2.6}, uCut:{value:H.cutF},
+    uTime:{value:0}, uLine:{value:.2}, uIsLine:{value:0}, uFocus:{value:5}, uDepthR:{value:1.5}, uSpark:{value:opts.sparkle ? 1 : 0}, uCalm:{value:opts.sparkle ? 1 : 0}, uJaw:{value:0}, uBlink:{value:0}, uBrow:{value:0}, uFrown:{value:0}, uSquint:{value:0}, uSmile:{value:0}, uFade:{value:1}, uSoft:{value:opts.soft ? 1 : 0}, uMouth:{value:5.866}, uEye:{value:6.47}, uScatter:{value:0}};
   const mat = (isLine, feat) => new THREE.ShaderMaterial({uniforms:{...U, uIsLine:{value:isLine ? 1 : 0}, uFeat:{value:feat ? 1 : 0}}, vertexShader:VS, fragmentShader:FS, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending});
   const pmat = mat(false), lmat = mat(true);
   const points = new THREE.Points(pg, pmat), lines = new THREE.LineSegments(lg, lmat);
@@ -214,12 +220,14 @@ export async function createHead(host, opts = {}){
     const fg = new THREE.BufferGeometry();
     ['position', 'aPosB', 'aNrmA', 'aNrmB', 'aRnd', 'aEdge', 'aKind', 'aAo', 'aDispA', 'aDispB', 'aCol', 'aHeat'].forEach(k => fg.setAttribute(k, pg.getAttribute(k)));
     fg.setIndex(new THREE.BufferAttribute(new Uint16Array(idx), 1));
-    feat = new THREE.LineSegments(fg, mat(true, true)); feat.frustumCulled = false; scene.add(feat);
+    const fm = mat(true, true); fm.uniforms.uLine = {value:opts.net ? .55 : U.uLine.value};
+    feat = new THREE.LineSegments(fg, fm); feat.frustumCulled = false; scene.add(feat);
   }
   /* where the mouth and eyes sit on each head, so speech and blinks land on the right rows */
   const meanY = (k, p) => { let s = 0, c = 0; for (let i = 0; i < n; i++) if (H.kind[i] === k) { s += p[i * 3 + 1]; c++; } return c ? s / c : 0; };
   const MOUTH = [meanY(7, H.pf), meanY(7, H.pm)], EYE = [meanY(2, H.pf), meanY(2, H.pm)];
-  if (opts.sparkle) lines.visible = false;   // sparkle look: lights only, no net
+  if (opts.sparkle && !opts.net) lines.visible = false;   // sparkle look: lights only, no net
+  if (opts.net) U.uLine.value = .09;
   const drops = new THREE.Group(); scene.add(drops);
   const dropGeo = new THREE.SphereGeometry(1, 20, 14);
 
@@ -235,8 +243,8 @@ export async function createHead(host, opts = {}){
     for (let i = 0; i < n; i++) { const y = p[i * 3 + 1]; if (y < cut) continue; x0 = Math.min(x0, p[i * 3]); x1 = Math.max(x1, p[i * 3]); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
     return {x:(x0 + x1) / 2, y:y0 + (y1 - y0) * .5, z:.45, h:y1 - y0};
   };
-  const yaw0 = opts.yaw ?? -.5, g0 = opts.morph ?? (opts.gender === 'male' ? 1 : 0);
-  const state = {g:g0, gT:g0, after:1, afterT:1, wipe:opts.wipe ?? .5, yaw:yaw0, yawT:yaw0, pitch:.04, plan:[], points:true, dirty:true};
+  const yaw0 = opts.yaw ?? -.5, g0 = opts.morph ?? (opts.gender === 'male' ? (opts.maleMorph ?? 1) : 0);
+  const state = {fade:opts.fadeOnScroll ? 0 : 1, fadeT:opts.fadeOnScroll ? 0 : 1, g:g0, gT:g0, after:1, afterT:1, wipe:opts.wipe ?? .5, yaw:yaw0, yawT:yaw0, pitch:.04, plan:[], points:true, dirty:true};
   const VIEWS = {front:0, q:-.62, side:-1.45};
 
   function computeDisp(){
@@ -279,6 +287,15 @@ export async function createHead(host, opts = {}){
     }
     state.dirty = true;
   }
+  const sstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const softP = (x, y, z, g) => {
+    const sm = U.uSoft.value * sstep(0, 1, g); if (!sm) return [x, y, z];
+    const ax = Math.abs(x), dy = y - U.uEye.value, fr = sstep(.9, 1.15, z), mo = U.uMouth.value;
+    z -= sm * (.05 * Math.exp(-(((dy - .17) / .1) ** 2)) * (1 - sstep(.45, .65, ax)) + .035 * Math.exp(-(((dy + .35) / .18) ** 2)) * (1 - sstep(.06, .16, ax))) * fr;
+    x *= 1 - sm * (.09 * sstep(mo + .05, mo - .35, y) - .04 * Math.exp(-(((dy + .2) / .18) ** 2)));
+    y += sm * .06 * sstep(mo - .15, mo - .5, y);
+    return [x, y, z];
+  };
   function placeDrops(cam = camera){
     const g = state.g, a = Math.max(0, state.after);
     for (const m of drops.children) {
@@ -287,7 +304,8 @@ export async function createHead(host, opts = {}){
       const rr = r * Math.cbrt(Math.max(a, .001));
       m.scale.setScalar(rr);
       const lift = (dispA[v] + (dispB[v] - dispA[v]) * g) * a + rr * .4;
-      m.position.set(P3(0) + N3(0) * lift, P3(1) + N3(1) * lift, P3(2) + N3(2) * lift);
+      const S = softP(P3(0), P3(1), P3(2), g);
+      m.position.set(S[0] + N3(0) * lift, S[1] + N3(1) * lift, S[2] + N3(2) * lift);
       // drops on the far side of the head fade out
       const cx = cam.position.x - m.position.x, cy = cam.position.y - m.position.y, cz = cam.position.z - m.position.z, cl = Math.hypot(cx, cy, cz) || 1;
       const face = (N3(0) * cx + N3(1) * cy + N3(2) * cz) / cl, vis = Math.min(1, Math.max(0, (face + .15) / .45));
@@ -323,13 +341,14 @@ export async function createHead(host, opts = {}){
     if (!alive) return;
     raf = requestAnimationFrame(frame);
     if (opts.visible && !opts.visible()) { t0 = now; return; }
+    if (opts.fadeOnScroll && state.fade < .002 && state.fadeT === 0) { t0 = now; return; }
     const dt = Math.min(.05, (now - t0) / 1000); t0 = now;
     let moving = false;
     const ap = (k, kT, s) => { const d = state[kT] - state[k]; if (Math.abs(d) > 1e-4) { state[k] += d * Math.min(1, dt * s); moving = true; } else state[k] = state[kT]; };
-    ap('g', 'gT', 5); ap('after', 'afterT', 3.2); if (!drag) ap('yaw', 'yawT', 4);
+    ap('g', 'gT', 5); ap('fade', 'fadeT', 2.4); ap('after', 'afterT', 3.2); if (!drag) ap('yaw', 'yawT', 4);
     if (opts.sparkle && !still) { U.uTime.value = now / 1000; state.dirty = true; }
     if (!moving && !state.dirty) return;
-    U.uMorph.value = state.g; U.uCut.value = H.cutF + (H.cutM - H.cutF) * state.g;
+    U.uMorph.value = state.g; if (opts.fadeOnScroll) { renderer.domElement.style.opacity = state.fade.toFixed(3); } U.uCut.value = H.cutF + (H.cutM - H.cutF) * state.g;
     U.uMouth.value = MOUTH[0] + (MOUTH[1] - MOUTH[0]) * state.g; U.uEye.value = EYE[0] + (EYE[1] - EYE[0]) * state.g;
     place();
     // the wipe: before (no filler) left of the line, after right of it
@@ -342,6 +361,8 @@ export async function createHead(host, opts = {}){
     if (opts.onFrame) opts.onFrame();
   }
   const ro = new ResizeObserver(size); ro.observe(host); size();
+  let fio = null;
+  if (opts.fadeOnScroll && window.IntersectionObserver) { fio = new IntersectionObserver(es => es.forEach(e => { state.fadeT = e.isIntersecting ? 1 : 0; state.dirty = true; }), {threshold:.25}); fio.observe(host); } else state.fade = state.fadeT = 1;
   // drag to turn the head
   const cv = renderer.domElement;
   cv.style.touchAction = 'pan-y';
@@ -361,7 +382,7 @@ export async function createHead(host, opts = {}){
     setAmount(f){ state.afterT = f; state.dirty = true; },
     jumpAmount(f){ state.after = state.afterT = f; state.dirty = true; },
     setWipe(x){ state.wipe = Math.max(0, Math.min(1, x)); state.dirty = true; },
-    setGender(g){ state.gT = g === 'male' ? 1 : 0; state.dirty = true; },
+    setGender(g){ state.gT = g === 'male' ? (opts.maleMorph ?? 1) : 0; state.dirty = true; },
     setView(v){ state.yawT = VIEWS[v] ?? state.yawT; state.dirty = true; },
     setPoints(on){ state.points = on; state.dirty = true; },
     /* where vertex v sits on screen (CSS px inside host), and how much it faces the camera (0 to 1) */
@@ -395,7 +416,7 @@ export async function createHead(host, opts = {}){
       size(); state.dirty = true;
       return out;
     },
-    destroy(){ alive = false; cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); pg.dispose(); lg.dispose(); dropGeo.dispose(); cv.remove(); },
+    destroy(){ alive = false; cancelAnimationFrame(raf); ro.disconnect(); if (fio) fio.disconnect(); renderer.dispose(); pg.dispose(); lg.dispose(); dropGeo.dispose(); cv.remove(); },
     _state:state,
   };
 }
