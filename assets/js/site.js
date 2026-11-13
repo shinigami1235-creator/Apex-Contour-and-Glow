@@ -344,7 +344,7 @@
     if (now > blinkAt) { blink = Math.min(1, blink + .35); if (blink >= 1) blinkAt = now + 2800 + Math.random() * 3500; } else blink = Math.max(0, blink - .25);
     const f = face();
     if (f) f.setFace({ jaw: 0, blink });
-    if (head && !inMirror) { head.setYaw(-.15 + mouse[0] * .16); head.setPitch(.04 - mouse[1] * .05 + pitchAdd); }
+    if (head && !inMirror) { head.setYaw(.28 - mouse[0] * .3); head.setPitch(.04 - mouse[1] * .05 + pitchAdd); }
     requestAnimationFrame(life);
   };
   addEventListener('pointermove', e => { mouse = [e.clientX / innerWidth - .5, e.clientY / innerHeight - .5]; });
@@ -414,7 +414,7 @@
   const start = () => {
     cameo.hidden = false;
     import('./../features/filler/head.js?v=17').then(m => m.createHead(document.getElementById('cameo-head'), {
-      base: 'assets/', sparkle: true, sparse: true, features: true, noDrag: true, wipe: 0, yaw: -.15, morph: .5, zoom: .7
+      base: 'assets/', sparkle: true, sparse: true, features: true, noDrag: true, wipe: 0, yaw: .28, morph: .5, zoom: .7
     })).then(h => { head = h; requestAnimationFrame(life); if (!FACTS && !said.has('open')) { said.add('open'); setTimeout(() => speak(OPEN, 'cameo'), 600); } }).catch(() => { cameo.hidden = true; });
     ['card', 'fitting', 'entrance', 'rsvp'].map(id => document.getElementById(id)).filter(Boolean).forEach(p => io.observe(p));
     const vg = document.querySelector('.mirror-stage .vanity-glass'); if (vg) mio.observe(vg);
