@@ -86,7 +86,26 @@ class Apex_CLI {
 	 * [--lang=<lang>]
 	 * : Only this language (en or th). Default: every language with a content file.
 	 */
+	/** Polylang with English (default, no prefix) and Thai under /th/, post-name permalinks, Bangkok time. */
+	private function site_setup(): void {
+		if ( function_exists( 'PLL' ) && PLL()->model ) {
+			$have = function_exists( 'pll_languages_list' ) ? pll_languages_list() : [];
+			foreach ( [ [ 'English', 'en', 'en_US', 0, 'gb' ], [ 'ไทย', 'th', 'th', 1, 'th' ] ] as [ $name, $slug, $locale, $order, $flag ] ) {
+				if ( in_array( $slug, $have, true ) ) continue;
+				$r = PLL()->model->add_language( [ 'name' => $name, 'slug' => $slug, 'locale' => $locale, 'rtl' => 0, 'term_group' => $order, 'flag' => $flag ] );
+				WP_CLI::log( is_wp_error( $r ) ? "Polylang $slug: " . $r->get_error_message() : "Added the language $name" );
+			}
+			$o = get_option( 'polylang' );
+			if ( is_array( $o ) ) { $o['default_lang'] = 'en'; $o['hide_default'] = 1; $o['force_lang'] = 1; $o['rewrite'] = 1; update_option( 'polylang', $o ); }
+		} else {
+			WP_CLI::warning( 'Polylang is not active, so only one language is set up. Activate it and run the import again.' );
+		}
+		if ( get_option( 'permalink_structure' ) === '' ) update_option( 'permalink_structure', '/%postname%/' );
+		update_option( 'timezone_string', 'Asia/Bangkok' );
+	}
+
 	public function import( $args, $assoc ) {
+		$this->site_setup();
 		$langs = isset( $assoc['lang'] ) ? [ $assoc['lang'] ] : APEX_LANGS;
 		$done = 0;
 		foreach ( $langs as $lang ) {
