@@ -37,9 +37,9 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
 <section class="hero" id="planner">
   <div class="wrap">
     <div class="hero-head">
-      <p class="kicker">Injectables at Apex Hospital &amp; Clinics, Bangkok</p>
-      <h1>Twelve injectables, <em>planned around your face.</em></h1>
-      <p class="sub">Tap an area of the face to see which treatments work there, what each costs and how long it lasts.</p>
+      <p class="kicker">Apex Hospital &amp; Clinics, Bangkok</p>
+      <h1>Injectables <em>at Apex</em></h1>
+      <p class="sub">Tap an area of the face to see its treatments and prices.</p>
     </div>
     <div class="tabs" role="tablist">
       <button type="button" role="tab" aria-selected="true" data-tab="map">Face planner</button>
@@ -52,7 +52,7 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
       <div class="zcol r">{col("r")}</div>
     </div>
     <div class="picks" data-panel="map" aria-live="polite">
-      <p class="empty">Which area bothers you most? Tap it beside the face, or drag the face to turn it.</p>
+      <p class="empty">Tap an area. Drag the face to turn it.</p>
       <div class="list" hidden><h3></h3><ul></ul></div>
       <button type="button" class="fz fz-skin" data-z="skin">The whole face</button>
     </div>
@@ -63,8 +63,8 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
 
 <section class="sec" id="treatments">
   <div class="wrap">
-    <div class="sec-head"><p class="kicker">Treatments and prices</p><h2>Twelve treatments <em>at Apex</em></h2>{divider()}
-      <p>Starting prices at Apex. Your doctor confirms the plan and the amount at your consultation.</p></div>
+    <div class="sec-head"><h2>Treatments <em>and prices</em></h2>{divider()}
+      <p>Starting prices. Your doctor confirms the amount at the consultation.</p></div>
     <div class="menu-card gilt"><div class="menu">{menu}</div></div>
     <p class="menu-foot"><a class="btn" href="compare.html">Compare two treatments</a></p>
   </div>
@@ -72,7 +72,7 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
 
 <section class="sec lav" id="visit">
   <div class="wrap">
-    <div class="sec-head"><p class="kicker">Your visit</p><h2>Five steps <em>at the clinic</em></h2>{divider()}</div>
+    <div class="sec-head"><h2>Your <em>visit</em></h2>{divider()}</div>
     <ol class="steps">{steps}</ol>
   </div>
 </section>
@@ -89,9 +89,8 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
       <p class="ba-cap"><span>Before</span><span>After 1 month</span></p>
     </div>
     <div>
-      <p class="kicker">Apex results</p>
-      <h2>Profhilo, one month <em>after the first session</em></h2>
-      <p>Drag the line across the photo to compare. Pick another case below.</p>
+      <h2>Before <em>and after</em></h2>
+      <p>Profhilo at Apex, one month after the first session. Drag the line to compare.</p>
       <div class="thumbs" id="thumbs">{thumbs}</div>
       <dl class="stats"><div><dt>Sessions</dt><dd>Two, a month apart</dd></div><div><dt>Lasts</dt><dd>6 to 12 months</dd></div><div><dt>From</dt><dd>25,000 baht</dd></div></dl>
       <div class="tools"><button type="button" class="btn" data-ba="play">Play again</button><a class="btn" href="profhilo.html">Read about Profhilo</a></div>
@@ -102,8 +101,7 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
 
 <section class="sec plum" id="compare">
   <div class="wrap">
-    <div class="sec-head"><p class="kicker">Compare</p><h2>Two treatments, <em>side by side</em></h2><img class="orn-div" src="assets/img/orn/divider.svg" alt="">
-      <p>Pick one on each side to see what each does, how long it lasts and what it costs.</p></div>
+    <div class="sec-head"><h2>Compare <em>two treatments</em></h2><img class="orn-div" src="assets/img/orn/divider.svg" alt=""></div>
     <form class="pair" action="compare.html">
       <label>First{pick("a", "botox")}</label><span class="and">&amp;</span><label>Second{pick("b", "filler")}</label>
       <button class="btn lt" type="submit">Compare</button>
@@ -114,9 +112,8 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
 <section class="sec lav" id="book">
   <div class="wrap book">
     <div>
-      <p class="kicker">Book a consultation</p>
-      <h2>Talk to an Apex doctor <em>first</em></h2>
-      <p>Send your name and the treatment you have in mind, and Apex replies on LINE to set a day.</p>
+      <h2>Book a <em>consultation</em></h2>
+      <p>Send your details on LINE or call, and Apex sets a day with you.</p>
       <ul class="ways"><li><b>LINE</b><a href="{LINE_URL}">{LINE_ID}</a></li><li><b>Phone</b><a href="tel:{PHONE.replace("-", "")}">{PHONE}</a></li></ul>
     </div>
     <form class="form gilt" id="book-form">

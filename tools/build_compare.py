@@ -16,8 +16,8 @@ html = head('Compare two treatments | Apex Contour and Glow',
 {header()}
 <main>
 <section class="sec plum"><div class="wrap">
-  <div class="sec-head"><p class="kicker">Compare</p><h2>Two treatments, <em>side by side</em></h2>{divider()}
-    <p>Pick one treatment on each side. Your doctor makes the final choice at your consultation.</p></div>
+  <div class="sec-head"><h2>Compare <em>two treatments</em></h2>{divider()}
+    <p>Pick one on each side.</p></div>
   <form class="pair" action="compare.html" id="pair">
     <label>First{pick("a", "botox")}</label><span class="and">&amp;</span><label>Second{pick("b", "filler")}</label>
   </form>

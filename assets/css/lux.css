@@ -320,3 +320,4 @@ h1 em,h2 em{font-style:italic;color:var(--gold-dk)}
 @media (max-width:700px){.menu-card{padding:34px 20px 20px;background-size:30px 30px}}
 .cta{margin-top:40px}
 .cmp-card{background-color:#fff;padding:30px}.cmp-card .cmp-table{margin-top:0}@media (max-width:700px){.cmp-card{padding:12px}}
+.how li .n{display:block;margin-bottom:10px}

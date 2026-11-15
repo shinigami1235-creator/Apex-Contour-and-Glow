@@ -28,6 +28,7 @@ RULES = [
     ('stock phrase', r'\bthink of it as\b|\bin other words\b|\bthe whole point\b|\bat its core\b|\bthe real question\b|\bwhich is (what|why)\b|\bwhether you\'re\b|\bhere\'s (the thing|why|how)\b|^imagine\b|\bthe (catch|result|kicker|secret)\?|\bmore than just\b|\bnot your (average|typical)\b|\bit\'s (all )?about\b'),
     ('Claude habit', r'\bdeliberate(ly)?\b|\bevery single\b|\bload[- ]bearing\b|\bearns its keep\b|\brather than merely\b|\bsingle most\b|\bless like\b.*\bmore like\b'),
     ('gerund tail', r',\s*(ensuring|allowing|highlighting|reflecting|showcasing|making it|creating|leaving you|giving you|helping you|resulting in)\b'),
+    ('tagline', r'\b(planned|designed|made|crafted|tailored|built) (around|for) (you|your)\b|\bthe art of\b|\bdiscover\b|\bexperience the\b|\bmeets\b|\bunveil\w*|\breveal your\b|\byour best (self|you|skin)\b|\bconfidence\b|\bbeauty,? (redefined|reimagined)\b'),
     ('ball theme left over', r'\b(dances?|dance card|ball|gala|waltz|RSVP|evening\'s programme|tonight)\b'),
 ]
 NEED_PAIR = {'restatement'}
@@ -109,6 +110,8 @@ BAD = {
     'Each dance is one treatment on the card.': 'ball theme left over',
     'Profhilo hydrates dry skin. Profhilo hydrates dry skin well.': 'restatement',
     'Whether you\'re 30 or 40, there is a plan.': 'stock phrase',
+    'Twelve injectables, planned around your face.': 'tagline',
+    'Discover the art of a natural lift.': 'tagline',
 }
 GOOD = [
     'The unit is skin area in the plane of the photograph since it cannot measure millilitres.',

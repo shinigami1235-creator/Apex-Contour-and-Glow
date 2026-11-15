@@ -8,10 +8,7 @@ ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII']
 
 def page(slug, t):
     facts = ''.join(f'<div><dt>{E(a)}</dt><dd>{E(b)}</dd></div>' for a, b in t['facts'])
-    lead = E(t['lead'])
-    if ', ' in lead:
-        x, y = lead.split(', ', 1); lead = f'{x}, <em>{y}</em>'
-    how = ''.join(f'<li class="gilt sm"><span class="n">{ROMAN[i]}</span><h3>{E(h)}</h3><p>{E(p)}</p></li>' for i, (k, h, p) in enumerate(t['how']))
+    how = ''.join(f'<li class="gilt sm"><span class="n">{ROMAN[i]}</span><p>{E(p)}</p></li>' for i, (k, h, p) in enumerate(t['how']))
     alts = ''.join(f'<li><b>{E(a)}</b><span>{E(b)}</span>' + (f'<a href="{c}">{E(d)}</a>' if c else '') + '</li>' for a, b, c, d in t['not_for'])
     cards = lambda items: ''.join(f'<li><b>{E(a)}</b><em>{E(u)}</em></li>' for a, u in items)
     face = [(lab, u) for lab, u, *_ in t['face']]
@@ -41,7 +38,7 @@ def page(slug, t):
     <span class="line" aria-hidden="true"></span>
     <input class="range" type="range" min="0" max="100" value="50" aria-label="Move the line between before and after">
   </div></div><p class="ba-cap"><span>{E(lb)}</span><span>{E(la)}</span></p></div>
-  <div><p class="kicker">Apex results</p><h2>{E(t["name"])} <em>before and after</em></h2>
+  <div><h2>Before <em>and after</em></h2>
     <p>{E(R.get("caption", t["name"] + " at Apex. Drag the line across the photo to compare."))}</p>
     <div class="thumbs" id="thumbs">{thumbs}</div>
     <div class="tools"><button type="button" class="btn" data-ba="play">Play again</button></div>
@@ -50,7 +47,7 @@ def page(slug, t):
     elif R:
         imgs = ''.join(f'<button type="button" class="gal-item" data-full="assets/img/{R["set"]}-g{i}.webp"><img src="assets/img/{R["set"]}-g{i}.webp" alt="{E(t["name"])} result {i}" loading="lazy"></button>' for i in range(1, R['n'] + 1))
         results = f'''<section class="sec" id="results"><div class="wrap">
-  <div class="sec-head"><p class="kicker">Apex results</p><h2>{E(t["name"])} <em>before and after</em></h2>{divider()}
+  <div class="sec-head"><h2>Before <em>and after</em></h2>{divider()}
   <p>{E(R.get("caption", t["name"] + " at Apex. Tap a photo to see it large."))}</p></div>
   <div class="gallery">{imgs}</div><p class="fine center">Individual results vary.</p>
 </div></section>'''
@@ -74,35 +71,35 @@ def page(slug, t):
   </aside>
 </div></section>
 <section class="sec lav-2"><div class="wrap">
-  <div class="sec-head"><p class="kicker">How it works</p><h2 class="lead">{lead}</h2>{divider()}</div>
+  <div class="sec-head"><h2>How it <em>works</em></h2>{divider()}</div>
   <ol class="how">{how}</ol>
-  <div class="alt gilt sm"><h3>When another treatment fits better</h3><ul>{alts}</ul></div>
+  <div class="alt gilt sm"><h3>Not suited for</h3><ul>{alts}</ul></div>
 </div></section>
 <section class="sec where"><div class="wrap">
-  <div class="sec-head"><p class="kicker">Where it goes</p><h2>Areas for <em>{E(t["name"])}</em></h2>{divider()}</div>
+  <div class="sec-head"><h2>Treatment <em>areas</em></h2>{divider()}</div>
   {face_h}<ul class="where-grid">{cards(face)}</ul>{body_html}
   <p class="note center">{E(t["areas_note"])}</p>
 </div></section>
 <section class="sec lav"><div class="wrap">
-  <div class="sec-head"><p class="kicker">Your visit</p><h2>Step by step <em>at the clinic</em></h2>{divider()}</div>
+  <div class="sec-head"><h2>Your <em>visit</em></h2>{divider()}</div>
   <ol class="visit">{visit}</ol>
 </div></section>
 <section class="sec"><div class="wrap">
-  <div class="sec-head"><p class="kicker">What to expect</p><h2>From the first day <em>to the full result</em></h2>{divider()}</div>
+  <div class="sec-head"><h2>When you <em>see results</em></h2>{divider()}</div>
   <ol class="tl" style="--n:{len(t['timeline'])}">{tl}</ol>
 </div></section>
 {results}
 <section class="sec lav-2" id="prices"><div class="wrap">
-  <div class="sec-head"><p class="kicker">Prices</p><h2>{E(t["name"])} <em>at Apex</em></h2>{divider()}</div>
+  <div class="sec-head"><h2>{E(t["name"])} <em>prices</em></h2>{divider()}</div>
   <div class="price-wrap{'' if pkgs and table else ' solo'}">{table}<div class="pkgs">{pkgs}</div></div>
   <p class="note center">{E(pr["note"])}</p>
 </div></section>
 <section class="sec lav"><div class="wrap">
-  <div class="sec-head"><p class="kicker">Before and after your visit</p><h2>How to <em>prepare and recover</em></h2>{divider()}</div>
+  <div class="sec-head"><h2>Before and after <em>your visit</em></h2>{divider()}</div>
   <div class="care"><div class="gilt sm"><h3>Before you come</h3><ul>{before}</ul></div><div class="gilt sm"><h3>After you leave</h3>{after}{urgent}</div></div>
 </div></section>
 <section class="sec"><div class="wrap">
-  <div class="sec-head"><p class="kicker">Questions</p><h2>What people <em>ask us</em></h2>{divider()}</div>
+  <div class="sec-head"><h2>Questions</h2>{divider()}</div>
   <div class="faq-list">{faq}</div>
   <p class="center cta"><a class="btn solid" href="index.html#book">Book a consultation</a></p>
 </div></section>
