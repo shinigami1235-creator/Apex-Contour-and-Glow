@@ -58,7 +58,7 @@ void main(){
   p.y += uSmile * (.08 * cornerW + .04 * cheekW);
   p.x += sx * uSmile * .05 * cornerW;
   /* the working muscles glow while they move, so the change is easy to see */
-  float hx = clamp(uBrow * (browW + .6 * foreW) + uFrown * browW * (1. - smoothstep(.18, .42, ax)) + uSquint * (cheekW + crowW + is(aKind, 6.)) + uSmile * (cornerW + .7 * cheekW), 0., 1.);
+  float hx = clamp(uBrow * (browW + .6 * foreW) + uFrown * browW * (1. - smoothstep(.18, .42, ax)) + uSquint * (cheekW + crowW) + uSmile * (cornerW + .7 * cheekW), 0., 1.);
   /* blink: the upper lid comes down over the eye */
   p.y -= uBlink * .085 * is(aKind, 5.) * smoothstep(-.1, .05, p.y - uEye);
   /* dust: the points drift apart along a slow swirl */
@@ -247,6 +247,8 @@ export async function createHead(host, opts = {}){
   const state = {fade:opts.fadeOnScroll ? 0 : 1, fadeT:opts.fadeOnScroll ? 0 : 1, g:g0, gT:g0, after:1, afterT:1, wipe:opts.wipe ?? .5, yaw:yaw0, yawT:yaw0, pitch:.04, plan:[], points:true, dirty:true};
   const VIEWS = {front:0, q:-.62, side:-1.45};
 
+  /* filler never lands on the eye itself: the eyeball and upper lid stay dark, the lower lid takes a little */
+  const EYEMASK = new Float32Array(n).map((_, i) => H.kind[i] === 2 || H.kind[i] === 5 ? 0 : H.kind[i] === 6 ? .25 : 1);
   function computeDisp(){
     dispA.fill(0); dispB.fill(0); heat.fill(0); col.fill(0);
     const W = new Float32Array(n * 3), D = [new Float32Array(n), new Float32Array(n)], HT = new Float32Array(n);
@@ -258,7 +260,7 @@ export async function createHead(host, opts = {}){
         for (let i = 0; i < n; i++) {
           const dx = p[i * 3] - cx, dy = p[i * 3 + 1] - cy, dz = p[i * 3 + 2] - cz, r2 = dx * dx + dy * dy + dz * dz;
           if (r2 > R2 * 4) continue;
-          const w = Math.exp(-2 * r2 / R2);
+          const w = Math.exp(-2 * r2 / R2) * EYEMASK[i];
           D[g][i] += A * w;
           if (!g) { HT[i] = Math.max(HT[i], w); W[i * 3] += c[0] * w; W[i * 3 + 1] += c[1] * w; W[i * 3 + 2] += c[2] * w; }
         }

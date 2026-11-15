@@ -190,7 +190,7 @@
   };
   const start = () => {
     if (head !== null) return; head = false;
-    import('./../features/filler/head.js?v=19').then(m => m.createHead(host, {
+    import('./../features/filler/head.js?v=20').then(m => m.createHead(host, {
       base: 'assets/', features: true, soft: true, wipe: 0, yaw: -.15, morph: .4, zoom: .74,
       onTurn: y => { lookYaw = y; },
       visible: () => onScreen && !stage.hidden,
