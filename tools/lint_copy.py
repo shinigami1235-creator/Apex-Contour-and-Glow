@@ -135,8 +135,9 @@ def main(args):
     if selftest(): print('lint self-test failed'); return 2
     if args: files = args
     else:
-        files = sorted(glob.glob(os.path.join(ROOT, '*.html'))) + sorted(glob.glob(os.path.join(ROOT, 'assets/js/*.js'))) + sorted(glob.glob(os.path.join(ROOT, 'assets/features/*/*.js'))) \
-              + [os.path.join(ROOT, 'tools', 'tx_content.py')]
+        # privacy.html is Apex's own legal text, so it is left out
+        files = sorted(f for f in glob.glob(os.path.join(ROOT, '*.html')) if not f.endswith('privacy.html')) + sorted(glob.glob(os.path.join(ROOT, 'assets/js/*.js'))) \
+              + sorted(glob.glob(os.path.join(ROOT, 'assets/features/*/*.js'))) + [os.path.join(ROOT, 'tools', 'tx_content.py'), os.path.join(ROOT, 'tools', 'site_content.py')]
     ok = allowed(); hits = 0; seen = set()
     for f in files:
         src = from_html(f) if f.endswith('.html') else from_js(f) if f.endswith('.js') else from_py(f)

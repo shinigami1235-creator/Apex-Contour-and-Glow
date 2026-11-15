@@ -128,6 +128,8 @@ html = head(H['seo_title'], H['seo_desc']) + f'''
       <label>Phone<input name="phone" type="tel" autocomplete="tel" placeholder="081 234 5678"></label>
       <label>Treatment<select name="treatment">{book_opts}</select></label>
       <label>Preferred day<input name="day" type="date"></label>
+      <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+      <label class="consent"><input type="checkbox" name="consent" required><span>{E(H['book']['consent'])} <a href="privacy.html">{E(H['book']['privacy'])}</a></span></label>
       <button class="btn solid" type="submit"><span class="line-dot"></span>Send on LINE</button>
       <p class="fine">{E(H['book']['fine'])}</p>
     </form>

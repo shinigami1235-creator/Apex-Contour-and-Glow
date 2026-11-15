@@ -5,7 +5,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(SITE, 'tools'))
 from tx_content import TX
-from site_content import SETTINGS, HOME
+from site_content import SETTINGS, HOME, PRIVACY
 from tx_art import ICON
 from layout import ORDER, ROWS, C, PAIRS, ZONES, AREA, zones
 
@@ -23,6 +23,7 @@ out = {
     'lang': 'en',
     'settings': SETTINGS,
     'home': HOME,
+    'privacy': PRIVACY,
     'treatments': [treatment(k, i) for i, k in enumerate(ORDER)],
     'compare': {'rows': [list(r) for r in ROWS],
                 'pairs': [dict(zip(('a', 'b'), k.split('|')), note=v) for k, v in PAIRS.items()]},

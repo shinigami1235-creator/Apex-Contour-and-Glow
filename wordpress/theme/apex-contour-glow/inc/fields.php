@@ -112,7 +112,7 @@ function apex_plain( string $v, bool $multi = false ): string {
 function apex_clean( array $f, $v, string $lang ) {
 	switch ( $f['t'] ) {
 		case 'text': return apex_plain( (string) $v );
-		case 'textarea': return apex_plain( (string) $v, true );
+		case 'textarea': return str_replace( [ "\r\n", "\r" ], "\n", apex_plain( (string) $v, true ) );
 		case 'url': return apex_clean_link( (string) $v );
 		case 'image': return apex_img_store( apex_clean_link( (string) $v ) );
 		case 'number': $v = trim( (string) $v ); return is_numeric( $v ) ? $v + 0 : '';
@@ -160,6 +160,7 @@ function apex_settings_pages(): array {
 		'settings' => [ __( 'Site settings', 'apex' ), __( 'The site name, LINE, phone and footer on every page.', 'apex' ) ],
 		'home'     => [ __( 'Home page', 'apex' ), __( 'The headings and text of each part of the home page. The treatments, prices and photos come from Treatments and Before and after.', 'apex' ) ],
 		'compare'  => [ __( 'Compare', 'apex' ), __( 'The row names of the comparison table and the pairs shown under Often compared. Each treatment\'s values are in its Summary.', 'apex' ) ],
+		'privacy'  => [ __( 'Privacy policy', 'apex' ), __( 'The privacy policy page. Apex\'s DPO should approve any change.', 'apex' ) ],
 		'planner'  => [ __( 'Face planner', 'apex' ), __( 'The names on the area buttons beside the 3D face. Which treatments show for an area comes from each treatment\'s Face areas.', 'apex' ) ],
 	];
 }

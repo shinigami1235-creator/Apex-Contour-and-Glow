@@ -10,6 +10,7 @@ $page = $o instanceof WP_Post && $o->post_type === 'page' ? (string) get_post_me
 if ( is_front_page() || is_home() ) $html = apex_render_home( $S );
 elseif ( is_singular( 'apex_tx' ) && isset( $S['tx'][ (string) get_post_meta( $o->ID, '_apex_key', true ) ] ) ) $html = apex_render_tx( $S, (string) get_post_meta( $o->ID, '_apex_key', true ) );
 elseif ( $page === 'compare' ) $html = apex_render_compare( $S );
+elseif ( $page === 'privacy' ) $html = apex_render_privacy( $S );
 else {
 	status_header( 404 );
 	nocache_headers();

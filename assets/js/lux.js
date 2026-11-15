@@ -64,13 +64,31 @@
     });
   }
 
-  // ---- booking: the form opens LINE with the message written out ----
+  // events for Tag Manager (Apex settings › Tracking and code lists them)
+  const emit = (event, data) => { (window.dataLayer = window.dataLayer || []).push({ event, apex: data || {} }); };
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="https://line.me"], a[href^="tel:"]');
+    if (a) emit('apex_contact_click', { how: a.href.startsWith('tel:') ? 'phone' : 'line' });
+  });
+
+  // ---- booking: on WordPress the details are saved for the clinic first (window.CG_BOOK), then LINE opens with the message ----
   const form = document.getElementById('book-form');
-  if (form) form.addEventListener('submit', e => {
+  if (form) form.addEventListener('submit', async e => {
     e.preventDefault();
     const f = new FormData(form), day = f.get('day');
     const text = [`Hello Apex, I'd like to book a consultation.`, `Name: ${f.get('name')}`, f.get('phone') && `Phone: ${f.get('phone')}`,
       `Treatment: ${f.get('treatment')}`, day && `Preferred day: ${day}`].filter(Boolean).join('\n');
+    emit('apex_book_submit', { treatment: f.get('treatment') });
+    if (window.CG_BOOK) {
+      const btn = form.querySelector('button[type=submit]'); btn.disabled = true;
+      try {
+        const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 6000);
+        await fetch(window.CG_BOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
+          body: JSON.stringify({ ...Object.fromEntries(f), consent: !!f.get('consent'), lang: document.documentElement.lang }) });
+        clearTimeout(t);
+      } catch (err) { /* LINE still carries the message */ }
+      btn.disabled = false;
+    }
     location.href = `https://line.me/R/oaMessage/${encodeURIComponent(window.CG_LINE || '@apexbeauty')}/?${encodeURIComponent(text)}`;
   });
 
@@ -144,7 +162,7 @@
     b.addEventListener('click', () => {
       picked = b.dataset.z;
       if (b.parentElement.classList.contains('r')) side = 1; else if (b.parentElement.classList.contains('l')) side = -1;
-      show(picked); pickList(picked);
+      show(picked); pickList(picked); emit('apex_area_pick', { area: picked });
       hero.querySelectorAll('.fz').forEach(x => x.setAttribute('aria-pressed', x === b));
     });
   });

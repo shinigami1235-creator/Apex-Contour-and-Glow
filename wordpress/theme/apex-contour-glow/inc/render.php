@@ -40,10 +40,11 @@ function apex_head( string $title, string $desc ): string {
 	// treatment addresses for the scripts, which build links to the pages
 	$urls = [];
 	foreach ( apex_site()['order'] as $k ) $urls[ $k ] = apex_link( "$k.html" );
-	$wp .= '<script>window.CG_URLS = ' . wp_json_encode( $urls, JSON_UNESCAPED_SLASHES ) . '; window.CG_ASSETS = ' . wp_json_encode( apex_asset( '' ), JSON_UNESCAPED_SLASHES ) . ";</script>\n";
+	$wp .= '<script>window.CG_URLS = ' . wp_json_encode( $urls, JSON_UNESCAPED_SLASHES ) . '; window.CG_ASSETS = ' . wp_json_encode( apex_asset( '' ), JSON_UNESCAPED_SLASHES ) . '; window.CG_BOOK = ' . wp_json_encode( rest_url( 'apex/v1/book' ), JSON_UNESCAPED_SLASHES ) . ";</script>\n";
 	$lang = apex_lang();
+	$own = ! function_exists( 'apex_own_meta' ) || apex_own_meta();
 	return "<!DOCTYPE html>\n<html lang=\"" . esc_attr( $lang ) . "\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
-		. '<title>' . apex_e( $title ) . "</title>\n<meta name=\"description\" content=\"" . apex_e( $desc ) . "\">\n<meta name=\"theme-color\" content=\"#4a2563\">\n"
+		. ( $own ? '<title>' . apex_e( $title ) . "</title>\n<meta name=\"description\" content=\"" . apex_e( $desc ) . "\">\n" : '' ) . "<meta name=\"theme-color\" content=\"#4a2563\">\n"
 		. '<link rel="preload" href="assets/fonts/bodoni-moda-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>' . "\n"
 		. '<link rel="preload" href="assets/fonts/jost-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>' . "\n"
 		. '<link rel="stylesheet" href="assets/css/lux.css?v=' . APEX_VERSION . '">' . "\n" . $wp . '</head>';
@@ -63,7 +64,8 @@ function apex_footer( array $S ): string {
 		. '  <p>' . apex_e( $s['clinic'] ) . '</p>' . "\n"
 		. '  <p>LINE <a href="' . apex_line_url( $S ) . '">' . $s['line_id'] . '</a> · <a href="' . apex_tel( $S ) . '">' . $s['phone'] . '</a></p>'
 		. ( $s['permit'] !== '' ? "\n" . '  <p class="fine">' . apex_e( $s['permit'] ) . '</p>' : '' ) . "\n"
-		. '  <p class="fine">' . apex_e( $s['footer_note'] ) . '</p>' . "\n" . '</footer>';
+		. '  <p class="fine">' . apex_e( $s['footer_note'] ) . '</p>' . "\n"
+		. '  <p class="fine"><a href="privacy.html">' . apex_e( $S['home']['book']['privacy'] ) . '</a></p>' . "\n" . '</footer>';
 }
 function apex_scripts( array $S ): string {
 	return '<script src="assets/js/lux.js?v=' . APEX_VERSION . '"></script>';
@@ -236,6 +238,8 @@ function apex_render_home( array $S ): string {
       <label>Phone<input name="phone" type="tel" autocomplete="tel" placeholder="081 234 5678"></label>
       <label>Treatment<select name="treatment">$book_opts</select></label>
       <label>Preferred day<input name="day" type="date"></label>
+      <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+      <label class="consent"><input type="checkbox" name="consent" required><span>{$e( $H['book']['consent'] )} <a href="privacy.html">{$e( $H['book']['privacy'] )}</a></span></label>
       <button class="btn solid" type="submit"><span class="line-dot"></span>Send on LINE</button>
       <p class="fine">{$e( $H['book']['fine'] )}</p>
     </form>
@@ -422,7 +426,7 @@ function apex_render_compare( array $S ): string {
     note.hidden = !P[key]; note.textContent = P[key] || '';
     history.replaceState(null, '', '?a=' + pick.a + '&b=' + pick.b);
   };
-  [A, B].forEach(s => s.addEventListener('change', draw));
+  [A, B].forEach(s => s.addEventListener('change', () => { draw(); (window.dataLayer = window.dataLayer || []).push({ event: 'apex_compare', apex: { a: A.value, b: B.value } }); }));
   draw();
 })();
 </script>
@@ -452,4 +456,26 @@ JS;
 </main>
 HTML
 	. "\n" . apex_footer( $S ) . "\n" . $js . "\n" . apex_scripts( $S ) . "\n" . apex_tail( $S );
+}
+
+/* ---------- privacy policy: tools/build_privacy.py ---------- */
+/** Escapes text, then turns **bold** and [text](link) into markup, the same as inl() in tools/layout.py. */
+function apex_inl( $s ): string {
+	$h = apex_e( $s );
+	$h = preg_replace( '#\[([^\]\n]+)\]\(((?:https?://|mailto:|tel:|/|\#)[^\s()]*)\)#u', '<a href="$2">$1</a>', $h );
+	return preg_replace( '#\*\*([^*\n]+?)\*\*#u', '<strong>$1</strong>', $h );
+}
+function apex_render_privacy( array $S ): string {
+	$P = $S['privacy'];
+	$body = [];
+	foreach ( $P['blocks'] as [ $t, $x ] ) {
+		if ( $t === 'list' ) { $li = ''; foreach ( explode( "\n", $x ) as $i ) if ( trim( $i ) !== '' ) $li .= '<li>' . apex_inl( $i ) . '</li>'; $body[] = '<ul>' . $li . '</ul>'; }
+		elseif ( $t === 'h2' || $t === 'h3' ) $body[] = "<$t>" . apex_inl( $x ) . "</$t>";
+		else $body[] = '<p>' . apex_inl( $x ) . '</p>';
+	}
+	return apex_head( $P['seo_title'], $P['seo_desc'] ) . "\n" . '<body class="legal-page">' . "\n" . apex_header() . "\n" . '<main>' . "\n"
+		. '<section class="sec legal"><div class="wrap">' . "\n"
+		. '  <div class="sec-head"><h1>' . apex_e( $P['h1'] ) . '</h1>' . apex_divider() . '</div>' . "\n"
+		. '  <div class="legal-body gilt">' . "\n" . implode( "\n", $body ) . "\n" . '  </div>' . "\n" . '</div></section>' . "\n" . '</main>'
+		. "\n" . apex_footer( $S ) . "\n" . apex_scripts( $S ) . "\n" . apex_tail( $S );
 }

@@ -121,7 +121,7 @@ function apex_store_meta( int $id, array $f, $v ): void {
 }
 
 /* ---------- options: settings, home, compare, planner ---------- */
-const APEX_OPTIONS = [ 'settings', 'home', 'compare', 'planner' ];
+const APEX_OPTIONS = [ 'settings', 'home', 'compare', 'planner', 'privacy' ];
 function apex_read_opt( string $name, string $lang ): array {
 	$v = get_option( "apex_{$name}_{$lang}" );
 	$v = is_array( $v ) ? $v : [];
@@ -179,4 +179,4 @@ function apex_build_site( string $lang ): array {
 function apex_data_bump(): void { update_option( 'apex_data_v', (int) get_option( 'apex_data_v', 1 ) + 1, true ); }
 add_action( 'save_post', function ( $id, $p ) { if ( $p->post_type !== 'revision' && $p->post_type !== 'apex_lead' ) apex_data_bump(); }, 10, 2 );
 foreach ( [ 'deleted_post', 'trashed_post', 'untrashed_post' ] as $h ) add_action( $h, 'apex_data_bump' );
-add_action( 'updated_option', function ( $name ) { if ( preg_match( '/^apex_(settings|home|compare|planner)_/', $name ) ) apex_data_bump(); } );
+add_action( 'updated_option', function ( $name ) { if ( preg_match( '/^apex_(settings|home|compare|planner|privacy)_/', $name ) ) apex_data_bump(); } );

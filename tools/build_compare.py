@@ -55,7 +55,7 @@ html = head('Compare two treatments | Apex Contour and Glow',
     note.hidden = !P[key]; note.textContent = P[key] || '';
     history.replaceState(null, '', '?a=' + pick.a + '&b=' + pick.b);
   }};
-  [A, B].forEach(s => s.addEventListener('change', draw));
+  [A, B].forEach(s => s.addEventListener('change', () => {{ draw(); (window.dataLayer = window.dataLayer || []).push({{ event: 'apex_compare', apex: {{ a: A.value, b: B.value }} }}); }}));
   draw();
 }})();
 </script>

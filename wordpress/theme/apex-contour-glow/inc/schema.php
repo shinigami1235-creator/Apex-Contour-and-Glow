@@ -61,7 +61,8 @@ function apex_schema( string $type ): array {
 			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part' ),
 			apex_f( 'a', 'select', 'First treatment picked', [ 'o' => 'treatments' ] ), apex_f( 'b', 'select', 'Second treatment picked', [ 'o' => 'treatments' ] ) ] ] ),
 		apex_f( 'book', 'group', 'Book a consultation', [ 'f' => [
-			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part' ), apex_f( 'p', 'textarea', 'Text' ), apex_f( 'fine', 'text', 'Small print under the button' ) ] ] ),
+			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part' ), apex_f( 'p', 'textarea', 'Text' ), apex_f( 'fine', 'text', 'Small print under the button' ),
+			apex_f( 'consent', 'text', 'Consent box', [ 'h' => 'The sentence beside the tick box people must tick before sending' ] ), apex_f( 'privacy', 'text', 'Privacy policy link', [ 'h' => 'Also used in the footer' ] ) ] ] ),
 	];
 
 	/* ---------- treatments ---------- */
@@ -124,6 +125,13 @@ function apex_schema( string $type ): array {
 	/* ---------- face planner area names, one copy per language ---------- */
 	$S['planner'] = [
 		apex_f( 'zones', 'repeater', 'Areas', [ 'fixed' => 11, 'h' => 'The names on the buttons beside the 3D face. Where each sits on the face is fixed by the research behind it.', 'f' => [ apex_f( 'key', 'text', 'Key', [ 'keep' => true ] ), apex_f( 'label', 'text', 'Button' ) ] ] ),
+	];
+	/* ---------- privacy policy, one copy per language ---------- */
+	$S['privacy'] = [
+		apex_f( 'seo_title', 'text', 'SEO title' ), apex_f( 'seo_desc', 'textarea', 'SEO description' ), apex_f( 'h1', 'text', 'Heading' ),
+		apex_f( 'blocks', 'repeater', 'Text', [ 'list' => true, 'h' => 'One block per paragraph, heading or list. Inside the text, **two stars** make bold and [text](https://link) makes a link.', 'f' => [
+			apex_f( 't', 'select', 'Kind', [ 'o' => [ 'p' => 'Paragraph', 'h2' => 'Heading', 'h3' => 'Small heading', 'list' => 'List (one item per line)' ] ] ),
+			apex_f( 'x', 'textarea', 'Text' ) ] ] ),
 	];
 	return $S[ $type ] ?? [];
 }

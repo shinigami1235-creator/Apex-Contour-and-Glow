@@ -5,7 +5,7 @@ from tx_content import TX
 from site_content import SETTINGS
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 E = html.escape
-CSS_V = 4; JS_V = 8; HEAD_V = 18
+CSS_V = 5; JS_V = 8; HEAD_V = 18
 LINE_ID = SETTINGS['line_id']; PHONE = SETTINGS['phone']
 LINE_URL = 'https://line.me/R/ti/p/' + LINE_ID
 ORDER = ['botox', 'filler', 'harmonyca', 'radiesse', 'sculptra', 'juvelook', 'profhilo', 'skinvive', 'vitaran', 'nucleofill', 'celeb-skin', 'meso']
@@ -131,6 +131,7 @@ def footer():
   <p>LINE <a href="{LINE_URL}">{LINE_ID}</a> · <a href="tel:{PHONE.replace('-', '')}">{PHONE}</a></p>{f'''
   <p class="fine">{E(SETTINGS['permit'])}</p>''' if SETTINGS['permit'] else ''}
   <p class="fine">{E(SETTINGS['footer_note'])}</p>
+  <p class="fine"><a href="privacy.html">Privacy policy</a></p>
 </footer>'''
 
 def divider():
@@ -145,3 +146,10 @@ def cols(n, opts=(4, 3, 5)):
     for c in opts:
         if n % c == 0: return min(c, n)
     return max(opts, key=lambda c: (n % c) / c) if n > 2 else n
+
+def inl(s):
+    """Escapes text, then turns **bold** and [text](link) into markup (the privacy policy's inline formatting)."""
+    import re
+    h = E(s)
+    h = re.sub(r'\[([^\]\n]+)\]\(((?:https?://|mailto:|tel:|/|#)[^\s()]*)\)', r'<a href="\2">\1</a>', h)
+    return re.sub(r'\*\*([^*\n]+?)\*\*', r'<strong>\1</strong>', h)

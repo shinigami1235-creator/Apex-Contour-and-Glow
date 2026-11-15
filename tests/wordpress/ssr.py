@@ -16,17 +16,20 @@ def norm_wp(html):
     b = body(html)
     b = re.sub(r'<script>window\.CG_URLS = .*?</script>\n', '', b)
     b = re.sub(r'\n<script[^>]*speculationrules.*?</script>', '', b, flags=re.S)
+    b = re.sub(r'\n?<div class="ck" id="apex-ck".*?</script>\n', '', b, flags=re.S)   # the cookie banner
     b = re.sub(r'https?://[^"]*/wp-content/themes/apex-contour-glow/assets/', 'assets/', b)
     b = re.sub(rf'{re.escape(BASE)}/treatments/([a-z0-9-]+)/', r'\1.html', b)
     b = re.sub(rf'{re.escape(BASE)}/compare/', 'compare.html', b)
+    b = re.sub(rf'{re.escape(BASE)}/privacy/', 'privacy.html', b)
     b = re.sub(rf'{re.escape(BASE)}/(?=[#?"])', 'index.html', b)
     b = b.replace('&#038;', '&amp;')
+    b = re.sub(r'\s+</body>', '</body>', b)
     return re.sub(r'\?v=[\w.]+', '', b).rstrip()
 
 def norm_static(html):
-    return re.sub(r'\?v=[\w.]+', '', body(html)).rstrip()
+    return re.sub(r'\s+</body>', '</body>', re.sub(r'\?v=[\w.]+', '', body(html))).rstrip()
 
-pages = [('index.html', '/')] + [(f'{k}.html', f'/treatments/{k}/') for k in ORDER] + [('compare.html', '/compare/')]
+pages = [('index.html', '/')] + [(f'{k}.html', f'/treatments/{k}/') for k in ORDER] + [('compare.html', '/compare/'), ('privacy.html', '/privacy/')]
 bad = 0
 for f, path in pages:
     want = norm_static(open(os.path.join(SITE, f), encoding='utf-8').read())
