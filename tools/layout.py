@@ -2,10 +2,11 @@
 import html, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
+from site_content import SETTINGS
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 E = html.escape
 CSS_V = 4; JS_V = 6; HEAD_V = 18
-LINE_ID = '@apexbeauty'; PHONE = '080-500-0123'
+LINE_ID = SETTINGS['line_id']; PHONE = SETTINGS['phone']
 LINE_URL = 'https://line.me/R/ti/p/' + LINE_ID
 ORDER = ['botox', 'filler', 'harmonyca', 'radiesse', 'sculptra', 'juvelook', 'profhilo', 'skinvive', 'vitaran', 'nucleofill', 'celeb-skin', 'meso']
 ASK = 'Ask your doctor'
@@ -126,9 +127,10 @@ def footer():
     return f'''<footer class="foot">
   <img class="orn-div" src="assets/img/orn/divider.svg" alt="">
   <p class="mark">Apex <span>Contour and Glow</span></p>
-  <p>Apex Hospital &amp; Clinics, Bangkok</p>
-  <p>LINE <a href="{LINE_URL}">{LINE_ID}</a> · <a href="tel:{PHONE.replace('-', '')}">{PHONE}</a></p>
-  <p class="fine">Individual results vary. Treatments are done by licensed doctors after a consultation.</p>
+  <p>{E(SETTINGS['clinic'])}</p>
+  <p>LINE <a href="{LINE_URL}">{LINE_ID}</a> · <a href="tel:{PHONE.replace('-', '')}">{PHONE}</a></p>{f'''
+  <p class="fine">{E(SETTINGS['permit'])}</p>''' if SETTINGS['permit'] else ''}
+  <p class="fine">{E(SETTINGS['footer_note'])}</p>
 </footer>'''
 
 def divider():

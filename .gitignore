@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# built by wordpress/tools/export_content.py and the theme build
+wordpress/theme/*/import/
+wordpress/theme/*/assets/
+wordpress/dist/
