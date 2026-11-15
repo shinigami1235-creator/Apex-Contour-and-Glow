@@ -21,7 +21,7 @@ define( 'APEX_URI', get_template_directory_uri() );
 const APEX_LANGS = [ 'en', 'th' ];
 function apex_default_lang(): string { return 'en'; }
 
-foreach ( [ 'helpers', 'schema', 'types', 'data', 'render' ] as $f ) {
+foreach ( [ 'helpers', 'schema', 'types', 'data', 'render', 'fields' ] as $f ) {
 	require_once APEX_DIR . "/inc/$f.php";
 }
 if ( defined( 'WP_CLI' ) && WP_CLI ) require_once APEX_DIR . '/inc/cli.php';

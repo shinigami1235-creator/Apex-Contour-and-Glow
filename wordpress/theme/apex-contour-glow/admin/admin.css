@@ -1,0 +1,24 @@
+/* Apex admin forms */
+.apex-fields{max-width:980px}
+.apex-fields .apex-note{background:#f6f1fb;border-left:4px solid #6b3fa0;padding:10px 12px;margin:6px 0 14px}
+.apex-field{margin:0 0 14px}
+.apex-field>label,.apex-group>legend{display:block;font-weight:600;margin:0 0 4px}
+.apex-field .description{margin-top:4px}
+.apex-group{border:1px solid #dcdcde;border-radius:6px;padding:10px 14px 4px;margin:0 0 16px;background:#fff}
+.apex-group>legend{padding:0 6px}
+.apex-group .apex-group{background:#fbfbfc}
+.apex-rows{list-style:decimal;margin:8px 0 0 22px;padding:0}
+.apex-row{border:1px solid #e0e0e3;border-radius:6px;padding:8px 12px 2px;margin:0 0 10px;background:#fbfbfc;position:relative}
+.apex-row-tools{position:absolute;top:6px;right:10px;display:flex;gap:10px}
+.apex-row-tools .apex-del{color:#b32d2e}
+.apex-image{display:flex;gap:8px;align-items:center}
+.apex-thumb{flex:0 0 64px;height:48px;border:1px solid #dcdcde;border-radius:4px;background:#f0f0f1 center/cover;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.apex-thumb img{max-width:100%;max-height:100%;object-fit:contain}
+.apex-posts{display:grid;gap:6px;max-width:640px}
+.apex-check{font-weight:600}
+.apex-in-editor{opacity:.75}
+.apex-wording th{width:220px}
+.apex-wording code{font-size:12px}
+.apex-settings .nav-tab-wrapper{margin-bottom:14px}
+.apex-fixed>p>.apex-add,.apex-fixed .apex-del,.apex-fixed .apex-up,.apex-fixed .apex-down{display:none}
+.apex-field input[readonly]{background:#f6f7f7;color:#50575e}
