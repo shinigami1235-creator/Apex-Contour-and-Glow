@@ -3,7 +3,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 from tx_art import icon
-from layout import E, ROOT, head, header, footer, divider, scripts
+from layout import E, ROOT, head, header, footer, divider, scripts, cols
 ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII']
 
 def page(slug, t):
@@ -31,7 +31,7 @@ def page(slug, t):
     if R and R['mode'] == 'slider':
         lb, la = R.get('labels', ('Before', 'After'))
         thumbs = ''.join(f'<button type="button" data-i="{i}" class="{"on" if i == 1 else ""}"><img src="assets/img/{R["set"]}-{i}-after.webp" alt="{E(t["name"])} case {i}" loading="lazy"></button>' for i in range(1, R['n'] + 1)) if R['n'] > 1 else ''
-        results = f'''<section class="sec" id="results"><div class="wrap res">
+        results = f'''<section class="sec lav-2" id="results"><div class="wrap res gilt">
   <div class="ba-stage"><div class="mirror"><div class="glass ba" id="ba" data-set="{R["set"]}">
     <img src="assets/img/{R["set"]}-1-after.webp" alt="After {E(t["name"])}" class="after">
     <img src="assets/img/{R["set"]}-1-before.webp" alt="Before {E(t["name"])}" class="before">
@@ -40,7 +40,7 @@ def page(slug, t):
   </div></div><div class="plaques"><span class="pl-b">{E(lb)}</span><span class="pl-a">{E(la)}</span></div></div>
   <div><h2>Before <em>and after</em></h2>
     <p>{E(R.get("caption", t["name"] + " at Apex. Drag the line across the photo to compare."))}</p>
-    <div class="thumbs" id="thumbs">{thumbs}</div>
+    <div class="thumbs" id="thumbs" style="--tc:{R["n"]}">{thumbs}</div>
     <div class="tools"><button type="button" class="btn" data-ba="play">Play again</button></div>
     <p class="fine">Individual results vary.</p></div>
 </div></section>'''
@@ -49,7 +49,7 @@ def page(slug, t):
         results = f'''<section class="sec" id="results"><div class="wrap">
   <div class="sec-head"><h2>Before <em>and after</em></h2>{divider()}
   <p>{E(R.get("caption", t["name"] + " at Apex. Tap a photo to see it large."))}</p></div>
-  <div class="gallery">{imgs}</div><p class="fine center">Individual results vary.</p>
+  <div class="gallery" style="--cols:{cols(R['n'])}">{imgs}</div><p class="fine center">Individual results vary.</p>
 </div></section>'''
     src = ''.join(f'<li>{E(x)}</li>' for x in t['sources'])
     hook = ''.join(f'<p>{E(x)}</p>' for x in t['hook'])

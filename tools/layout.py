@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 E = html.escape
-CSS_V = 3; JS_V = 5; HEAD_V = 18
+CSS_V = 4; JS_V = 6; HEAD_V = 18
 LINE_ID = '@apexbeauty'; PHONE = '080-500-0123'
 LINE_URL = 'https://line.me/R/ti/p/' + LINE_ID
 ORDER = ['botox', 'filler', 'harmonyca', 'radiesse', 'sculptra', 'juvelook', 'profhilo', 'skinvive', 'vitaran', 'nucleofill', 'celeb-skin', 'meso']
@@ -136,3 +136,10 @@ def divider():
 
 def scripts():
     return f'<script src="assets/js/lux.js?v={JS_V}"></script>'
+
+
+def cols(n, opts=(4, 3, 5)):
+    """How many per row so the rows come out full, or as close as they can (the short row is centred)."""
+    for c in opts:
+        if n % c == 0: return min(c, n)
+    return max(opts, key=lambda c: (n % c) / c) if n > 2 else n

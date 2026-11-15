@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#4a2563">
 <link rel="preload" href="assets/fonts/bodoni-moda-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/jost-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/lux.css?v=3">
+<link rel="stylesheet" href="assets/css/lux.css?v=4">
 </head>
 <body class="cmp-page">
 <header class="topbar"><div class="wrap">
@@ -18,25 +18,24 @@
   <a class="btn lt" href="index.html#book">Book</a>
 </div></header>
 <main>
-<section class="sec plum"><div class="wrap">
-  <div class="sec-head"><h2>Compare <em>two treatments</em></h2><img class="orn-div" src="assets/img/orn/divider.svg" alt="">
-    <p>Pick one on each side.</p></div>
-  <form class="pair" action="compare.html" id="pair">
-    <label>First<select name="a" id="pick-a"><option value="botox" selected>Botox</option><option value="filler">Filler</option><option value="harmonyca">HArmonyCa</option><option value="radiesse">Radiesse</option><option value="sculptra">Sculptra</option><option value="juvelook">Juvelook</option><option value="profhilo">Profhilo</option><option value="skinvive">Skinvive</option><option value="vitaran">Vitaran</option><option value="nucleofill">Nucleofill</option><option value="celeb-skin">Celeb Skin</option><option value="meso">Meso</option></select></label><span class="and">&amp;</span><label>Second<select name="b" id="pick-b"><option value="botox">Botox</option><option value="filler" selected>Filler</option><option value="harmonyca">HArmonyCa</option><option value="radiesse">Radiesse</option><option value="sculptra">Sculptra</option><option value="juvelook">Juvelook</option><option value="profhilo">Profhilo</option><option value="skinvive">Skinvive</option><option value="vitaran">Vitaran</option><option value="nucleofill">Nucleofill</option><option value="celeb-skin">Celeb Skin</option><option value="meso">Meso</option></select></label>
-  </form>
-</div></section>
-<section class="sec lav-2"><div class="wrap">
+<section class="cmp-screen"><div class="wrap cmp-grid">
+  <div class="cmp-side">
+    <h1>Compare <em>two treatments</em></h1><img class="orn-div" src="assets/img/orn/divider.svg" alt="">
+    <form class="pair stack" action="compare.html" id="pair">
+      <label>First<select name="a" id="pick-a"><option value="botox" selected>Botox</option><option value="filler">Filler</option><option value="harmonyca">HArmonyCa</option><option value="radiesse">Radiesse</option><option value="sculptra">Sculptra</option><option value="juvelook">Juvelook</option><option value="profhilo">Profhilo</option><option value="skinvive">Skinvive</option><option value="vitaran">Vitaran</option><option value="nucleofill">Nucleofill</option><option value="celeb-skin">Celeb Skin</option><option value="meso">Meso</option></select></label><span class="and">&amp;</span><label>Second<select name="b" id="pick-b"><option value="botox">Botox</option><option value="filler" selected>Filler</option><option value="harmonyca">HArmonyCa</option><option value="radiesse">Radiesse</option><option value="sculptra">Sculptra</option><option value="juvelook">Juvelook</option><option value="profhilo">Profhilo</option><option value="skinvive">Skinvive</option><option value="vitaran">Vitaran</option><option value="nucleofill">Nucleofill</option><option value="celeb-skin">Celeb Skin</option><option value="meso">Meso</option></select></label>
+    </form>
+    <p class="kicker">Often compared</p>
+    <div class="pchips"><a href="compare.html?a=botox&amp;b=filler">Botox and Filler</a><a href="compare.html?a=celeb-skin&amp;b=vitaran">Celeb Skin and Vitaran</a><a href="compare.html?a=celeb-skin&amp;b=meso">Celeb Skin and Meso</a><a href="compare.html?a=harmonyca&amp;b=radiesse">HArmonyCa and Radiesse</a><a href="compare.html?a=harmonyca&amp;b=sculptra">HArmonyCa and Sculptra</a><a href="compare.html?a=filler&amp;b=profhilo">Filler and Profhilo</a><a href="compare.html?a=filler&amp;b=skinvive">Filler and Skinvive</a><a href="compare.html?a=nucleofill&amp;b=vitaran">Nucleofill and Vitaran</a><a href="compare.html?a=filler&amp;b=juvelook">Filler and Juvelook</a><a href="compare.html?a=juvelook&amp;b=sculptra">Juvelook and Sculptra</a></div>
+    <a class="btn solid" href="index.html#book">Book a consultation</a>
+  </div>
   <div class="gilt cmp-card">
   <table class="cmp-table">
-    <thead><tr><th></th><th data-s="a" data-f="name"></th><th data-s="b" data-f="name"></th></tr></thead>
-    <tbody><tr><th scope="row">What it is</th><td data-s="a" data-f="is"></td><td data-s="b" data-f="is"></td></tr><tr><th scope="row">Best for</th><td data-s="a" data-f="for"></td><td data-s="b" data-f="for"></td></tr><tr><th scope="row">First change</th><td data-s="a" data-f="first"></td><td data-s="b" data-f="first"></td></tr><tr><th scope="row">Lasts</th><td data-s="a" data-f="lasts"></td><td data-s="b" data-f="lasts"></td></tr><tr><th scope="row">Sessions</th><td data-s="a" data-f="sessions"></td><td data-s="b" data-f="sessions"></td></tr><tr><th scope="row">Downtime</th><td data-s="a" data-f="down"></td><td data-s="b" data-f="down"></td></tr><tr><th scope="row">From</th><td data-s="a" data-f="from"></td><td data-s="b" data-f="from"></td></tr><tr><th scope="row"></th><td><a class="btn" data-s="a" data-f="link"></a></td><td><a class="btn" data-s="b" data-f="link"></a></td></tr></tbody>
+    <thead><tr><th></th><th><span class="half" data-s="a" data-f="half"></span><span data-s="a" data-f="name"></span></th><th><span class="half" data-s="b" data-f="half"></span><span data-s="b" data-f="name"></span></th></tr></thead>
+    <tbody><tr><th scope="row">What it is</th><td data-s="a" data-f="is"></td><td data-s="b" data-f="is"></td></tr><tr><th scope="row">Best for</th><td data-s="a" data-f="for"></td><td data-s="b" data-f="for"></td></tr><tr><th scope="row">First change</th><td data-s="a" data-f="first"></td><td data-s="b" data-f="first"></td></tr><tr><th scope="row">Lasts</th><td data-s="a" data-f="lasts"></td><td data-s="b" data-f="lasts"></td></tr><tr><th scope="row">Sessions</th><td data-s="a" data-f="sessions"></td><td data-s="b" data-f="sessions"></td></tr><tr><th scope="row">Downtime</th><td data-s="a" data-f="down"></td><td data-s="b" data-f="down"></td></tr><tr><th scope="row">From</th><td data-s="a" data-f="from"></td><td data-s="b" data-f="from"></td></tr><tr class="go"><th scope="row"></th><td><a class="btn" data-s="a" data-f="link"></a></td><td><a class="btn" data-s="b" data-f="link"></a></td></tr></tbody>
   </table>
-  </div>
   <p class="cmp-note" id="pair-note" hidden></p>
-  <p class="note center">Prices are starting prices and promotions change. Check the latest on LINE @apexbeauty.</p>
-  <p class="kicker center" style="margin-top:40px">Often compared</p>
-  <div class="pchips"><a href="compare.html?a=botox&amp;b=filler">Botox and Filler</a><a href="compare.html?a=celeb-skin&amp;b=vitaran">Celeb Skin and Vitaran</a><a href="compare.html?a=celeb-skin&amp;b=meso">Celeb Skin and Meso</a><a href="compare.html?a=harmonyca&amp;b=radiesse">HArmonyCa and Radiesse</a><a href="compare.html?a=harmonyca&amp;b=sculptra">HArmonyCa and Sculptra</a><a href="compare.html?a=filler&amp;b=profhilo">Filler and Profhilo</a><a href="compare.html?a=filler&amp;b=skinvive">Filler and Skinvive</a><a href="compare.html?a=nucleofill&amp;b=vitaran">Nucleofill and Vitaran</a><a href="compare.html?a=filler&amp;b=juvelook">Filler and Juvelook</a><a href="compare.html?a=juvelook&amp;b=sculptra">Juvelook and Sculptra</a></div>
-  <p class="center cta"><a class="btn solid" href="index.html#book">Book a consultation</a></p>
+  <p class="note center">Starting prices. Promotions change, so check the latest on LINE @apexbeauty.</p>
+  </div>
 </div></section>
 </main>
 <footer class="foot">
@@ -69,6 +68,6 @@
   draw();
 })();
 </script>
-<script src="assets/js/lux.js?v=5"></script>
+<script src="assets/js/lux.js?v=6"></script>
 </body>
 </html>

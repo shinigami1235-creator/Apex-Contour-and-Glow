@@ -15,25 +15,24 @@ html = head('Compare two treatments | Apex Contour and Glow',
 <body class="cmp-page">
 {header()}
 <main>
-<section class="sec plum"><div class="wrap">
-  <div class="sec-head"><h2>Compare <em>two treatments</em></h2>{divider()}
-    <p>Pick one on each side.</p></div>
-  <form class="pair" action="compare.html" id="pair">
-    <label>First{pick("a", "botox")}</label><span class="and">&amp;</span><label>Second{pick("b", "filler")}</label>
-  </form>
-</div></section>
-<section class="sec lav-2"><div class="wrap">
+<section class="cmp-screen"><div class="wrap cmp-grid">
+  <div class="cmp-side">
+    <h1>Compare <em>two treatments</em></h1>{divider()}
+    <form class="pair stack" action="compare.html" id="pair">
+      <label>First{pick("a", "botox")}</label><span class="and">&amp;</span><label>Second{pick("b", "filler")}</label>
+    </form>
+    <p class="kicker">Often compared</p>
+    <div class="pchips">{chips}</div>
+    <a class="btn solid" href="index.html#book">Book a consultation</a>
+  </div>
   <div class="gilt cmp-card">
   <table class="cmp-table">
-    <thead><tr><th></th><th data-s="a" data-f="name"></th><th data-s="b" data-f="name"></th></tr></thead>
-    <tbody>{rows}<tr><th scope="row"></th><td><a class="btn" data-s="a" data-f="link"></a></td><td><a class="btn" data-s="b" data-f="link"></a></td></tr></tbody>
+    <thead><tr><th></th><th><span class="half" data-s="a" data-f="half"></span><span data-s="a" data-f="name"></span></th><th><span class="half" data-s="b" data-f="half"></span><span data-s="b" data-f="name"></span></th></tr></thead>
+    <tbody>{rows}<tr class="go"><th scope="row"></th><td><a class="btn" data-s="a" data-f="link"></a></td><td><a class="btn" data-s="b" data-f="link"></a></td></tr></tbody>
   </table>
-  </div>
   <p class="cmp-note" id="pair-note" hidden></p>
-  <p class="note center">Prices are starting prices and promotions change. Check the latest on LINE @apexbeauty.</p>
-  <p class="kicker center" style="margin-top:40px">Often compared</p>
-  <div class="pchips">{chips}</div>
-  <p class="center cta"><a class="btn solid" href="index.html#book">Book a consultation</a></p>
+  <p class="note center">Starting prices. Promotions change, so check the latest on LINE @apexbeauty.</p>
+  </div>
 </div></section>
 </main>
 {footer()}

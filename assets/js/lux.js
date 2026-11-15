@@ -131,6 +131,8 @@
     list.querySelector('.area').textContent = names[z];
     list.querySelector('.basis').innerHTML = [inf.codes && `<li><i></i>Filler: ${esc(inf.codes)}</li>`, inf.toxin && `<li><i class="t"></i>Botox: ${esc(inf.toxin)}</li>`,
       inf.bap && `<li><i></i>Skin boosters: ${esc(inf.bap)}</li>`].filter(Boolean).join('');
+    const n = (zones[z] || []).length, cols = n <= 4 ? n : n % 4 === 0 ? 4 : n % 3 === 0 ? 3 : n % 5 === 0 ? 5 : n === 7 ? 4 : 3;
+    list.querySelector('.txc').style.setProperty('--cols', cols);
     list.querySelector('.txc').innerHTML = (zones[z] || []).map(e =>
       `<li><a href="${e.slug}.html"><span class="top"><b>${esc(e.name)}</b><span class="pr">${/\d/.test(e.price) ? 'from ' + esc(e.price) : esc(e.price)}</span></span>` +
       `<span class="amt">${e.note ? esc(e.note) : '&nbsp;'}</span><span class="go">Read more</span></a></li>`).join('');

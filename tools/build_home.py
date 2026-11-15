@@ -16,13 +16,21 @@ def item(k):
 menu = ''.join(f'<div><h3>{half} <span>{sub}</span></h3><ul>' + ''.join(item(k) for k in ORDER if TX[k]['half'] == half) + '</ul></div>'
                for half, sub in (('Contour', 'shape and lift'), ('Glow', 'skin quality')))
 col = lambda side: ''.join(f'<button type="button" class="fz" data-z="{k}">{E(lab)}</button>' for k, lab, v, sd in ZONES if sd == side)
-STEPS = [('Consultation', 'Your doctor looks at your face, asks what bothers you and picks the treatment and the amount.'),
-         ('Numbing cream', 'The cream goes on first and sits for a while before your doctor starts.'),
-         ('Treatment', 'A fine needle at each point, a few seconds each. Your doctor tells you how many points before starting.'),
-         ('Ice and rest', 'A little swelling or a small bruise can show for a few days.'),
-         ('Follow-up', 'Your doctor checks the result with you and tells you when to come back.')]
+STEPS = [('talk', 'Consultation', 'Your doctor looks at your face, asks what bothers you and picks the treatment and the amount.', '15 to 20 minutes'),
+         ('tube', 'Numbing cream', 'The cream goes on first and sits before your doctor starts.', '20 to 30 minutes'),
+         ('needle', 'Treatment', 'A fine needle at each point, a few seconds each. Your doctor tells you how many points before starting.', '10 to 30 minutes'),
+         ('ice', 'Ice and rest', 'A little swelling or a small bruise can show for a few days.', 'About 10 minutes'),
+         ('cal', 'Follow-up', 'Your doctor checks the result with you and tells you when to come back.', '2 weeks later')]
 ROMAN = ['I', 'II', 'III', 'IV', 'V']
-steps = ''.join(f'<li class="gilt sm"><span class="n">{ROMAN[i]}</span><h3>{E(a)}</h3><p>{E(b)}</p></li>' for i, (a, b) in enumerate(STEPS))
+SICON = {
+ 'talk': '<path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+ 'tube': '<path d="M9 3h6v3H9z"/><path d="M8 6h8l-1 14H9z"/><path d="M10 11h4"/>',
+ 'needle': '<path d="M14 4l6 6M17 7L8 16l-2 0 0-2 9-9M6 18l-2 2M11 9l2 2M9 11l2 2"/>',
+ 'ice': '<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/><path d="M10 4.5l2 1.5 2-1.5M10 19.5l2-1.5 2 1.5"/>',
+ 'cal': '<rect x="4" y="5" width="16" height="15" rx="1"/><path d="M4 9h16M8 3v4M16 3v4M9 14l2 2 4-4"/>',
+}
+steps = ''.join(f'<li class="gilt sm"><span class="med"><svg viewBox="0 0 24 24" aria-hidden="true">{SICON[ic]}</svg></span><span class="n">{ROMAN[i]}</span>'
+                f'<h3>{E(a)}</h3><p>{E(b)}</p><span class="time">{E(t)}</span></li>' for i, (ic, a, b, t) in enumerate(STEPS))
 def pick(name, sel):
     return f'<select name="{name}">' + ''.join(f'<option value="{k}"{" selected" if k == sel else ""}>{E(TX[k]["name"])}</option>' for k in ORDER) + '</select>'
 book_opts = '<option>Not sure yet</option>' + ''.join(f'<option>{E(TX[k]["name"])}</option>' for k in ORDER)
@@ -73,11 +81,12 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
   <div class="wrap">
     <div class="sec-head"><h2>Your <em>visit</em></h2>{divider()}</div>
     <ol class="steps">{steps}</ol>
+    <p class="steps-foot">A visit takes about 1 to 1.5 hours.</p>
   </div>
 </section>
 
-<section class="sec" id="results">
-  <div class="wrap res">
+<section class="sec lav-2" id="results">
+  <div class="wrap res gilt">
     <div>
       <div class="ba-stage"><div class="mirror"><div class="glass ba" id="ba" data-set="profhilo">
         <img src="assets/img/profhilo-1-after.webp" alt="After Profhilo, one month" class="after">
@@ -90,7 +99,7 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
     <div>
       <h2>Before <em>and after</em></h2>
       <p>Profhilo at Apex, one month after the first session. Drag the line to compare.</p>
-      <div class="thumbs" id="thumbs">{thumbs}</div>
+      <div class="thumbs" id="thumbs" style="--tc:{R['n']}">{thumbs}</div>
       <dl class="stats"><div><dt>Sessions</dt><dd>Two, a month apart</dd></div><div><dt>Lasts</dt><dd>6 to 12 months</dd></div><div><dt>From</dt><dd>25,000 baht</dd></div></dl>
       <div class="tools"><button type="button" class="btn" data-ba="play">Play again</button><a class="btn" href="profhilo.html">Read about Profhilo</a></div>
       <p class="fine">Individual results vary.</p>
