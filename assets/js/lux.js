@@ -8,10 +8,15 @@
   if (ba) {
     const before = ba.querySelector('.before'), after = ba.querySelector('.after'), range = ba.querySelector('.range'), set_ = ba.dataset.set;
     let run = 0, drag = false;
-    const set = v => { v = Math.max(0, Math.min(100, v)); before.style.clipPath = `inset(0 ${100 - v}% 0 0)`; ba.style.setProperty('--x', v + '%'); range.value = v; };
+    const plB = document.querySelector('.pl-b'), plA = document.querySelector('.pl-a');
+    const set = v => {
+      v = Math.max(0, Math.min(100, v)); before.style.clipPath = `inset(0 ${100 - v}% 0 0)`; ba.style.setProperty('--x', v + '%'); range.value = v;
+      if (plB) { plB.classList.toggle('on', v > 60); plA.classList.toggle('on', v < 40); }
+    };
     const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
     const play = () => {
       const id = ++run; if (still) { set(50); return; }
+      ba.classList.remove('shine'); void ba.offsetWidth; ba.classList.add('shine');
       const keys = [[0, 100], [600, 100], [2400, 0], [3000, 0], [4100, 50]], t0 = performance.now();
       const step = now => {
         if (id !== run) return;
@@ -72,14 +77,14 @@
   // ---- face planner: the 3D head in the gold oval, the areas beside it, and the filler head in the second tab ----
   const hero = document.getElementById('planner');
   if (!hero || !window.CG_ZONES) return;
-  const { zones, names, verts } = window.CG_ZONES;
+  const { zones, names, verts, pts, fill, info } = window.CG_ZONES;
   const stage = hero.querySelector('.planner'), host = document.getElementById('planner-head');
   const list = hero.querySelector('.picks .list'), empty = hero.querySelector('.picks .empty');
   const leads = hero.querySelector('.leads'), ctx = leads.getContext('2d');
   const btn = {}; hero.querySelectorAll('.zcol .fz').forEach(b => { btn[b.dataset.z] = b; });
   const narrow = matchMedia('(max-width: 700px)');
   const GOLD = '#f0d397';
-  let head = null, picked = null, showing = 0, onScreen = false;
+  let head = null, picked = null, hovered = null, showing = 0, onScreen = false;
   let lookYaw = -.15, lookPitch = .04, pitchNow = .04;
 
   // until the head loads, the labels sit evenly down each side
@@ -87,77 +92,99 @@
     if (narrow.matches) { Object.values(btn).forEach(b => { b.style.top = ''; }); return; }
     for (const side of ['l', 'r']) {
       const bs = [...hero.querySelectorAll('.zcol.' + side + ' .fz')], h = stage.clientHeight;
-      bs.forEach((b, i) => { b.style.top = (h * (.16 + .68 * i / Math.max(1, bs.length - 1))) + 'px'; });
+      bs.forEach((b, i) => { b.style.top = (h * (.2 + .6 * i / Math.max(1, bs.length - 1))) + 'px'; });
     }
   };
   spread();
   narrow.addEventListener('change', spread);
 
-  // each area turns the head to the angle that shows it best, toward the side of the face it sits on
+  // each area turns the head to the angle that shows it best
   const BEST = { forehead: [0, .1], brows: [0, .05], eyes: [.6, 0], temples: [.95, .02], undereyes: [.3, .05], cheeks: [.65, 0],
-    smile: [.4, 0], lips: [.35, 0], chin: [1.25, -.02], jaw: [.85, -.04], neck: [.6, -.14], skin: [.15, .04] };
+    smile: [.4, 0], lips: [.35, 0], chin: [.6, -.03], jaw: [.85, -.04], neck: [.5, -.14], skin: [.15, .04] };
+  let side = -1;
   const lookAt = z => {
     const b = z && BEST[z]; if (!b) { lookPitch = .04; return; }
-    const x = head && verts[z] != null ? head.sideX(verts[z]) : -1;
-    lookYaw = b[0] ? b[0] * (x > .04 ? 1 : -1) : 0; lookPitch = .04 + b[1];
+    lookYaw = b[0] * side; lookPitch = .04 + b[1];
   };
-  const light = z => { if (!head) return; head.jumpAmount(1); head.setPlan(z && verts[z] ? [{ v: verts[z], ml: .0001, color: GOLD }] : []); };
-  // picking an area shows the treatment on the face: the muscle Botox relaxes moves and lets go, and a filler area fills out in gold
+  // picking an area shows the treatment on the face: the muscle Botox relaxes moves and lets go, and the filler points fill out in gold
   const ACT = { forehead: 'brow', brows: 'frown', eyes: 'squint', lips: 'smile' };
-  const FILL = { temples: 1.5, undereyes: .6, cheeks: 1.6, smile: 1, lips: .8, chin: 1.2, jaw: 1.6, neck: .8 };
   const tw = (ms, fn) => new Promise(res => { if (still) { fn(1); return res(); } const t0 = performance.now(); const f = now => { const u = Math.min(1, (now - t0) / ms); fn(u * u * (3 - 2 * u)); u < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
   const show = async z => {
-    if (!head) return; const id = ++showing; lookAt(z);
+    if (!head) return; const id = ++showing; lookAt(z); head.setPlan([]);
     const act = ACT[z];
     if (act) {
-      light(null);
       await tw(650, u => head.setFace({ [act]: u })); await new Promise(r => setTimeout(r, 700));
       if (id !== showing) return;
       await tw(1100, u => head.setFace({ [act]: 1 - u }));
     }
     if (id !== showing) return;
-    if (FILL[z]) { head.setPlan([{ v: verts[z], ml: FILL[z], color: GOLD }]); head.jumpAmount(0); head.setAmount(1); }
-    else if (z === 'skin') head.setPlan(Object.values(verts).map(v => ({ v, ml: .0001, color: GOLD })));
-    else light(z);
+    const f = (fill[z] || []).filter(([v, ml]) => ml > 0);
+    if (f.length && z !== 'skin') { head.setPlan(f.map(([v, ml]) => ({ v, ml, color: GOLD }))); head.jumpAmount(0); head.setAmount(1); }
     showing = 0;
   };
+  const pickList = z => {
+    const inf = info[z] || {};
+    list.querySelector('.area').textContent = names[z];
+    list.querySelector('.basis').innerHTML = [inf.codes && `<li><i></i>Filler: ${esc(inf.codes)}</li>`, inf.toxin && `<li><i class="t"></i>Botox: ${esc(inf.toxin)}</li>`,
+      inf.bap && `<li><i></i>Skin boosters: ${esc(inf.bap)}</li>`].filter(Boolean).join('');
+    list.querySelector('.txc').innerHTML = (zones[z] || []).map(e =>
+      `<li><a href="${e.slug}.html"><span class="top"><b>${esc(e.name)}</b><span class="pr">${/\d/.test(e.price) ? 'from ' + esc(e.price) : esc(e.price)}</span></span>` +
+      `<span class="amt">${e.note ? esc(e.note) : '&nbsp;'}</span><span class="go">Read more</span></a></li>`).join('');
+    empty.hidden = true; list.hidden = false;
+  };
   hero.querySelectorAll('.fz').forEach(b => {
-    b.addEventListener('pointerenter', () => { if (b.dataset.z !== 'skin') { lookAt(b.dataset.z); if (!showing) light(b.dataset.z); } });
-    b.addEventListener('pointerleave', () => { lookAt(picked); if (!showing) light(picked); });
+    b.addEventListener('pointerenter', () => { hovered = b.dataset.z; if (b.parentElement.classList.contains('r')) side = 1; else if (b.parentElement.classList.contains('l')) side = -1; lookAt(hovered); });
+    b.addEventListener('pointerleave', () => { hovered = null; lookAt(picked); });
     b.addEventListener('click', () => {
-      picked = b.dataset.z; show(picked);
+      picked = b.dataset.z;
+      if (b.parentElement.classList.contains('r')) side = 1; else if (b.parentElement.classList.contains('l')) side = -1;
+      show(picked); pickList(picked);
       hero.querySelectorAll('.fz').forEach(x => x.setAttribute('aria-pressed', x === b));
-      list.querySelector('h3').textContent = names[picked];
-      list.querySelector('ul').innerHTML = (zones[picked] || []).map(e =>
-        `<li><a href="${e.slug}.html"><b>${esc(e.name)}</b><span>${e.note ? esc(e.note) + ' · ' : ''}<i>from ${esc(e.price)}</i></span></a></li>`).join('');
-      empty.hidden = true; list.hidden = false;
     });
   });
 
-  // a gold thread runs from each label to its place on the face, and the labels follow their areas as the head turns
+  // gold points mark where filler goes (round) and where Botox goes (diamond), on both sides of the face;
+  // a gold thread runs from each label to the nearest point of its area
   const draw = () => {
     if (!head) return;
     const sr = stage.getBoundingClientRect(), hr = host.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
     if (leads.width !== Math.round(sr.width * dpr) || leads.height !== Math.round(sr.height * dpr)) { leads.width = Math.round(sr.width * dpr); leads.height = Math.round(sr.height * dpr); }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, sr.width, sr.height);
-    const dot = (x, y, r, a) => { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(255,240,205,${a})`); g.addColorStop(1, 'rgba(230,200,143,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); };
-    if (narrow.matches) {
-      if (picked && verts[picked]) { const a = head.anchor(verts[picked]); dot(a.x + hr.left - sr.left, a.y + hr.top - sr.top, 14 + 4 * Math.sin(performance.now() / 300), .95); }
-      return;
-    }
-    for (const side of ['l', 'r']) {
-      const its = Object.keys(btn).filter(k => btn[k].parentElement.classList.contains(side)).map(k => {
-        const a = head.anchor(verts[k]); return { k, a, x: a.x + hr.left - sr.left, y: a.y + hr.top - sr.top };
-      }).sort((p, q) => p.y - q.y);
+    const ox = hr.left - sr.left, oy = hr.top - sr.top, t = performance.now() / 1000;
+    const at = v => { const a = head.anchor(v); return { x: a.x + ox, y: a.y + oy, f: a.front }; };
+    const mark = (p, kind, k) => {
+      if (p.f < .12) return;
+      const r = 3.2 + .8 * Math.sin(t * 3 + k), a = Math.min(1, p.f * 1.3);
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.4);
+      g.addColorStop(0, `rgba(255,236,190,${.55 * a})`); g.addColorStop(1, 'rgba(240,211,151,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.4, 0, 7); ctx.fill();
+      ctx.fillStyle = kind === 't' ? `rgba(255,255,255,${a})` : `rgba(246,220,160,${a})`;
+      ctx.beginPath();
+      if (kind === 't') { ctx.moveTo(p.x, p.y - r); ctx.lineTo(p.x + r, p.y); ctx.lineTo(p.x, p.y + r); ctx.lineTo(p.x - r, p.y); ctx.closePath(); }
+      else ctx.arc(p.x, p.y, r * .8, 0, 7);
+      ctx.fill();
+    };
+    const zone = hovered || picked;
+    const zp = zone && pts[zone] ? pts[zone].map(([v, kind]) => ({ ...at(v), kind })) : [];
+    zp.forEach((p, k) => mark(p, p.kind, k));
+    if (narrow.matches) return;
+    for (const sd of ['l', 'r']) {
+      const keys = Object.keys(btn).filter(k => btn[k].parentElement.classList.contains(sd));
+      const its = keys.map(k => {
+        // the point of this area that faces the viewer best, on this label's side when it can be seen
+        const cand = (pts[k] || [[verts[k]]]).map(([v]) => at(v)).filter(p => p.f > .15);
+        const p = cand.length ? cand.reduce((a, b) => ((sd === 'l' ? -b.x : b.x) + 60 * b.f > (sd === 'l' ? -a.x : a.x) + 60 * a.f ? b : a)) : at(verts[k]);
+        return { k, p };
+      }).sort((a, b) => a.p.y - b.p.y);
       let last = -1e9;
       for (const it of its) {
-        const b = btn[it.k], h = b.offsetHeight + 8, y = Math.max(it.y, last + h); last = y;
+        const b = btn[it.k], h = b.offsetHeight + 8, y = Math.max(it.p.y, last + h); last = y;
         b.style.top = (y - b.offsetHeight / 2) + 'px';
-        const br = b.getBoundingClientRect(), lx = side === 'l' ? br.right - sr.left + 4 : br.left - sr.left - 4;
-        const on = it.k === picked, al = Math.min(1, (.22 + .5 * it.a.front) * (on ? 1.8 : 1));
-        ctx.strokeStyle = `rgba(227,197,142,${al})`; ctx.lineWidth = on ? 1.4 : .8;
-        ctx.beginPath(); ctx.moveTo(lx, y); ctx.lineTo(lx + (side === 'l' ? 14 : -14), y); ctx.lineTo(it.x, it.y); ctx.stroke();
-        dot(it.x, it.y, on ? 12 : 6, .85 * it.a.front + .1);
+        const br = b.getBoundingClientRect(), lx = sd === 'l' ? br.right - sr.left + 4 : br.left - sr.left - 4;
+        const on = it.k === zone, al = Math.min(1, (.18 + .45 * it.p.f) * (on ? 2 : 1));
+        ctx.strokeStyle = `rgba(227,197,142,${al})`; ctx.lineWidth = on ? 1.3 : .7;
+        ctx.beginPath(); ctx.moveTo(lx, y); ctx.lineTo(lx + (sd === 'l' ? 14 : -14), y); ctx.lineTo(it.p.x, it.p.y); ctx.stroke();
+        if (!on) { ctx.fillStyle = `rgba(240,211,151,${.25 + .5 * it.p.f})`; ctx.beginPath(); ctx.arc(it.p.x, it.p.y, 2, 0, 7); ctx.fill(); }
       }
     }
   };

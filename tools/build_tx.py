@@ -32,12 +32,12 @@ def page(slug, t):
         lb, la = R.get('labels', ('Before', 'After'))
         thumbs = ''.join(f'<button type="button" data-i="{i}" class="{"on" if i == 1 else ""}"><img src="assets/img/{R["set"]}-{i}-after.webp" alt="{E(t["name"])} case {i}" loading="lazy"></button>' for i in range(1, R['n'] + 1)) if R['n'] > 1 else ''
         results = f'''<section class="sec" id="results"><div class="wrap res">
-  <div><div class="ba-wrap gilt"><div class="ba" id="ba" data-set="{R["set"]}" style="--ar:{R.get("ar", "540/860")}">
+  <div class="ba-stage"><div class="mirror"><div class="glass ba" id="ba" data-set="{R["set"]}">
     <img src="assets/img/{R["set"]}-1-after.webp" alt="After {E(t["name"])}" class="after">
     <img src="assets/img/{R["set"]}-1-before.webp" alt="Before {E(t["name"])}" class="before">
-    <span class="line" aria-hidden="true"></span>
+    <span class="sheen" aria-hidden="true"></span><span class="line" aria-hidden="true"></span>
     <input class="range" type="range" min="0" max="100" value="50" aria-label="Move the line between before and after">
-  </div></div><p class="ba-cap"><span>{E(lb)}</span><span>{E(la)}</span></p></div>
+  </div></div><div class="plaques"><span class="pl-b">{E(lb)}</span><span class="pl-a">{E(la)}</span></div></div>
   <div><h2>Before <em>and after</em></h2>
     <p>{E(R.get("caption", t["name"] + " at Apex. Drag the line across the photo to compare."))}</p>
     <div class="thumbs" id="thumbs">{thumbs}</div>

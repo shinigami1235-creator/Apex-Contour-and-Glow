@@ -48,13 +48,14 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
     <div class="planner" data-panel="map">
       <canvas class="leads" aria-hidden="true"></canvas>
       <div class="zcol l">{col("l")}</div>
-      <div class="oval"><div class="glass"><div class="head" id="planner-head"></div></div></div>
+      <div class="mirror"><div class="glass"><div class="head" id="planner-head"></div></div></div>
       <div class="zcol r">{col("r")}</div>
     </div>
     <div class="picks" data-panel="map" aria-live="polite">
       <p class="empty">Tap an area. Drag the face to turn it.</p>
-      <div class="list" hidden><h3></h3><ul></ul></div>
+      <div class="list" hidden><p class="area"></p><ul class="basis"></ul><ul class="txc"></ul></div>
       <button type="button" class="fz fz-skin" data-z="skin">The whole face</button>
+      <p class="refs">Filler areas follow the MD Codes (<a href="https://doi.org/10.1007/s00266-020-01762-7">de Maio, Aesthetic Plastic Surgery 2021</a>). Botox points follow published injection guides (<a href="https://doi.org/10.1097/01.PRS.0000144795.76040.D3">Carruthers, Plastic and Reconstructive Surgery 2004</a>; <a href="https://doi.org/10.3390/toxins15020082">Toxins 2023</a>; <a href="https://doi.org/10.5115/acb.22.258">Anatomy and Cell Biology 2023</a>). Simulation only. Your doctor decides the points and amounts.</p>
     </div>
     <div class="sim" data-panel="sim" hidden><div id="filler-sim"></div>
       <p class="note center">Simulation only. Your doctor decides the amount at your consultation.</p></div>
@@ -80,13 +81,13 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
 <section class="sec" id="results">
   <div class="wrap res">
     <div>
-      <div class="ba-wrap gilt"><div class="ba" id="ba" data-set="profhilo" style="--ar:{R["ar"]}">
+      <div class="ba-stage"><div class="mirror"><div class="glass ba" id="ba" data-set="profhilo">
         <img src="assets/img/profhilo-1-after.webp" alt="After Profhilo, one month" class="after">
         <img src="assets/img/profhilo-1-before.webp" alt="Before Profhilo" class="before">
-        <span class="line" aria-hidden="true"></span>
+        <span class="sheen" aria-hidden="true"></span><span class="line" aria-hidden="true"></span>
         <input class="range" type="range" min="0" max="100" value="50" aria-label="Move the line between before and after">
       </div></div>
-      <p class="ba-cap"><span>Before</span><span>After 1 month</span></p>
+      <div class="plaques"><span class="pl-b">Before</span><span class="pl-a">After 1 month</span></div></div>
     </div>
     <div>
       <h2>Before <em>and after</em></h2>

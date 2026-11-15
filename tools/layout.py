@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 E = html.escape
-CSS_V = 1; JS_V = 1; HEAD_V = 18
+CSS_V = 2; JS_V = 2; HEAD_V = 18
 LINE_ID = '@apexbeauty'; PHONE = '080-500-0123'
 LINE_URL = 'https://line.me/R/ti/p/' + LINE_ID
 ORDER = ['botox', 'filler', 'harmonyca', 'radiesse', 'sculptra', 'juvelook', 'profhilo', 'skinvive', 'vitaran', 'nucleofill', 'celeb-skin', 'meso']
@@ -56,16 +56,48 @@ AREA = {
  'Chin': 'chin', 'Jaw': 'jaw', 'Jawline': 'jaw', 'Pre-jowl': 'jaw', 'Neck': 'neck', 'Neck and face lift': 'neck',
  'Whole face': 'skin', 'Whole face, for firmness': 'skin', 'Acne scars': 'skin',
 }
+def _codes():
+    import json, re
+    js = open(os.path.join(ROOT, 'assets/features/filler/codes.js')).read()
+    at = json.loads(re.search(r'HEAD_AT = (\{.*?\});', js).group(1))
+    vol = {k: float(v) for k, v in re.findall(r'\b(\w+): \{vol:([\d.]+)', js)}
+    return at, vol
+
 def zones():
+    from areas import TOXIN, ZONE_POINTS
+    at, vol = _codes()
     z = {k[0]: [] for k in ZONES}; z['skin'] = []
     for slug in ORDER:
         t = TX[slug]
         for lab, note, *_ in list(t['face']) + list(t['body']):
             a = AREA.get(lab)
             if a and not any(e['slug'] == slug for e in z[a]):
-                z[a].append(dict(slug=slug, name=t['name'], note=note, price=C[slug][6]))
+                p = C[slug][6]
+                short = ' '.join(p.replace(',', '#', 1).split(',')[0].replace('#', ',').split()[:2]) if 'baht' in p else p
+                z[a].append(dict(slug=slug, name=t['name'], note=(note + (' units' if slug == 'botox' and 'unit' not in note else '')) if note[:1].isdigit() else '', price=short))
     names = {k[0]: k[1] for k in ZONES}; names['skin'] = 'The whole face'
-    return dict(zones=z, names=names, verts={k: v for k, _, v, _ in ZONES})
+    pts, fill, info = {}, {}, {}
+    for key, d in ZONE_POINTS.items():
+        P, F = [], []
+        for code in d['codes']:
+            groups = at[code]; n = sum(len(g) for g in groups)
+            for g in groups:
+                for v in g:
+                    P.append([v, 'f']); F.append([v, round(max(vol.get(code, .2), .1) * len(g) / n * 2, 2)])
+        if d.get('toxin'):
+            for g in TOXIN[d['toxin'][0]]:
+                for v in g: P.append([v, 't'])
+        if d.get('extra'):
+            for g in TOXIN[d['extra']]:
+                for v in g: P.append([v, 'f'])
+        pts[key] = P; fill[key] = F
+        cs = d['codes']; fam = {}
+        for c in cs: fam.setdefault(c.rstrip('0123456789'), []).append(c)
+        label = ', '.join(f'{g[0]} to {g[-1]}' if len(g) > 2 else ' and '.join(g) for g in fam.values())
+        info[key] = dict(codes=('MD Codes ' + label) if cs and key != 'skin' else '',
+                         toxin=d['toxin'][1] if d.get('toxin') else '',
+                         bap='Five Bio Aesthetic Points a side' if key == 'skin' else '')
+    return dict(zones=z, names=names, verts={k: v for k, _, v, _ in ZONES}, pts=pts, fill=fill, info=info)
 
 def head(title, desc):
     return f'''<!DOCTYPE html>
