@@ -5,7 +5,7 @@ from tx_content import TX
 from site_content import SETTINGS
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 E = html.escape
-CSS_V = 4; JS_V = 6; HEAD_V = 18
+CSS_V = 4; JS_V = 8; HEAD_V = 18
 LINE_ID = SETTINGS['line_id']; PHONE = SETTINGS['phone']
 LINE_URL = 'https://line.me/R/ti/p/' + LINE_ID
 ORDER = ['botox', 'filler', 'harmonyca', 'radiesse', 'sculptra', 'juvelook', 'profhilo', 'skinvive', 'vitaran', 'nucleofill', 'celeb-skin', 'meso']

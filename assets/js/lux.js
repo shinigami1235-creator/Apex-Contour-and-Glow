@@ -134,7 +134,7 @@
     const n = (zones[z] || []).length, cols = n <= 4 ? n : n % 4 === 0 ? 4 : n % 3 === 0 ? 3 : n % 5 === 0 ? 5 : n === 7 ? 4 : 3;
     list.querySelector('.txc').style.setProperty('--cols', cols);
     list.querySelector('.txc').innerHTML = (zones[z] || []).map(e =>
-      `<li><a href="${e.slug}.html"><span class="top"><b>${esc(e.name)}</b><span class="pr">${/\d/.test(e.price) ? 'from ' + esc(e.price) : esc(e.price)}</span></span>` +
+      `<li><a href="${(window.CG_URLS || {})[e.slug] || e.slug + '.html'}"><span class="top"><b>${esc(e.name)}</b><span class="pr">${/\d/.test(e.price) ? 'from ' + esc(e.price) : esc(e.price)}</span></span>` +
       `<span class="amt">${e.note ? esc(e.note) : '&nbsp;'}</span><span class="go">Read more</span></a></li>`).join('');
     empty.hidden = true; list.hidden = false;
   };
@@ -197,7 +197,7 @@
   const start = () => {
     if (head !== null) return; head = false;
     import('./../features/filler/head.js?v=22').then(m => m.createHead(host, {
-      base: 'assets/', features: true, soft: true, wipe: 0, yaw: -.15, morph: 0, maleMorph: .8, zoom: .74,
+      base: window.CG_ASSETS || 'assets/', features: true, soft: true, wipe: 0, yaw: -.15, morph: 0, maleMorph: .8, zoom: .74,
       onTurn: y => { lookYaw = y; },
       visible: () => onScreen && !stage.hidden,
       onFrame: () => { if (head) { head.setYaw(lookYaw + (still ? 0 : Math.sin(performance.now() / 6000) * .05)); pitchNow += (lookPitch - pitchNow) * .06; head.setPitch(pitchNow); } draw(); }

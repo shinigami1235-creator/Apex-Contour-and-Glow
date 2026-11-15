@@ -3,7 +3,7 @@
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
-from layout import E, ROOT, ORDER, ROWS, PAIRS, ASK, summary, head, header, footer, divider, scripts
+from layout import E, ROOT, ORDER, ROWS, PAIRS, ASK, LINE_ID, summary, head, header, footer, divider, scripts
 
 data = {k: summary(k) for k in ORDER}
 def pick(name, sel):
@@ -31,7 +31,7 @@ html = head('Compare two treatments | Apex Contour and Glow',
     <tbody>{rows}<tr class="go"><th scope="row"></th><td><a class="btn" data-s="a" data-f="link"></a></td><td><a class="btn" data-s="b" data-f="link"></a></td></tr></tbody>
   </table>
   <p class="cmp-note" id="pair-note" hidden></p>
-  <p class="note center">Starting prices. Promotions change, so check the latest on LINE @apexbeauty.</p>
+  <p class="note center">Starting prices. Promotions change, so check the latest on LINE {E(LINE_ID)}.</p>
   </div>
 </div></section>
 </main>
@@ -47,7 +47,7 @@ html = head('Compare two treatments | Apex Contour and Glow',
       const t = D[pick[s]];
       document.querySelectorAll('[data-s="' + s + '"]').forEach(el => {{
         const f = el.dataset.f;
-        if (f === 'link') {{ el.href = pick[s] + '.html'; el.textContent = 'Read about ' + t.name; }}
+        if (f === 'link') {{ el.href = (window.CG_URLS || {{}})[pick[s]] || pick[s] + '.html'; el.textContent = 'Read about ' + t.name; }}
         else el.textContent = t[f];
       }});
     }}

@@ -5,17 +5,17 @@
  *
  * Field: [ 'k' => key, 't' => type, 'l' => label, 'h' => help, 'f' => sub-fields, 'o' => choices, 'src' => storage ]
  * Types: text, textarea, url, image, number, select, lines (one item per line), group, repeater.
- * A repeater of rows that the design keeps as plain lists ([label, value]) is stored as a list of objects
- * with the sub-field keys; inc/data.php turns them back into lists in the same order.
+ * A repeater marked 'list' holds rows the design keeps as plain lists ([label, value]). They are stored as
+ * objects with the sub-field keys, and inc/data.php turns them back into lists in the sub-field order.
  * src: 'title' keeps the value in the post title, 'order' in the menu order.
  */
 defined( 'ABSPATH' ) || exit;
 
 function apex_f( string $k, string $t, string $l, array $more = [] ): array { return [ 'k' => $k, 't' => $t, 'l' => $l ] + $more; }
 function apex_pair( string $k, string $l, string $a, string $b, array $more = [] ): array {
-	return apex_f( $k, 'repeater', $l, $more + [ 'f' => [ apex_f( 'a', 'text', $a ), apex_f( 'b', 'textarea', $b ) ] ] );
+	return apex_f( $k, 'repeater', $l, $more + [ 'list' => true, 'f' => [ apex_f( 'a', 'text', $a ), apex_f( 'b', 'textarea', $b ) ] ] );
 }
-function apex_h2( string $k, string $l ): array {
+function apex_h2_f( string $k, string $l ): array {
 	return apex_f( $k, 'group', $l, [ 'f' => [ apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part', [ 'h' => 'The words after the heading, shown in gold italic' ] ) ] ] );
 }
 /** The icons the design can draw next to a care point (tools/tx_art.py). */
@@ -50,7 +50,7 @@ function apex_schema( string $type ): array {
 			apex_pair( 'halves', 'Column headings', 'Name', 'Second line', [ 'h' => 'Contour first, then Glow. Each treatment says which column it sits in.', 'fixed' => 2 ] ) ] ] ),
 		apex_f( 'visit', 'group', 'Your visit', [ 'f' => [
 			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part' ), apex_f( 'foot', 'text', 'Line under the steps' ),
-			apex_f( 'steps', 'repeater', 'Steps', [ 'h' => 'Five steps fill the row best', 'f' => [
+			apex_f( 'steps', 'repeater', 'Steps', [ 'list' => true, 'h' => 'Five steps fill the row best', 'f' => [
 				apex_f( 'icon', 'select', 'Icon', [ 'o' => [ 'talk' => 'Talk', 'tube' => 'Cream', 'needle' => 'Needle', 'ice' => 'Ice', 'cal' => 'Calendar' ] ] ),
 				apex_f( 'h', 'text', 'Step' ), apex_f( 'p', 'textarea', 'Text' ), apex_f( 't', 'text', 'How long' ) ] ] ) ] ] ),
 		apex_f( 'results', 'group', 'Before and after', [ 'f' => [
@@ -80,8 +80,8 @@ function apex_schema( string $type ): array {
 			apex_f( 'is', 'text', 'What it is' ), apex_f( 'for', 'text', 'Best for' ), apex_f( 'first', 'text', 'First change' ), apex_f( 'lasts', 'text', 'Lasts' ),
 			apex_f( 'sessions', 'text', 'Sessions' ), apex_f( 'down', 'text', 'Downtime' ), apex_f( 'from', 'text', 'From' ) ] ] ),
 		apex_f( 'lead', 'textarea', 'How it works, opening line' ),
-		apex_f( 'how', 'repeater', 'How it works', [ 'f' => [ apex_f( 'icon', 'text', 'Icon', [ 'h' => 'Leave empty' ] ), apex_f( 'h', 'text', 'Heading (not shown)' ), apex_f( 'p', 'textarea', 'Text' ) ] ] ),
-		apex_f( 'not_for', 'repeater', 'Not suited for', [ 'f' => [ apex_f( 'a', 'text', 'Heading' ), apex_f( 'b', 'textarea', 'Text' ), apex_f( 'h', 'text', 'Link', [ 'h' => 'Another treatment\'s page, for example filler.html. Leave empty for none.' ] ), apex_f( 'x', 'text', 'Link text' ) ] ] ),
+		apex_f( 'how', 'repeater', 'How it works', [ 'list' => true, 'f' => [ apex_f( 'icon', 'text', 'Icon', [ 'h' => 'Leave empty' ] ), apex_f( 'h', 'text', 'Heading (not shown)' ), apex_f( 'p', 'textarea', 'Text' ) ] ] ),
+		apex_f( 'not_for', 'repeater', 'Not suited for', [ 'list' => true, 'f' => [ apex_f( 'a', 'text', 'Heading' ), apex_f( 'b', 'textarea', 'Text' ), apex_f( 'h', 'text', 'Link', [ 'h' => 'Another treatment\'s page, for example filler.html. Leave empty for none.' ] ), apex_f( 'x', 'text', 'Link text' ) ] ] ),
 		apex_pair( 'face', 'Face areas', 'Area', 'Amount', [ 'h' => 'The area names link the treatment to the face planner: Forehead, Between the brows, Crow\'s feet, Under-eyes, Temples, Cheeks, Smile lines, Lips, Chin, Jawline, Neck, Whole face' ] ),
 		apex_pair( 'body', 'Body areas', 'Area', 'Amount' ),
 		apex_f( 'areas_note', 'textarea', 'Note under the areas' ),
@@ -89,12 +89,12 @@ function apex_schema( string $type ): array {
 		apex_pair( 'timeline', 'When you see results', 'When', 'What' ),
 		apex_f( 'prices', 'group', 'Prices', [ 'f' => [
 			apex_f( 'head', 'lines', 'Table headings', [ 'h' => 'One per line' ] ),
-			apex_f( 'rows', 'repeater', 'Table rows', [ 'h' => 'One cell per line', 'f' => [ apex_f( 'cells', 'lines', 'Cells' ) ] ] ),
+			apex_pair( 'rows', 'Table rows', 'Item', 'Price' ),
 			apex_pair( 'invitations', 'Packages', 'Package', 'Price' ),
 			apex_f( 'note', 'text', 'Note under the prices' ) ] ] ),
 		apex_f( 'care', 'group', 'Before and after care', [ 'f' => [
-			apex_f( 'before', 'repeater', 'Before', [ 'f' => [ apex_f( 'icon', 'select', 'Icon', [ 'o' => apex_icons() ] ), apex_f( 'h', 'text', 'Heading' ), apex_f( 'p', 'textarea', 'Text' ) ] ] ),
-			apex_f( 'after', 'repeater', 'After', [ 'f' => [ apex_f( 'when', 'text', 'When' ), apex_f( 'items', 'repeater', 'Points', [ 'f' => [ apex_f( 'icon', 'select', 'Icon', [ 'o' => apex_icons() ] ), apex_f( 'x', 'text', 'Text' ) ] ] ) ] ] ),
+			apex_f( 'before', 'repeater', 'Before', [ 'list' => true, 'f' => [ apex_f( 'icon', 'select', 'Icon', [ 'o' => apex_icons() ] ), apex_f( 'h', 'text', 'Heading' ), apex_f( 'p', 'textarea', 'Text' ) ] ] ),
+			apex_f( 'after', 'repeater', 'After', [ 'list' => true, 'f' => [ apex_f( 'when', 'text', 'When' ), apex_f( 'items', 'repeater', 'Points', [ 'list' => true, 'f' => [ apex_f( 'icon', 'select', 'Icon', [ 'o' => apex_icons() ] ), apex_f( 'x', 'text', 'Text' ) ] ] ) ] ] ),
 			apex_f( 'urgent', 'textarea', 'When to call the clinic straight away' ) ] ] ),
 		apex_pair( 'faq', 'Questions', 'Question', 'Answer' ),
 		apex_f( 'results', 'group', 'Before and after', [ 'h' => 'The photos are the Before and after cases for this treatment', 'f' => [
@@ -117,7 +117,7 @@ function apex_schema( string $type ): array {
 
 	/* ---------- Compare, one copy per language ---------- */
 	$S['compare'] = [
-		apex_f( 'rows', 'repeater', 'Rows', [ 'fixed' => 7, 'h' => 'The row names. Each treatment\'s values are in its Summary.', 'f' => [ apex_f( 'k', 'text', 'Key', [ 'keep' => true ] ), apex_f( 'l', 'text', 'Row name' ) ] ] ),
+		apex_f( 'rows', 'repeater', 'Rows', [ 'list' => true, 'fixed' => 7, 'h' => 'The row names. Each treatment\'s values are in its Summary.', 'f' => [ apex_f( 'k', 'text', 'Key', [ 'keep' => true ] ), apex_f( 'l', 'text', 'Row name' ) ] ] ),
 		apex_f( 'pairs', 'repeater', 'Often compared', [ 'f' => [ apex_f( 'a', 'select', 'First', [ 'o' => 'treatments' ] ), apex_f( 'b', 'select', 'Second', [ 'o' => 'treatments' ] ), apex_f( 'note', 'textarea', 'What sets them apart' ) ] ] ),
 	];
 
