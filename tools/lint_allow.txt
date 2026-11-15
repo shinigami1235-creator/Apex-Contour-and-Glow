@@ -1,0 +1,2 @@
+# Lines the copy lint may skip. Text before the | sign must match exactly; the reason follows it.
+Restylane Vital or Vital Light | product names from Galderma, which Apex lists as an alternative
