@@ -41,15 +41,15 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
       <h1>Injectables <em>at Apex</em></h1>
       <p class="sub">Tap an area of the face to see its treatments and prices.</p>
     </div>
-    <div class="tabs" role="tablist">
-      <button type="button" role="tab" aria-selected="true" data-tab="map">Face planner</button>
-      <button type="button" role="tab" aria-selected="false" data-tab="sim">Filler on a 3D head</button>
-    </div>
     <div class="planner" data-panel="map">
       <canvas class="leads" aria-hidden="true"></canvas>
       <div class="zcol l">{col("l")}</div>
       <div class="mirror"><div class="glass"><div class="head" id="planner-head"></div></div></div>
       <div class="zcol r">{col("r")}</div>
+    </div>
+    <div class="hctl">
+      <div class="seg" role="group" aria-label="Face"><button type="button" data-sex="female" aria-pressed="true">Women</button><button type="button" data-sex="male" aria-pressed="false">Men</button></div>
+      <div class="seg" role="group" aria-label="Filler"><button type="button" data-ba="before" aria-pressed="false">Before</button><button type="button" data-ba="after" aria-pressed="true">After</button></div>
     </div>
     <div class="picks" data-panel="map" aria-live="polite">
       <p class="empty">Tap an area. Drag the face to turn it.</p>
@@ -57,8 +57,6 @@ html = head('Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
       <button type="button" class="fz fz-skin" data-z="skin">The whole face</button>
       <p class="refs">Filler areas follow the MD Codes (<a href="https://doi.org/10.1007/s00266-020-01762-7">de Maio, Aesthetic Plastic Surgery 2021</a>). Botox points follow published injection guides (<a href="https://doi.org/10.1097/01.PRS.0000144795.76040.D3">Carruthers, Plastic and Reconstructive Surgery 2004</a>; <a href="https://doi.org/10.3390/toxins15020082">Toxins 2023</a>; <a href="https://doi.org/10.5115/acb.22.258">Anatomy and Cell Biology 2023</a>). Simulation only. Your doctor decides the points and amounts.</p>
     </div>
-    <div class="sim" data-panel="sim" hidden><div id="filler-sim"></div>
-      <p class="note center">Simulation only. Your doctor decides the amount at your consultation.</p></div>
   </div>
 </section>
 

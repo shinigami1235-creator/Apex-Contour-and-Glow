@@ -108,19 +108,23 @@
   };
   // picking an area shows the treatment on the face: the muscle Botox relaxes moves and lets go, and the filler points fill out in gold
   const ACT = { forehead: 'brow', brows: 'frown', eyes: 'squint', lips: 'smile' };
-  const tw = (ms, fn) => new Promise(res => { if (still) { fn(1); return res(); } const t0 = performance.now(); const f = now => { const u = Math.min(1, (now - t0) / ms); fn(u * u * (3 - 2 * u)); u < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+  const tw = (ms, fn, live = () => true) => new Promise(res => { if (still) { fn(1); return res(); } const t0 = performance.now(); const f = now => { if (!live()) return res(); const u = Math.min(1, (now - t0) / ms); fn(u * u * (3 - 2 * u)); u < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+  // a new pick cancels the one still playing and puts the face back to rest, so no expression is left half done
+  const REST = { brow: 0, frown: 0, squint: 0, smile: 0 };
+  const NARROW = { lips: .55, chin: .8, smile: .8 };
+  let after = true;
   const show = async z => {
-    if (!head) return; const id = ++showing; lookAt(z); head.setPlan([]);
+    if (!head) return; const id = ++showing; lookAt(z); head.setPlan([]); head.setFace(REST);
+    const live = () => id === showing;
     const act = ACT[z];
     if (act) {
-      await tw(650, u => head.setFace({ [act]: u })); await new Promise(r => setTimeout(r, 700));
-      if (id !== showing) return;
-      await tw(1100, u => head.setFace({ [act]: 1 - u }));
+      await tw(650, u => live() && head.setFace({ ...REST, [act]: u }), live); await new Promise(r => setTimeout(r, 700));
+      if (!live()) return;
+      await tw(1100, u => live() && head.setFace({ ...REST, [act]: 1 - u }), live);
+      if (!live()) return;
     }
-    if (id !== showing) return;
     const f = (fill[z] || []).filter(([v, ml]) => ml > 0);
-    if (f.length && z !== 'skin') { head.setPlan(f.map(([v, ml]) => ({ v, ml, color: GOLD }))); head.jumpAmount(0); head.setAmount(1); }
-    showing = 0;
+    if (f.length && z !== 'skin') { head.setPlan(f.map(([v, ml]) => ({ v, ml, color: GOLD, r: NARROW[z] || 1, glow: z === 'lips' ? .4 : 1, drop: z !== 'lips' }))); head.jumpAmount(0); head.setAmount(after ? 1 : 0); }
   };
   const pickList = z => {
     const inf = info[z] || {};
@@ -152,12 +156,12 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, sr.width, sr.height);
     const ox = hr.left - sr.left, oy = hr.top - sr.top, t = performance.now() / 1000;
     const at = v => { const a = head.anchor(v); return { x: a.x + ox, y: a.y + oy, f: a.front }; };
-    const mark = (p, kind, k) => {
+    const mark = (p, kind, k, many) => {
       if (p.f < .12) return;
-      const r = 3.2 + .8 * Math.sin(t * 3 + k), a = Math.min(1, p.f * 1.3);
-      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.4);
-      g.addColorStop(0, `rgba(255,236,190,${.55 * a})`); g.addColorStop(1, 'rgba(240,211,151,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.4, 0, 7); ctx.fill();
+      const r = (many ? 2.4 : 3.2) + (many ? .4 : .8) * Math.sin(t * 3 + k), a = Math.min(1, p.f * 1.3), hr = r * (many ? 2 : 3.4);
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, hr);
+      g.addColorStop(0, `rgba(255,236,190,${(many ? .3 : .55) * a})`); g.addColorStop(1, 'rgba(240,211,151,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, hr, 0, 7); ctx.fill();
       ctx.fillStyle = kind === 't' ? `rgba(255,255,255,${a})` : `rgba(246,220,160,${a})`;
       ctx.beginPath();
       if (kind === 't') { ctx.moveTo(p.x, p.y - r); ctx.lineTo(p.x + r, p.y); ctx.lineTo(p.x, p.y + r); ctx.lineTo(p.x - r, p.y); ctx.closePath(); }
@@ -166,7 +170,7 @@
     };
     const zone = hovered || picked;
     const zp = zone && pts[zone] ? pts[zone].map(([v, kind]) => ({ ...at(v), kind })) : [];
-    zp.forEach((p, k) => mark(p, p.kind, k));
+    zp.forEach((p, k) => mark(p, p.kind, k, zp.length > 10));
     if (narrow.matches) return;
     for (const sd of ['l', 'r']) {
       const keys = Object.keys(btn).filter(k => btn[k].parentElement.classList.contains(sd));
@@ -190,8 +194,8 @@
   };
   const start = () => {
     if (head !== null) return; head = false;
-    import('./../features/filler/head.js?v=20').then(m => m.createHead(host, {
-      base: 'assets/', features: true, soft: true, wipe: 0, yaw: -.15, morph: .4, zoom: .74,
+    import('./../features/filler/head.js?v=22').then(m => m.createHead(host, {
+      base: 'assets/', features: true, soft: true, wipe: 0, yaw: -.15, morph: 0, maleMorph: .8, zoom: .74,
       onTurn: y => { lookYaw = y; },
       visible: () => onScreen && !stage.hidden,
       onFrame: () => { if (head) { head.setYaw(lookYaw + (still ? 0 : Math.sin(performance.now() / 6000) * .05)); pitchNow += (lookPitch - pitchNow) * .06; head.setPitch(pitchNow); } draw(); }
@@ -200,23 +204,14 @@
   new IntersectionObserver(es => es.forEach(e => { onScreen = e.isIntersecting; if (onScreen) start(); }), { rootMargin: '200px' }).observe(stage);
   addEventListener('resize', () => { spread(); draw(); });
 
-  // tabs: the face planner fades down and the filler head rises in, or the other way
-  let mounted = false, busy = false;
-  const wait = ms => new Promise(r => setTimeout(r, ms));
-  hero.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', async () => {
-    const to = [...hero.querySelectorAll(`[data-panel="${t.dataset.tab}"]`)], from = [...hero.querySelectorAll('[data-panel]:not([hidden])')];
-    if (busy || to.every(x => !x.hidden)) return; busy = true;
-    hero.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === t));
-    if (!still) { from.forEach(x => x.classList.add('leaving')); await wait(420); }
-    from.forEach(x => { x.hidden = true; x.classList.remove('leaving'); });
-    to.forEach(x => { x.hidden = false; x.classList.add('arriving'); });
-    if (t.dataset.tab === 'map' && head) { head.resize(); spread(); }
-    requestAnimationFrame(() => requestAnimationFrame(() => to.forEach(x => x.classList.remove('arriving'))));
-    busy = false;
-    if (t.dataset.tab === 'sim' && !mounted) {
-      mounted = true;
-      import('./../features/filler/index.js?v=19').then(m => m.mount(document.getElementById('filler-sim'),
-        { lang: 'en', base: 'assets/', noPlan: true, soft: true, maleMorph: .8, fadeOnScroll: true, consult: 'index.html#book' })).catch(() => { mounted = false; });
-    }
+  // one head for everything: women or men, and the filler before or after
+  hero.querySelectorAll('[data-sex]').forEach(b => b.addEventListener('click', () => {
+    hero.querySelectorAll('[data-sex]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    if (head) head.setGender(b.dataset.sex);
+  }));
+  hero.querySelectorAll('[data-ba]').forEach(b => b.addEventListener('click', () => {
+    after = b.dataset.ba === 'after';
+    hero.querySelectorAll('[data-ba]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    if (head) head.setAmount(after ? 1 : 0);
   }));
 })();

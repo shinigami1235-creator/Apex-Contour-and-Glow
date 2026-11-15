@@ -253,16 +253,16 @@ export async function createHead(host, opts = {}){
     dispA.fill(0); dispB.fill(0); heat.fill(0); col.fill(0);
     const W = new Float32Array(n * 3), D = [new Float32Array(n), new Float32Array(n)], HT = new Float32Array(n);
     for (const pt of state.plan) {
-      const c = hex(pt.color), V = pt.ml * .001;            // mL to dm³
-      const A = 2 * V / (Math.PI * RADIUS * RADIUS) * LIFT;  // a Gaussian bump of this volume, drawn LIFT times taller
+      const c = hex(pt.color), V = pt.ml * .001, RR = RADIUS * (pt.r || 1);   // mL to dm³; pt.r narrows the spread for small areas such as the lips
+      const A = 2 * V / (Math.PI * RR * RR) * LIFT;  // a Gaussian bump of this volume, drawn LIFT times taller
       [[H.pf, 0], [H.pm, 1]].forEach(([p, g]) => {
-        const cx = p[pt.v * 3], cy = p[pt.v * 3 + 1], cz = p[pt.v * 3 + 2], R2 = RADIUS * RADIUS * (g ? 1.15 : 1);
+        const cx = p[pt.v * 3], cy = p[pt.v * 3 + 1], cz = p[pt.v * 3 + 2], R2 = RR * RR * (g ? 1.15 : 1);
         for (let i = 0; i < n; i++) {
           const dx = p[i * 3] - cx, dy = p[i * 3 + 1] - cy, dz = p[i * 3 + 2] - cz, r2 = dx * dx + dy * dy + dz * dz;
           if (r2 > R2 * 4) continue;
           const w = Math.exp(-2 * r2 / R2) * EYEMASK[i];
           D[g][i] += A * w;
-          if (!g) { HT[i] = Math.max(HT[i], w); W[i * 3] += c[0] * w; W[i * 3 + 1] += c[1] * w; W[i * 3 + 2] += c[2] * w; }
+          if (!g) { HT[i] = Math.max(HT[i], w * (pt.glow ?? 1)); W[i * 3] += c[0] * w; W[i * 3 + 1] += c[1] * w; W[i * 3 + 2] += c[2] * w; }
         }
       });
     }
@@ -282,6 +282,7 @@ export async function createHead(host, opts = {}){
     // drops: a sphere of the real volume at each point, sitting on the lifted skin
     while (drops.children.length) { const d = drops.children.pop(); d.material.dispose(); }
     for (const pt of state.plan) {
+      if (pt.drop === false) continue;
       const r = Math.cbrt(3 * pt.ml * .001 / (4 * Math.PI));
       const m = new THREE.Mesh(dropGeo, new THREE.ShaderMaterial({uniforms:{uCol:{value:new THREE.Color(pt.color)}, uOp:{value:1}}, vertexShader:DROP_VS, fragmentShader:DROP_FS, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
       m.scale.setScalar(r); m.userData = {v:pt.v, r};

@@ -12,9 +12,9 @@
 # Skin boosters over the whole face: the five Bio Aesthetic Points used for Profhilo (malar, base of the nose, tragus,
 #   chin, angle of the jaw), from IBSA's BAP technique.
 # The toxin points were placed on the female head from the eye and mouth landmarks: glabella at and above the medial
-#   brow, frontalis at least 2 cm above the brow, crow's feet 1 cm outside the orbital rim, masseter in its lower third,
+#   brow, frontalis at least 2 cm above the brow, crow's feet 1 cm outside the orbital rim, masseter in the lower back of the muscle above the jaw angle, away from the risorius,
 #   mentalis on the chin, DAO below the mouth corner near the jaw border, platysma along the neck bands.
-TOXIN = {"glabella": [[77], [1785, 2406], [87, 792]], "frontalis": [[2061, 2687], [205, 896], [1405, 1578]], "crowsfeet": [[117, 818], [112, 813], [496, 1165]], "masseter": [[628, 1289], [518, 1184], [1546, 1717]], "mentalis": [[522, 1188]], "dao": [[526, 1192]], "platysma": [[2002, 2627], [262, 951], [258, 947]], "bap_tragus": [[323, 1006]]}
+TOXIN = {"glabella": [[77], [1785, 2406], [87, 792]], "frontalis": [[2061, 2687], [205, 896], [1405, 1578]], "crowsfeet": [[117, 818], [112, 813], [496, 1165]], "masseter": [[2570, 1946], [1248, 587], [2792, 2167]], "mentalis": [[522, 1188]], "dao": [[526, 1192]], "platysma": [[2002, 2627], [262, 951], [258, 947]], "bap_tragus": [[1365, 709]]}
 ZONE_POINTS = {
  'forehead':  dict(codes=['F1', 'F2', 'F3'], toxin=('frontalis', 'Frontalis muscle, 6 points')),
  'brows':     dict(codes=[], toxin=('glabella', 'Procerus and corrugator muscles, 5 points')),
