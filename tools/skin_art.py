@@ -147,3 +147,20 @@ def band(k):
     rnd = random.Random(k)
     return (f'<svg class="ly-art" viewBox="0 0 {W} {H[k]}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">'
             + ''.join(DRAW[k](rnd)) + '</svg>')
+
+
+def needle():
+    """A syringe above the skin. Its needle (.ln-shaft) is drawn by CSS so the script can set how deep it goes."""
+    svg = ('<svg class="ln-body" viewBox="0 0 40 160" aria-hidden="true" focusable="false">'
+           '<defs><linearGradient id="ln-glass" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".45" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#e6dcef" stop-opacity=".7"/></linearGradient>'
+           '<linearGradient id="ln-gel" x1="0" x2="1"><stop offset="0" stop-color="#f3a9cb"/><stop offset=".5" stop-color="#fbd3e5"/><stop offset="1" stop-color="#e888b4"/></linearGradient></defs>'
+           '<rect x="6" y="0" width="28" height="5" rx="2" fill="#efe7f6" stroke="#b9a3cf"/>'
+           '<rect x="18" y="5" width="4" height="70" fill="#d9cbe7"/>'
+           '<rect x="2" y="36" width="36" height="5" rx="2" fill="#efe7f6" stroke="#b9a3cf"/>'
+           '<rect x="10" y="41" width="20" height="94" rx="3" fill="url(#ln-glass)" stroke="#b9a3cf"/>'
+           '<rect x="12" y="81" width="16" height="52" rx="2" fill="url(#ln-gel)"/>'
+           '<rect x="11.5" y="75" width="17" height="6" rx="1.5" fill="#4a2a5e"/>'
+           + ''.join(f'<path d="M10 {y}h{5 if i % 2 else 8}" stroke="#9c86b3" stroke-width=".9"/>' for i, y in enumerate(range(52, 132, 8)))
+           + '<path d="M14 135h12l-3 11h-6z" fill="#efe7f6" stroke="#b9a3cf"/>'
+           '<rect x="16" y="146" width="8" height="14" rx="1.5" fill="#b07ad6" opacity=".9"/></svg>')
+    return f'<div class="ly-needle" data-ly="dermis" aria-hidden="true"><span class="ln-shaft"></span><span class="ln-drop"></span>{svg}</div>'

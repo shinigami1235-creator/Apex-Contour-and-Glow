@@ -4,7 +4,7 @@
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
-from skin_art import band
+from skin_art import band, needle
 from site_content import HOME, TAGS, LAYERS
 H = HOME
 from layout import E, ROOT, ORDER, C, ZONES, LINE_ID, LINE_URL, PHONE, zones, head2, header2, footer2, scripts2, ic, CURVE
@@ -101,7 +101,7 @@ html = head2(H['seo_title'], H['seo_desc']) + f'''
   <div class="wrap">
     <div class="shead"><div><p class="eyebrow on-night rv">{E(L['eyebrow'])}</p><h2 class="h-xl rv">{E(L['h2'])} {E(L['h2_em'])}</h2><p class="lead rv">{E(L['p'])}</p></div></div>
     <div class="ly-wrap rv">
-      <div class="ly-stack" role="group" aria-label="Layers">{lay_btns}</div>
+      <div class="ly-fig">{needle()}<div class="ly-stack" role="group" aria-label="Layers">{lay_btns}</div></div>
       <div class="ly-cards">{lay_cards}</div>
     </div>
   </div>

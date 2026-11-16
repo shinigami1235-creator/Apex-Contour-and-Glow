@@ -8,7 +8,7 @@ from tx_content import TX
 from site_content import SETTINGS, HOME, PRIVACY, TAGS
 from tx_art import ICON
 from layout import ORDER, ROWS, C, PAIRS, ZONES, AREA, zones, _ICONS, CURVE
-from skin_art import band
+from skin_art import band, needle
 
 def treatment(k, i):
     t = dict(TX[k])
@@ -49,5 +49,5 @@ with open(os.path.join(ddir, 'icons.json'), 'w', encoding='utf-8') as f:
 with open(os.path.join(ddir, 'apex-icons.json'), 'w', encoding='utf-8') as f:
     json.dump(_ICONS, f, ensure_ascii=False)
 with open(os.path.join(ddir, 'art.json'), 'w', encoding='utf-8') as f:
-    json.dump({'curve': CURVE, 'skin': {k: band(k) for k in ('surface', 'dermis', 'fat', 'muscle', 'bone')}}, f, ensure_ascii=False)
+    json.dump({'curve': CURVE, 'needle': needle(), 'skin': {k: band(k) for k in ('surface', 'dermis', 'fat', 'muscle', 'bone')}}, f, ensure_ascii=False)
 print(f'wrote {os.path.relpath(path, SITE)}: {len(out["treatments"])} treatments, {len(out["compare"]["pairs"])} pairs')

@@ -23,10 +23,27 @@
   }
 
   // ---- skin layers: pick a layer, see what works there ----
+  // the needle reaches into the picked layer and leaves a drop of product there
+  const needleEl = document.querySelector('.ly-needle'), lyStack = document.querySelector('.ly-stack');
+  const aim = (k, play) => {
+    if (!needleEl || !lyStack) return;
+    const band = lyStack.querySelector('.ly-' + k);
+    const y = k === 'surface' || !band ? 0 : band.offsetTop - lyStack.offsetTop + band.offsetHeight * (k === 'bone' ? .22 : .5);
+    needleEl.style.setProperty('--len', (y / Math.cos(25 * Math.PI / 180)).toFixed(1) + 'px');
+    needleEl.dataset.ly = k;
+    if (play) { needleEl.classList.remove('go'); void needleEl.offsetWidth; needleEl.classList.add('go'); }
+  };
+  const lyNow = () => (document.querySelector('.ly[aria-pressed=true]') || {}).dataset || {};
   document.querySelectorAll('.ly').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('.ly').forEach(x => x.setAttribute('aria-pressed', x === b));
     document.querySelectorAll('.ly-card').forEach(c => { c.hidden = c.dataset.ly !== b.dataset.ly; });
+    aim(b.dataset.ly, true);
   }));
+  if (needleEl) {
+    aim(lyNow().ly || 'dermis', false);
+    addEventListener('resize', () => aim(lyNow().ly || 'dermis', false));
+    new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { aim(lyNow().ly || 'dermis', true); o.disconnect(); } }), { threshold: .4 }).observe(needleEl.parentElement);
+  }
 
   // ---- before and after: drag the line, or let it sweep across once when it comes into view ----
   const ba = document.getElementById('ba');
@@ -175,7 +192,7 @@
     list.querySelector('.txc').innerHTML = (zones[z] || []).map(e =>
       `<li><a href="${(window.CG_URLS || {})[e.slug] || e.slug + '.html'}"><span class="top"><b>${esc(e.name)}</b><span class="pr">${/\d/.test(e.price) ? 'from ' + esc(e.price) : esc(e.price)}</span></span>` +
       (e.note ? `<span class="amt">${esc(e.note)}</span>` : '') + `</a></li>`).join('');
-    empty.hidden = true; list.hidden = false;
+    empty.hidden = true; list.hidden = false; stage.classList.add('has-pick');
   };
   hero.querySelectorAll('.fz').forEach(b => {
     b.addEventListener('pointerenter', () => { hovered = b.dataset.z; lookAt(hovered); });
@@ -221,8 +238,10 @@
     })).then(h => { head = h; stage.classList.add('live'); draw(); }).catch(() => { head = null; stage.classList.add('flat'); });
   };
   new IntersectionObserver(es => es.forEach(e => { onScreen = e.isIntersecting; if (onScreen) start(); }), { rootMargin: '200px' }).observe(stage);
-  addEventListener('resize', () => draw());
-  list.querySelector('.pk-x').addEventListener('click', () => { picked = null; showing++; if (head) { head.setPlan([]); } lookAt(null); list.hidden = true; empty.hidden = false; hero.querySelectorAll('.fz').forEach(x => x.setAttribute('aria-pressed', false)); });
+  // the card sits between the toggles and the area buttons, so it never covers either
+  const rail = hero.querySelector('.cg-rail'), railH = () => stage.style.setProperty('--rail', rail.offsetHeight + 'px');
+  railH(); addEventListener('resize', () => { railH(); draw(); });
+  list.querySelector('.pk-x').addEventListener('click', () => { picked = null; showing++; if (head) { head.setPlan([]); } lookAt(null); list.hidden = true; empty.hidden = false; stage.classList.remove('has-pick'); hero.querySelectorAll('.fz').forEach(x => x.setAttribute('aria-pressed', false)); });
 
   // one head for everything: women or men, and the filler before or after
   hero.querySelectorAll('[data-sex]').forEach(b => b.addEventListener('click', () => {

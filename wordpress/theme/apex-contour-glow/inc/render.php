@@ -193,7 +193,7 @@ function apex_render_home( array $S ): string {
 	$hero = $H['hero'];
 	$e = 'apex_e'; $h = 'apex_h'; $ic = 'apex_ic'; $img = fn( $x ) => apex_e( apex_img( $x ) );
 	$h1 = apex_e( $hero['h1'] ) . ( $hero['h1_em'] !== '' ? ' ' . apex_e( $hero['h1_em'] ) : '' );
-	$line = apex_line_url( $S ); $tel = apex_tel( $S ); $curve = $art['curve'];
+	$line = apex_line_url( $S ); $tel = apex_tel( $S ); $curve = $art['curve']; $needle = $art['needle'] ?? '';
 	$cmp_a = $pick( 'a', $H['compare']['a'] ); $cmp_b = $pick( 'b', $H['compare']['b'] );
 	return apex_head( $H['seo_title'], $H['seo_desc'] ) . "\n" . '<body class="cg-home">' . "\n" . apex_header( $S, true ) . "\n" . <<<HTML
 <main id="main">
@@ -234,7 +234,7 @@ function apex_render_home( array $S ): string {
   <div class="wrap">
     <div class="shead"><div><p class="eyebrow on-night rv">{$e( $L['eyebrow'] )}</p><h2 class="h-xl rv">{$h( $L )}</h2><p class="lead rv">{$e( $L['p'] )}</p></div></div>
     <div class="ly-wrap rv">
-      <div class="ly-stack" role="group" aria-label="Layers">$lay_btns</div>
+      <div class="ly-fig">$needle<div class="ly-stack" role="group" aria-label="Layers">$lay_btns</div></div>
       <div class="ly-cards">$lay_cards</div>
     </div>
   </div>

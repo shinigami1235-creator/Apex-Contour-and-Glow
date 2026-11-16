@@ -8,7 +8,8 @@
 .cg-hero .hb-grid{grid-template-columns:minmax(0,5fr) minmax(0,7fr);padding-top:110px}
 .cg-hero .hb-h1{font-size:clamp(46px,6.2vw,96px)}
 .cg-stage{position:relative;height:min(80svh,780px);min-height:540px}
-.cg-stage .cg-head{position:absolute;inset:40px 0 96px}
+.cg-stage .cg-head{position:absolute;inset:40px 0 96px;transition:transform .7s var(--ease-out)}
+.cg-stage.has-pick .cg-head{transform:translateX(-22%)}
 .cg-stage .cg-head canvas{width:100%!important;height:100%!important;display:block}
 .cg-stage .leads{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .cg-sex,.cg-ba{position:absolute;z-index:4;display:flex;padding:4px;border-radius:var(--pill);background:rgba(255,255,255,.08);border:1px solid rgba(201,179,221,.22)}
@@ -27,10 +28,11 @@
 .cg-rail button:active{transform:scale(.97)}
 
 /* the card that opens beside the face when an area is picked */
-.picks{position:absolute;z-index:5;right:0;top:58px;width:min(340px,46%)}
+.picks{position:absolute;z-index:5;right:0;top:58px;bottom:calc(var(--rail,140px) + 24px);width:min(340px,42%);display:flex;flex-direction:column;pointer-events:none}
+.picks>*{pointer-events:auto}
 .picks .empty{display:flex;gap:10px;align-items:center;margin:0;padding:12px 16px;border-radius:var(--r-m);font-size:14px;color:var(--on-night-2);background:rgba(255,255,255,.06);border:1px solid rgba(201,179,221,.18)}
 .picks .empty .i{width:20px;height:20px;color:var(--lilac-300)}
-.picks .list{position:relative;padding:20px 20px 16px;border-radius:var(--r-l);background:#fff;color:var(--ink);box-shadow:0 30px 60px -24px rgba(8,2,16,.7);max-height:calc(100% - 140px);overflow:auto}
+.picks .list{position:relative;padding:20px 20px 16px;border-radius:var(--r-l);background:#fff;color:var(--ink);box-shadow:0 30px 60px -24px rgba(8,2,16,.7);max-height:100%;overflow:auto;overscroll-behavior:contain}
 .pk-x{position:absolute;right:12px;top:12px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--lilac-100);color:var(--plum)}
 .pk-x .i{width:16px;height:16px}
 .picks .area{margin:0 36px 10px 0;font-size:24px;line-height:1.15;letter-spacing:-.02em}
@@ -148,7 +150,8 @@
   .cg-ba{top:52px}
   .cg-rail{position:relative;bottom:auto;order:2;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1*var(--gutter));padding:6px var(--gutter)}
   .cg-rail li{flex:none}
-  .picks{position:relative;right:auto;top:auto;width:auto;order:3;margin-top:12px}
+  .picks{position:relative;right:auto;top:auto;bottom:auto;width:auto;order:3;margin-top:12px}
+  .cg-stage.has-pick .cg-head{transform:none}
   .picks .list{max-height:none}
   .cg-grid{grid-template-columns:1fr 1fr}
   .ly-wrap,.cg-res,.cg-visit,.cg-book{grid-template-columns:minmax(0,1fr)}
@@ -316,3 +319,22 @@
 [hidden]{display:none!important}
 .txc a{text-decoration:none!important;color:var(--ink)!important}
 .txc a b{color:var(--plum)}
+
+/* the needle over the skin layers: its depth follows the picked layer */
+.ly-wrap{align-items:start}
+.ly-fig{position:relative;padding-top:150px}
+.ly-cards{padding-top:150px}
+.ly-needle{position:absolute;left:60%;top:150px;width:0;height:0;z-index:3;pointer-events:none;transform:rotate(25deg);--len:0px}
+.ln-body{position:absolute;left:-20px;bottom:2px;width:40px;height:160px;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45))}
+.ln-shaft{position:absolute;left:-1.5px;top:-2px;width:3px;height:calc(var(--len) + 2px);border-radius:0 0 3px 3px;background:linear-gradient(90deg,#8d96a1,#fbfcfd 45%,#6f7782);box-shadow:0 0 0 .5px rgba(0,0,0,.25);transition:height .9s var(--ease-out)}
+.ln-drop{position:absolute;left:0;top:var(--len);width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;opacity:0;transform:scale(.2);
+  background:radial-gradient(circle at 40% 35%,#fff 0 12%,rgba(255,200,226,.95) 30%,rgba(236,120,176,.7) 60%,rgba(236,120,176,0) 72%);transition:top .9s var(--ease-out)}
+.ly-needle.go .ln-drop{animation:ln-drop 1.4s .85s var(--ease-out) forwards}
+.ly-needle[data-ly=dermis] .ln-drop{width:18px;height:18px;margin:-9px 0 0 -9px;box-shadow:-16px 4px 0 -5px rgba(250,180,214,.85),15px -3px 0 -5px rgba(250,180,214,.85)}
+.ly-needle[data-ly=fat] .ln-drop{width:44px;height:38px;margin:-19px 0 0 -22px}
+.ly-needle[data-ly=muscle] .ln-drop{width:22px;height:22px;margin:-11px 0 0 -11px;background:radial-gradient(circle at 40% 35%,#fff 0 12%,rgba(210,225,255,.95) 32%,rgba(140,160,240,.65) 60%,rgba(140,160,240,0) 72%)}
+.ly-needle[data-ly=bone] .ln-drop{width:40px;height:26px;margin:-18px 0 0 -20px}
+.ly-needle[data-ly=surface] .ln-drop{display:none}
+@keyframes ln-drop{to{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.ln-shaft,.ln-drop{transition:none}.ly-needle.go .ln-drop{animation:none;opacity:1;transform:none}}
+@media (max-width:900px){.ly-fig{padding-top:130px}.ly-needle{top:130px}.ly-cards{padding-top:0}}
