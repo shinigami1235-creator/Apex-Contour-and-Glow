@@ -152,7 +152,7 @@
   if (!hero || !window.CG_ZONES) return;
   const { zones, names, verts, pts, fill, info } = window.CG_ZONES;
   const stage = hero.querySelector('.cg-stage'), host = document.getElementById('planner-head');
-  const list = hero.querySelector('.picks .list'), empty = hero.querySelector('.picks .empty');
+  const list = hero.querySelector('.picks .list'), empty = hero.querySelector('.cg-hint');
   const leads = hero.querySelector('.leads'), ctx = leads.getContext('2d');
   const narrow = matchMedia('(max-width: 700px)');
   const GOLD = '#f6b6d2';

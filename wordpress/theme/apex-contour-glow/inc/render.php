@@ -209,12 +209,12 @@ function apex_render_home( array $S ): string {
     </div>
     <div class="hb-stage cg-stage">
       <div class="cg-sex" role="group" aria-label="Face"><button type="button" data-sex="female" aria-pressed="true">Female</button><button type="button" data-sex="male" aria-pressed="false">Male</button></div>
+      <p class="empty cg-hint">{$ic( 'scan-face' )}{$e( $hero['empty'] )}</p>
       <div class="cg-head" id="planner-head" aria-label="Drag to turn the face. Tap an area below."></div>
       <canvas class="leads" aria-hidden="true"></canvas>
       <div class="cg-ba" role="group" aria-label="Filler"><button type="button" data-ba="before" aria-pressed="false">Before</button><button type="button" data-ba="after" aria-pressed="true">After</button></div>
       <ul class="cg-rail">$rail<li><button type="button" class="fz fz-skin" data-z="skin">{$e( $hero['whole'] )}</button></li></ul>
       <div class="picks" aria-live="polite">
-        <p class="empty">{$ic( 'scan-face' )}{$e( $hero['empty'] )}</p>
         <div class="list" hidden><button type="button" class="pk-x" aria-label="Close">{$ic( 'x' )}</button><p class="area"></p><ul class="basis"></ul><ul class="txc"></ul></div>
       </div>
     </div>

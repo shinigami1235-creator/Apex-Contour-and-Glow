@@ -30,7 +30,7 @@
 /* the card that opens beside the face when an area is picked */
 .picks{position:absolute;z-index:5;right:0;top:58px;bottom:calc(var(--rail,140px) + 24px);width:min(340px,42%);display:flex;flex-direction:column;pointer-events:none}
 .picks>*{pointer-events:auto}
-.picks .empty{display:flex;gap:10px;align-items:center;margin:0;padding:12px 16px;border-radius:var(--r-m);font-size:14px;color:var(--on-night-2);background:rgba(255,255,255,.06);border:1px solid rgba(201,179,221,.18)}
+.cg-hint-old{display:flex;gap:10px;align-items:center;margin:0;padding:12px 16px;border-radius:var(--r-m);font-size:14px;color:var(--on-night-2);background:rgba(255,255,255,.06);border:1px solid rgba(201,179,221,.18)}
 .picks .empty .i{width:20px;height:20px;color:var(--lilac-300)}
 .picks .list{position:relative;padding:20px 20px 16px;border-radius:var(--r-l);background:#fff;color:var(--ink);box-shadow:0 30px 60px -24px rgba(8,2,16,.7);max-height:100%;overflow:auto;overscroll-behavior:contain}
 .pk-x{position:absolute;right:12px;top:12px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--lilac-100);color:var(--plum)}
@@ -342,3 +342,18 @@
 @media (prefers-reduced-motion:reduce){.ln-shaft{transition:none}.ly-needle.go .ln-drop{animation:none;opacity:1;transform:translate(-50%,var(--dy))}}
 @media (max-width:900px){.ly-cards{padding-top:0}}
 @media (max-width:560px){.ly-n{height:26px;font-size:12px;padding:0 10px}.ly{padding:0 10px}}
+
+/* the "tap an area" hint sits top left of the stage, clear of the face */
+.cg-hint{position:absolute;z-index:4;left:0;top:4px;max-width:calc(50% - 110px);display:flex;gap:8px;align-items:flex-start;margin:0;font-size:13.5px;line-height:1.45;color:var(--on-night-2)}
+.cg-hint .i{flex:none;width:18px;height:18px;margin-top:1px;color:var(--lilac-300)}
+@media (max-width:900px){.cg-hint{position:relative;left:auto;top:auto;max-width:none;justify-content:center;align-self:center;margin:2px 0 0;text-align:center}}
+
+/* a bigger syringe */
+.ly-fig{padding-top:220px}
+.ly-cards{padding-top:220px}
+.ly-needle{top:220px}
+.ln-body{left:-22px;bottom:46px;width:44px;height:176px}
+.ln-shaft{left:-2px;width:4px;top:-48px;height:calc(var(--len) + 48px)}
+@media (max-width:900px){.ly-cards{padding-top:0}}
+@media (max-width:560px){.ly-fig{padding-top:170px}.ly-needle{top:170px}.ln-body{left:-17px;bottom:36px;width:34px;height:136px}.ln-shaft{left:-1.5px;width:3px;top:-38px;height:calc(var(--len) + 38px)}}
+@media (max-width:900px){.cg-sex{align-self:flex-start}.cg-ba{top:0}}
