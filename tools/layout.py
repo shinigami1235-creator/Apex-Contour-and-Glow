@@ -119,7 +119,7 @@ def inl(s):
 # (assets/css/apex.css) with Contour and Glow's own parts in assets/css/cg.css and assets/js/cg.js.
 import json as _json
 _ICONS = _json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icons.json')))
-CG_CSS_V = 3; CG_JS_V = 4
+CG_CSS_V = 4; CG_JS_V = 5
 CURVE = ('<svg viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true" focusable="false">'
          '<path class="sx-fill" d="M0 90V54C190 20 400 6 640 30S1090 88 1440 32V90Z"/><path class="sx-stitch" d="M0 46C190 12 400 -2 640 22S1090 80 1440 24"/></svg>')
 

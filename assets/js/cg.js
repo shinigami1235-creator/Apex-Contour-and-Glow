@@ -25,11 +25,16 @@
   // ---- skin layers: pick a layer, see what works there ----
   // the needle reaches into the picked layer and leaves a drop of product there
   const needleEl = document.querySelector('.ly-needle'), lyStack = document.querySelector('.ly-stack');
+  const TILT = 18 * Math.PI / 180;
   const aim = (k, play) => {
     if (!needleEl || !lyStack) return;
     const band = lyStack.querySelector('.ly-' + k);
-    const y = k === 'surface' || !band ? 0 : band.offsetTop - lyStack.offsetTop + band.offsetHeight * (k === 'bone' ? .22 : .5);
-    needleEl.style.setProperty('--len', (y / Math.cos(25 * Math.PI / 180)).toFixed(1) + 'px');
+    const top = band ? band.offsetTop - lyStack.offsetTop : 0;
+    // the tip stops in the middle of the dermis, fat or muscle, and on the periosteum for bone (filler sits on the bone, not in it)
+    const y = k === 'surface' || !band ? 0 : k === 'bone' ? top + band.offsetHeight * 7 / 76 : top + band.offsetHeight * .5;
+    needleEl.style.setProperty('--len', (y / Math.cos(TILT)).toFixed(1) + 'px');
+    needleEl.style.setProperty('--tx', (-y * Math.tan(TILT)).toFixed(1) + 'px');
+    needleEl.style.setProperty('--ty', y.toFixed(1) + 'px');
     needleEl.dataset.ly = k;
     if (play) { needleEl.classList.remove('go'); void needleEl.offsetWidth; needleEl.classList.add('go'); }
   };

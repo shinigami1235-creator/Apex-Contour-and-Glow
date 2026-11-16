@@ -72,11 +72,12 @@
 .ly-n::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--lilac)}
 .ly-stack:has(.ly[aria-pressed=true]) .ly:not([aria-pressed=true]){filter:saturate(.8) brightness(.86)}
 .ly[aria-pressed=true]{box-shadow:inset 0 0 0 3px #fff;z-index:1}
-.ly[aria-pressed=true] .ly-art{transform:scale(1.03)}
+.ly[aria-pressed=true] .ly-art{transform:none}
 .ly[aria-pressed=true] .ly-n{background:var(--plum);color:#fff}
 .ly[aria-pressed=true] .ly-n::before{background:#fff}
 .ly:hover{filter:none!important}
-.ly-surface{flex:0 0 76px}.ly-dermis{flex:0 0 120px}.ly-fat{flex:0 0 120px}.ly-muscle{flex:0 0 88px}.ly-bone{flex:0 0 72px}
+/* each band keeps the drawing's own shape (tools/skin_art.py H), so the needle lands where the drawing says */
+.ly-surface{flex:none;aspect-ratio:600/80}.ly-dermis{flex:none;aspect-ratio:600/130}.ly-fat{flex:none;aspect-ratio:600/130}.ly-muscle{flex:none;aspect-ratio:600/96}.ly-bone{flex:none;aspect-ratio:600/76}
 .ly-cards{position:relative}
 .ly-card{height:100%;padding:clamp(24px,3vw,40px);border-radius:var(--r-l);background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.03));box-shadow:inset 0 0 0 1px rgba(201,179,221,.18)}
 .ly-p{font-size:clamp(18px,1.5vw,22px);line-height:1.5;color:var(--on-night);margin:0 0 24px}
@@ -322,19 +323,22 @@
 
 /* the needle over the skin layers: its depth follows the picked layer */
 .ly-wrap{align-items:start}
-.ly-fig{position:relative;padding-top:150px}
-.ly-cards{padding-top:150px}
-.ly-needle{position:absolute;left:60%;top:150px;width:0;height:0;z-index:3;pointer-events:none;transform:rotate(25deg);--len:0px}
-.ln-body{position:absolute;left:-20px;bottom:2px;width:40px;height:160px;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45))}
-.ln-shaft{position:absolute;left:-1.5px;top:-2px;width:3px;height:calc(var(--len) + 2px);border-radius:0 0 3px 3px;background:linear-gradient(90deg,#8d96a1,#fbfcfd 45%,#6f7782);box-shadow:0 0 0 .5px rgba(0,0,0,.25);transition:height .9s var(--ease-out)}
-.ln-drop{position:absolute;left:0;top:var(--len);width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;opacity:0;transform:scale(.2);
-  background:radial-gradient(circle at 40% 35%,#fff 0 12%,rgba(255,200,226,.95) 30%,rgba(236,120,176,.7) 60%,rgba(236,120,176,0) 72%);transition:top .9s var(--ease-out)}
-.ly-needle.go .ln-drop{animation:ln-drop 1.4s .85s var(--ease-out) forwards}
-.ly-needle[data-ly=dermis] .ln-drop{width:18px;height:18px;margin:-9px 0 0 -9px;box-shadow:-16px 4px 0 -5px rgba(250,180,214,.85),15px -3px 0 -5px rgba(250,180,214,.85)}
-.ly-needle[data-ly=fat] .ln-drop{width:44px;height:38px;margin:-19px 0 0 -22px}
-.ly-needle[data-ly=muscle] .ln-drop{width:22px;height:22px;margin:-11px 0 0 -11px;background:radial-gradient(circle at 40% 35%,#fff 0 12%,rgba(210,225,255,.95) 32%,rgba(140,160,240,.65) 60%,rgba(140,160,240,0) 72%)}
-.ly-needle[data-ly=bone] .ln-drop{width:40px;height:26px;margin:-18px 0 0 -20px}
+.ly-fig{position:relative;padding-top:160px}
+.ly-cards{padding-top:160px}
+.ly-needle{position:absolute;left:70%;top:160px;width:0;height:0;z-index:3;pointer-events:none;--len:0px;--tx:0px;--ty:0px;--dy:-50%}
+.ln-rig{position:absolute;left:0;top:0;transform:rotate(18deg);transform-origin:0 0}
+.ln-body{position:absolute;left:-15px;bottom:34px;width:30px;height:120px;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45))}
+.ln-shaft{position:absolute;left:-1.5px;top:-36px;width:3px;height:calc(var(--len) + 36px);border-radius:0 0 3px 3px;background:linear-gradient(90deg,#8d96a1,#fbfcfd 45%,#6f7782);box-shadow:0 0 0 .5px rgba(0,0,0,.3);transition:height .9s var(--ease-out)}
+.ln-drop{position:absolute;left:var(--tx);top:var(--ty);width:30px;height:30px;border-radius:50%;opacity:0;transform:translate(-50%,var(--dy)) scale(.2);transform-origin:50% 50%;
+  background:radial-gradient(circle at 40% 35%,#fff 0 12%,rgba(255,200,226,.95) 30%,rgba(236,120,176,.75) 60%,rgba(236,120,176,0) 72%)}
+.ly-needle.go .ln-drop{animation:ln-drop 1.3s .85s var(--ease-out) forwards}
+@keyframes ln-drop{to{opacity:1;transform:translate(-50%,var(--dy)) scale(1)}}
+.ly-needle[data-ly=dermis] .ln-drop{width:16px;height:16px;box-shadow:-15px 4px 0 -4px rgba(250,180,214,.9),14px -3px 0 -4px rgba(250,180,214,.9)}
+.ly-needle[data-ly=fat] .ln-drop{width:42px;height:36px}
+.ly-needle[data-ly=muscle] .ln-drop{width:22px;height:22px;background:radial-gradient(circle at 40% 35%,#fff 0 12%,rgba(210,225,255,.95) 32%,rgba(140,160,240,.7) 60%,rgba(140,160,240,0) 72%)}
+.ly-needle[data-ly=bone] .ln-drop{width:46px;height:22px;border-radius:50% 50% 40% 40%/70% 70% 30% 30%}
+.ly-needle[data-ly=bone]{--dy:-92%}
 .ly-needle[data-ly=surface] .ln-drop{display:none}
-@keyframes ln-drop{to{opacity:1;transform:scale(1)}}
-@media (prefers-reduced-motion:reduce){.ln-shaft,.ln-drop{transition:none}.ly-needle.go .ln-drop{animation:none;opacity:1;transform:none}}
-@media (max-width:900px){.ly-fig{padding-top:130px}.ly-needle{top:130px}.ly-cards{padding-top:0}}
+@media (prefers-reduced-motion:reduce){.ln-shaft{transition:none}.ly-needle.go .ln-drop{animation:none;opacity:1;transform:translate(-50%,var(--dy))}}
+@media (max-width:900px){.ly-cards{padding-top:0}}
+@media (max-width:560px){.ly-n{height:26px;font-size:12px;padding:0 10px}.ly{padding:0 10px}}
