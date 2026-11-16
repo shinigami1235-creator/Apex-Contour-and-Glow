@@ -153,6 +153,29 @@ function decodeHeads(buf){
   out.ao = Float32Array.from(new Uint8Array(buf, o + n * 5, n), v => v / 255);
   return out;
 }
+/* The ear (kind 3) is a low-detail patch that reads oddly in the net look. Each ear point is pulled to the average of
+   its neighbours, over and over, with the points around the ear held still, so the ear settles into a smooth patch of
+   skin on the side of the head. No treatment point sits on the ear. */
+function flattenEars(H){
+  const n = H.n, E = H.e, nb = Array.from({length:n}, () => []);
+  for (let q = 0; q < E.length / 2; q++) { const a = E[q * 2], b = E[q * 2 + 1]; nb[a].push(b); nb[b].push(a); }
+  // the ear and the row of points around it move; Jw2 (1346, 688) sits in that row and stays put
+  const KEEP = new Set([1346, 688]), set = new Set();
+  for (let i = 0; i < n; i++) if (H.kind[i] === 3) { set.add(i); nb[i].forEach(j => set.add(j)); }
+  const ear = [...set].filter(i => nb[i].length && !KEEP.has(i));
+  for (const arr of [H.pf, H.pm, H.nf, H.nm]) {
+    for (let it = 0; it < 160; it++) for (const i of ear) {
+      let x = 0, y = 0, z = 0; for (const j of nb[i]) { x += arr[j * 3]; y += arr[j * 3 + 1]; z += arr[j * 3 + 2]; }
+      const k = nb[i].length; arr[i * 3] = x / k; arr[i * 3 + 1] = y / k; arr[i * 3 + 2] = z / k;
+    }
+  }
+  for (const nrm of [H.nf, H.nm]) for (const i of ear) {
+    const l = Math.hypot(nrm[i * 3], nrm[i * 3 + 1], nrm[i * 3 + 2]) || 1;
+    nrm[i * 3] /= l; nrm[i * 3 + 1] /= l; nrm[i * 3 + 2] /= l;
+  }
+  for (let it = 0; it < 160; it++) for (const i of ear) { let a = 0; for (const j of nb[i]) a += H.ao[j]; H.ao[i] = a / nb[i].length; }
+  for (const i of ear) if (H.kind[i] === 3) H.kind[i] = 0;
+}
 const hex = c => [parseInt(c.slice(1, 3), 16) / 255, parseInt(c.slice(3, 5), 16) / 255, parseInt(c.slice(5, 7), 16) / 255];
 
 export async function createHead(host, opts = {}){
@@ -160,6 +183,7 @@ export async function createHead(host, opts = {}){
   const res = await fetch((opts.base || '') + 'features/bodymap/heads.bin');
   if (!res.ok) throw new Error('heads.bin ' + res.status);
   const H = decodeHeads(await res.arrayBuffer());
+  flattenEars(H);
   const n = H.n, ne = H.e.length / 2, E = H.e;
 
   /* points: every vertex plus three along each edge; lines: one segment per edge */
