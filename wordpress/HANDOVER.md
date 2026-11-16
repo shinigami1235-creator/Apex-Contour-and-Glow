@@ -94,11 +94,11 @@ The preview site's addresses (`botox.html`, `compare.html?a=botox&b=filler`) for
 
 ## What editors can change
 
-- **Treatments:** each treatment page, from the opening paragraphs and facts box to prices, packages, areas, the visit steps, the results timeline, care, questions and sources. Its Summary feeds the home page price list, Compare and the face planner cards. Its Face areas decide which face planner areas show it.
-- **Before and after:** one entry per case, linked to its treatment, with a before and an after photo. A photo grid case has only the after photo. The treatment's own "Before and after" box says whether its cases show in the gold mirror with a line to drag or as a photo grid.
+- **Treatments:** each treatment page, from the opening paragraphs and facts box to prices, packages, areas, the visit steps, the results timeline, care, questions and sources. Its Summary feeds the home page tiles, Compare and the face planner cards. Its Symbol, What it is made of and Skin layers fields fill the tile on the home page and its own page, and the Skin layers section. Its Face areas decide which face planner areas show it.
+- **Before and after:** one entry per case, linked to its treatment, with a before and an after photo. A photo grid case has only the after photo. The treatment's own "Before and after" box says whether its cases show as one photo with a line to drag or as a photo grid.
 - **Apex settings:**
   - Site settings: the site name, clinic line, LINE ID, phone, permit number and footer note.
-  - Home page: the headings and text of every part of the home page, which treatment fills the before and after mirror, and the booking form wording.
+  - Home page: the headings and text of every part of the home page, the Skin layers text, which treatment opens the before and after, and the booking form wording.
   - Compare: the row names and the "Often compared" pairs with their notes.
   - Face planner: the names on the area buttons. Where each area sits on the 3D face is set by the research behind it (the MD Codes and published Botox injection guides), so it is not editable.
   - Privacy policy: the policy text, block by block. Apex's DPO should approve any change.
@@ -164,5 +164,6 @@ For the developer: the static design is the source of the styles, scripts and 3D
 | Version | Date | What changed | Run `wp apex import` after installing? |
 |---|---|---|---|
 | 0.1.0 | 15 Nov 2026 | First build, not yet sent to IT. English only. | Yes, the first time. |
+| 0.2.0 | 16 Nov 2026 | New design, matching the Apex Surgery site. Adds the Skin layers section and the Symbol, What it is made of and Skin layers fields on each treatment. | Yes, since the new fields come from the package. |
 
 Thank you. Send me anything that does not match this and I will fix it.

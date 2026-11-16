@@ -69,7 +69,7 @@ html = head2(H['seo_title'], H['seo_desc']) + f'''
   <div class="wrap hb-grid">
     <div class="hb-copy">
       <p class="eyebrow on-night rv">{E(H['hero']['kicker'])}</p>
-      <h1 class="hb-h1 rv" data-d="60">Apex Contour and Glow</h1>
+      <h1 class="hb-h1 rv" data-d="60">{E(H["hero"]["h1"])}{(" " + E(H["hero"]["h1_em"])) if H["hero"]["h1_em"] else ""}</h1>
       <p class="hb-lead rv" data-d="120">{E(H['hero']['sub'])}</p>
       <div class="hb-acts rv" data-d="180"><a class="btn btn-light" href="#book">{ic('message-circle')}Consultation</a><a class="btn btn-ghost" href="compare.html">{ic('sliders-horizontal')}Compare treatments</a></div>
       <ul class="hb-svcs rv" data-d="240">{hero_tx}</ul>

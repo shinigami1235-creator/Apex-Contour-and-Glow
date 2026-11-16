@@ -313,3 +313,6 @@
   .cm-name{font-size:18px}
   .cg-areas li{padding:14px 16px}
 }
+[hidden]{display:none!important}
+.txc a{text-decoration:none!important;color:var(--ink)!important}
+.txc a b{color:var(--plum)}

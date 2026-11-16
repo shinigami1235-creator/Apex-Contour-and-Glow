@@ -26,7 +26,7 @@ def results(slug, t):
     if R['mode'] == 'slider':
         lb, la = R.get('labels', ('Before', 'After'))
         src = lambda i, s: f'assets/img/{R["set"]}-{i}-{s}.webp'
-        thumbs = ''.join(f'<button type="button" class="{"on" if i == 1 else ""}" data-b="{src(i, "before")}" data-a="{src(i, "after")}" data-l="{E(lb)} | {E(la)}" aria-label="Case {i}"><img src="{src(i, "after")}" alt="" loading="lazy"></button>'
+        thumbs = ''.join(f'<button type="button" class="{"on" if i == 1 else ""}" data-b="{src(i, "before")}" data-a="{src(i, "after")}" data-l="{E(lb)} | {E(la)}"><img src="{src(i, "after")}" alt="{E(t["name"])} case {i}" loading="lazy"></button>'
                          for i in range(1, R['n'] + 1)) if R['n'] > 1 else ''
         return f'''<section class="section washed" id="results"><div class="wrap">
   <div class="shead"><div><p class="eyebrow rv">Results</p><h2 class="h-xl rv">Before and after</h2></div></div>

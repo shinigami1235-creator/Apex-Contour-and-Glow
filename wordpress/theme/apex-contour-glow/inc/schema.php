@@ -16,7 +16,7 @@ function apex_pair( string $k, string $l, string $a, string $b, array $more = []
 	return apex_f( $k, 'repeater', $l, $more + [ 'list' => true, 'f' => [ apex_f( 'a', 'text', $a ), apex_f( 'b', 'textarea', $b ) ] ] );
 }
 function apex_h2_f( string $k, string $l ): array {
-	return apex_f( $k, 'group', $l, [ 'f' => [ apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part', [ 'h' => 'The words after the heading, shown in gold italic' ] ) ] ] );
+	return apex_f( $k, 'group', $l, [ 'f' => [ apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part', [ 'h' => 'The words after the heading' ] ) ] ] );
 }
 /** The icons the design can draw next to a care point (tools/tx_art.py). */
 function apex_icons(): array {
@@ -43,25 +43,29 @@ function apex_schema( string $type ): array {
 		apex_f( 'seo_title', 'text', 'SEO title' ),
 		apex_f( 'seo_desc', 'textarea', 'SEO description' ),
 		apex_f( 'hero', 'group', 'Face planner', [ 'f' => [
-			apex_f( 'kicker', 'text', 'Small line above the heading' ), apex_f( 'h1', 'text', 'Heading' ), apex_f( 'h1_em', 'text', 'Heading, gold part' ),
+			apex_f( 'kicker', 'text', 'Small line above the heading' ), apex_f( 'h1', 'text', 'Heading' ), apex_f( 'h1_em', 'text', 'Heading, second part' ),
 			apex_f( 'sub', 'text', 'Line under the heading' ), apex_f( 'empty', 'text', 'Hint before an area is picked' ), apex_f( 'whole', 'text', 'Whole face button' ) ] ] ),
 		apex_f( 'treatments', 'group', 'Treatments and prices', [ 'f' => [
-			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part' ), apex_f( 'p', 'text', 'Line under the heading' ),
+			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part' ), apex_f( 'p', 'text', 'Line under the heading' ),
 			apex_pair( 'halves', 'Column headings', 'Name', 'Second line', [ 'h' => 'Contour first, then Glow. Each treatment says which column it sits in.', 'fixed' => 2 ] ) ] ] ),
 		apex_f( 'visit', 'group', 'Your visit', [ 'f' => [
-			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part' ), apex_f( 'foot', 'text', 'Line under the steps' ),
+			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part' ), apex_f( 'foot', 'text', 'Line under the steps' ),
 			apex_f( 'steps', 'repeater', 'Steps', [ 'list' => true, 'h' => 'Five steps fill the row best', 'f' => [
 				apex_f( 'icon', 'select', 'Icon', [ 'o' => [ 'talk' => 'Talk', 'tube' => 'Cream', 'needle' => 'Needle', 'ice' => 'Ice', 'cal' => 'Calendar' ] ] ),
 				apex_f( 'h', 'text', 'Step' ), apex_f( 'p', 'textarea', 'Text' ), apex_f( 't', 'text', 'How long' ) ] ] ) ] ] ),
+		apex_f( 'layers', 'group', 'Skin layers', [ 'f' => [
+			apex_f( 'eyebrow', 'text', 'Small line above the heading' ), apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part' ), apex_f( 'p', 'textarea', 'Line under the heading' ),
+			apex_f( 'layers', 'repeater', 'Layers', [ 'list' => true, 'fixed' => 5, 'h' => 'Top to bottom. Each treatment says which layers it works in.', 'f' => [
+				apex_f( 'k', 'text', 'Key', [ 'keep' => true ] ), apex_f( 'n', 'text', 'Name' ), apex_f( 'p', 'textarea', 'Text' ) ] ] ) ] ] ),
 		apex_f( 'results', 'group', 'Before and after', [ 'f' => [
-			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part' ),
-			apex_f( 'set', 'select', 'Treatment shown', [ 'o' => 'treatments', 'h' => 'Its before and after cases go in the mirror' ] ),
+			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part' ),
+			apex_f( 'set', 'select', 'Treatment shown', [ 'o' => 'treatments', 'h' => 'Its before and after cases go in the photo with the line' ] ),
 			apex_f( 'p', 'textarea', 'Text' ), apex_pair( 'stats', 'Facts under the photos', 'Label', 'Value' ), apex_f( 'fine', 'text', 'Small print' ) ] ] ),
 		apex_f( 'compare', 'group', 'Compare', [ 'f' => [
-			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part' ),
+			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part' ),
 			apex_f( 'a', 'select', 'First treatment picked', [ 'o' => 'treatments' ] ), apex_f( 'b', 'select', 'Second treatment picked', [ 'o' => 'treatments' ] ) ] ] ),
 		apex_f( 'book', 'group', 'Book a consultation', [ 'f' => [
-			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, gold part' ), apex_f( 'p', 'textarea', 'Text' ), apex_f( 'fine', 'text', 'Small print under the button' ),
+			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part' ), apex_f( 'p', 'textarea', 'Text' ), apex_f( 'fine', 'text', 'Small print under the button' ),
 			apex_f( 'consent', 'text', 'Consent box', [ 'h' => 'The sentence beside the tick box people must tick before sending' ] ), apex_f( 'privacy', 'text', 'Privacy policy link', [ 'h' => 'Also used in the footer' ] ) ] ] ),
 	];
 
@@ -72,6 +76,9 @@ function apex_schema( string $type ): array {
 		apex_f( 'order', 'number', 'Order on the site', [ 'src' => 'order' ] ),
 		apex_f( 'no', 'number', 'Number on the page' ),
 		apex_f( 'half', 'select', 'Column', [ 'o' => [ 'Contour' => 'Contour (shape and lift)', 'Glow' => 'Glow (skin quality)' ] ] ),
+		apex_f( 'sym', 'text', 'Symbol', [ 'h' => 'Two letters for the tile, for example Bt for Botox' ] ),
+		apex_f( 'material', 'text', 'What it is made of', [ 'h' => 'Under the name on the tile, for example Botulinum toxin' ] ),
+		apex_f( 'layers', 'lines', 'Skin layers it works in', [ 'h' => 'One per line, from: surface, dermis, fat, muscle, bone' ] ),
 		apex_f( 'seo_title', 'text', 'SEO title' ), apex_f( 'seo_desc', 'textarea', 'SEO description' ),
 		apex_f( 'hook', 'lines', 'Opening paragraphs', [ 'h' => 'One paragraph per line' ] ),
 		apex_pair( 'facts', 'Facts beside the opening', 'Label', 'Value', [ 'h' => 'Four fill the box best' ] ),
@@ -99,8 +106,8 @@ function apex_schema( string $type ): array {
 			apex_f( 'urgent', 'textarea', 'When to call the clinic straight away' ) ] ] ),
 		apex_pair( 'faq', 'Questions', 'Question', 'Answer' ),
 		apex_f( 'results', 'group', 'Before and after', [ 'h' => 'The photos are the Before and after cases for this treatment', 'f' => [
-			apex_f( 'mode', 'select', 'Shown as', [ 'o' => [ '' => 'Not shown', 'slider' => 'Mirror with a line to drag', 'gallery' => 'Photo grid' ] ] ),
-			apex_f( 'labels', 'lines', 'Mirror labels', [ 'h' => 'Two lines: the before label, then the after label' ] ),
+			apex_f( 'mode', 'select', 'Shown as', [ 'o' => [ '' => 'Not shown', 'slider' => 'Photo with a line to drag', 'gallery' => 'Photo grid' ] ] ),
+			apex_f( 'labels', 'lines', 'Photo labels', [ 'h' => 'Two lines: the before label, then the after label' ] ),
 			apex_f( 'caption', 'text', 'Line under the heading' ),
 			apex_f( 'ar', 'text', 'Photo shape', [ 'h' => 'Width/height of the photos, for example 540/860' ] ) ] ] ),
 		apex_f( 'sources', 'lines', 'Sources', [ 'h' => 'One per line' ] ),

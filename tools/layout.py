@@ -2,7 +2,7 @@
 import html, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
-from site_content import SETTINGS
+from site_content import SETTINGS, HOME
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 E = html.escape
 HEAD_V = 18
@@ -119,7 +119,7 @@ def inl(s):
 # (assets/css/apex.css) with Contour and Glow's own parts in assets/css/cg.css and assets/js/cg.js.
 import json as _json
 _ICONS = _json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icons.json')))
-CG_CSS_V = 1; CG_JS_V = 1
+CG_CSS_V = 2; CG_JS_V = 2
 CURVE = ('<svg viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true" focusable="false">'
          '<path class="sx-fill" d="M0 90V54C190 20 400 6 640 30S1090 88 1440 32V90Z"/><path class="sx-stitch" d="M0 46C190 12 400 -2 640 22S1090 80 1440 24"/></svg>')
 
@@ -169,7 +169,7 @@ def footer2():
   <div><h2 class="ftr-h">Tools</h2><a href="index.html#planner">Face planner</a><a href="index.html#layers">Skin layers</a><a href="compare.html">Compare two treatments</a><a href="index.html#results">Before and after</a></div>
   <div><h2 class="ftr-h">Contact</h2><a href="{LINE_URL}">{ic('brand:line')}LINE {E(LINE_ID)}</a><a href="tel:{PHONE.replace('-', '')}">{ic('phone')}{E(PHONE)}</a><a href="index.html#book">{ic('calendar')}Book a consultation</a></div>
 </div>
-<div class="ftr-bot cg-bot"><span>{E(SETTINGS['footer_note'])}</span><span><a href="privacy.html">Privacy policy</a></span></div></div>
+<div class="ftr-bot cg-bot"><span>{E(SETTINGS['footer_note'])}</span><span><a href="privacy.html">{E(HOME['book']['privacy'])}</a></span></div></div>
 <p class="cg-mark" aria-hidden="true">APEX</p></footer>'''
 
 def scripts2():

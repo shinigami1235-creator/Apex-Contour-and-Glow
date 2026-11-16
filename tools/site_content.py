@@ -12,7 +12,7 @@ SETTINGS = {
 HOME = {
     'seo_title': 'Apex Contour and Glow | Injectables at Apex Hospital & Clinics',
     'seo_desc': 'Botox, filler, HArmonyCa, Radiesse, Sculptra, Juvelook, Profhilo, Skinvive, Vitaran, Nucleofill, Celeb Skin and meso at Apex Hospital & Clinics, Bangkok, with prices.',
-    'hero': {'kicker': 'Apex Hospital & Clinics, Bangkok', 'h1': 'Injectables', 'h1_em': 'at Apex',
+    'hero': {'kicker': 'Apex Hospital & Clinics, Bangkok', 'h1': 'Apex Contour and Glow', 'h1_em': '',
              'sub': 'Tap an area of the face to see its treatments and prices.',
              'empty': 'Tap an area. Drag the face to turn it.', 'whole': 'The whole face'},
     'treatments': {'h2': 'Treatments', 'h2_em': 'and prices', 'p': 'Starting prices. Your doctor confirms the amount at the consultation.',
@@ -290,3 +290,4 @@ LAYERS = {
         ['bone', 'Bone', 'The cheekbones, jaw and chin. Filler placed on the bone shapes and lifts from the base.'],
     ],
 }
+HOME['layers'] = LAYERS   # the Skin layers section of the home page

@@ -3,7 +3,7 @@
  * Google Tag Manager with Google Consent Mode v2, and the cookie banner Thai PDPA asks for.
  * Nothing that stores analytics or advertising cookies runs until the visitor accepts; Tag Manager loads
  * straight away with everything denied, so tags that respect consent (GA4, Google Ads) wait for the choice.
- * The site's own events (apex_* in dataLayer, see assets/js/lux.js) go to the same dataLayer.
+ * The site's own events (apex_* in dataLayer, see assets/js/cg.js) go to the same dataLayer.
  * Apex settings › Tracking sets the container ID; empty turns tracking off.
  * The same page holds custom code: boxes printed as typed in the head, after <body>, before </body>, plus
  * custom CSS and JavaScript. Only someone allowed to post raw HTML (an administrator) can change them.
@@ -59,15 +59,15 @@ add_action( 'wp_footer', function () {
 <div class="ck" id="apex-ck" role="dialog" aria-modal="false" aria-labelledby="apex-ck-h" hidden>
   <div class="ck-in"><p class="ck-h" id="apex-ck-h"><?php echo esc_html( $t['h'] ); ?></p><p class="ck-p"><?php echo esc_html( $t['p'] ); ?></p>
   <div class="ck-opts" hidden><label><input type="checkbox" name="analytics"> <b><?php echo esc_html( $t['an'] ); ?></b><small><?php echo esc_html( $t['anP'] ); ?></small></label><label><input type="checkbox" name="ads"> <b><?php echo esc_html( $t['ad'] ); ?></b><small><?php echo esc_html( $t['adP'] ); ?></small></label></div>
-  <div class="ck-acts"><button type="button" class="btn solid" data-ck="all"><?php echo esc_html( $t['all'] ); ?></button><button type="button" class="btn" data-ck="none"><?php echo esc_html( $t['none'] ); ?></button><button type="button" class="ck-set" data-ck="set"><?php echo esc_html( $t['set'] ); ?></button><button type="button" class="btn solid" data-ck="save" hidden><?php echo esc_html( $t['save'] ); ?></button></div></div>
+  <div class="ck-acts"><button type="button" class="btn btn-plum btn-sm" data-ck="all"><?php echo esc_html( $t['all'] ); ?></button><button type="button" class="btn btn-ghost btn-sm" data-ck="none"><?php echo esc_html( $t['none'] ); ?></button><button type="button" class="ck-set" data-ck="set"><?php echo esc_html( $t['set'] ); ?></button><button type="button" class="btn btn-plum btn-sm" data-ck="save" hidden><?php echo esc_html( $t['save'] ); ?></button></div></div>
 </div>
 <style>
-.ck{position:fixed;z-index:120;left:16px;right:16px;bottom:16px;max-width:560px;background:#fff;color:var(--ink,#2f163f);border:1px solid var(--gold-line,#d9c08f);box-shadow:0 18px 60px rgba(31,10,48,.28)}
+.ck{position:fixed;z-index:120;left:16px;right:16px;bottom:16px;max-width:560px;background:#fff;color:var(--ink,#2a1838);border-radius:var(--r-l,24px);box-shadow:0 0 0 1px rgba(106,56,140,.12),0 18px 60px rgba(31,10,48,.28)}
 .ck [hidden]{display:none!important}
-.ck-in{padding:22px 24px}.ck-h{font:400 22px/1.2 var(--serif,serif);margin:0 0 8px;color:var(--plum,#4a2563)}.ck-p{font-size:14.5px;line-height:1.6;margin:0 0 16px}
-.ck-acts{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.ck-set{background:none;border:0;padding:8px 4px;font:inherit;font-size:14px;color:var(--plum,#4a2563);text-decoration:underline;cursor:pointer}
+.ck-in{padding:22px 24px}.ck-h{font-size:21px;line-height:1.2;margin:0 0 8px;color:var(--plum,#6A388C)}.ck-p{font-size:14.5px;line-height:1.6;margin:0 0 16px}
+.ck-acts{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.ck-set{background:none;border:0;padding:8px 4px;font:inherit;font-size:14px;color:var(--plum,#6A388C);text-decoration:underline;cursor:pointer}
 .ck-opts{display:grid;gap:10px;margin:0 0 14px}.ck-opts label{display:grid;grid-template-columns:22px 1fr;column-gap:8px;font-size:14px;cursor:pointer}.ck-opts small{grid-column:2;opacity:.8}
-.ck-opts input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--apex,#673587)}
+.ck-opts input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--plum,#6A388C)}
 .ck-link{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
 @media (max-width:520px){.ck{left:10px;right:10px;bottom:10px}.ck-acts .btn{flex:1 1 auto;text-align:center}}
 </style>

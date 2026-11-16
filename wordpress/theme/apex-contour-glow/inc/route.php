@@ -14,6 +14,6 @@ elseif ( $page === 'privacy' ) $html = apex_render_privacy( $S );
 else {
 	status_header( 404 );
 	nocache_headers();
-	$html = apex_head( 'Page not found | Apex Contour and Glow', '' ) . "\n<body>\n" . apex_header() . "\n<main><section class=\"sec\"><div class=\"wrap\"><div class=\"sec-head\"><h2>Page <em>not found</em></h2>" . apex_divider() . "</div><p class=\"center\"><a class=\"btn solid\" href=\"index.html\">Go to the home page</a></p></div></section></main>\n" . apex_footer( $S ) . "\n" . apex_scripts( $S ) . "\n" . apex_tail( $S );
+	$html = apex_head( 'Page not found | Apex Contour and Glow', '' ) . "\n<body>\n" . apex_header( $S ) . "\n<main id=\"main\"><section class=\"phead\" data-tone=\"night\"><div class=\"phead-lines\" aria-hidden=\"true\"></div><div class=\"wrap\"><h1 class=\"display-s\">Page not found</h1><p class=\"lead\">This address has no page. The treatments and the face planner are on the home page.</p><p class=\"sh-acts\"><a class=\"btn btn-light\" href=\"index.html\">Go to the home page</a></p></div></section></main>\n" . apex_footer( $S ) . "\n" . apex_scripts( $S ) . "\n" . apex_tail( $S );
 }
 echo apex_links( $html );

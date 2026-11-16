@@ -34,7 +34,7 @@ add_action( 'wp_head', function () {
 	[ $title, $desc ] = apex_seo_now();
 	if ( apex_own_meta() && $url ) {
 		echo '<link rel="canonical" href="' . esc_url( $url ) . '">' . "\n";
-		echo '<meta property="og:type" content="website"><meta property="og:title" content="' . esc_attr( $title ) . '"><meta property="og:description" content="' . esc_attr( $desc ) . '"><meta property="og:url" content="' . esc_url( $url ) . '"><meta property="og:image" content="' . esc_url( apex_asset( 'img/mirror-gold.webp' ) ) . '"><meta property="og:locale" content="' . ( apex_lang() === 'th' ? 'th_TH' : 'en_US' ) . '">' . "\n";
+		echo '<meta property="og:type" content="website"><meta property="og:title" content="' . esc_attr( $title ) . '"><meta property="og:description" content="' . esc_attr( $desc ) . '"><meta property="og:url" content="' . esc_url( $url ) . '"><meta property="og:image" content="' . esc_url( apex_asset( 'img/og.jpg' ) ) . '"><meta property="og:locale" content="' . ( apex_lang() === 'th' ? 'th_TH' : 'en_US' ) . '">' . "\n";
 	}
 	$S = apex_site();
 	$clinic = [ '@type' => 'MedicalClinic', 'name' => $S['settings']['brand'], 'telephone' => $S['settings']['phone'], 'url' => apex_home_url(), 'address' => [ '@type' => 'PostalAddress', 'addressLocality' => 'Bangkok', 'addressCountry' => 'TH' ], 'parentOrganization' => [ '@type' => 'Organization', 'name' => 'Apex Hospital & Clinics' ] ];

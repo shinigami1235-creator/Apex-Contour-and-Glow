@@ -5,9 +5,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(SITE, 'tools'))
 from tx_content import TX
-from site_content import SETTINGS, HOME, PRIVACY
+from site_content import SETTINGS, HOME, PRIVACY, TAGS
 from tx_art import ICON
-from layout import ORDER, ROWS, C, PAIRS, ZONES, AREA, zones
+from layout import ORDER, ROWS, C, PAIRS, ZONES, AREA, zones, _ICONS, CURVE
+from skin_art import band
 
 def treatment(k, i):
     t = dict(TX[k])
@@ -16,6 +17,7 @@ def treatment(k, i):
     t['key'] = k
     t['order'] = i
     t['summary'] = {r[0]: v for r, v in zip(ROWS, C[k])}
+    t['sym'], t['material'], t['layers'] = TAGS[k][0], TAGS[k][1], list(TAGS[k][2])
     return t
 
 out = {
@@ -43,4 +45,9 @@ with open(os.path.join(ddir, 'planner.json'), 'w', encoding='utf-8') as f:
     json.dump(planner, f, ensure_ascii=False, separators=(',', ':'))
 with open(os.path.join(ddir, 'icons.json'), 'w', encoding='utf-8') as f:
     json.dump(ICON, f, ensure_ascii=False)
+# the Apex icon set, the curved section edge and the drawn skin layers: fixed parts of the design
+with open(os.path.join(ddir, 'apex-icons.json'), 'w', encoding='utf-8') as f:
+    json.dump(_ICONS, f, ensure_ascii=False)
+with open(os.path.join(ddir, 'art.json'), 'w', encoding='utf-8') as f:
+    json.dump({'curve': CURVE, 'skin': {k: band(k) for k in ('surface', 'dermis', 'fat', 'muscle', 'bone')}}, f, ensure_ascii=False)
 print(f'wrote {os.path.relpath(path, SITE)}: {len(out["treatments"])} treatments, {len(out["compare"]["pairs"])} pairs')
