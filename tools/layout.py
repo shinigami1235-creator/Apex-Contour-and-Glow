@@ -5,7 +5,7 @@ from tx_content import TX
 from site_content import SETTINGS
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 E = html.escape
-CSS_V = 5; JS_V = 8; HEAD_V = 18
+HEAD_V = 18
 LINE_ID = SETTINGS['line_id']; PHONE = SETTINGS['phone']
 LINE_URL = 'https://line.me/R/ti/p/' + LINE_ID
 ORDER = ['botox', 'filler', 'harmonyca', 'radiesse', 'sculptra', 'juvelook', 'profhilo', 'skinvive', 'vitaran', 'nucleofill', 'celeb-skin', 'meso']
@@ -100,47 +100,6 @@ def zones():
                          bap='Five Bio Aesthetic Points a side' if key == 'skin' else '')
     return dict(zones=z, names=names, verts={k: v for k, _, v, _ in ZONES}, pts=pts, fill=fill, info=info)
 
-def head(title, desc):
-    return f'''<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{E(title)}</title>
-<meta name="description" content="{E(desc)}">
-<meta name="robots" content="noindex">
-<meta name="theme-color" content="#4a2563">
-<link rel="preload" href="assets/fonts/bodoni-moda-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="assets/fonts/jost-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/lux.css?v={CSS_V}">
-</head>'''
-
-def header(home=False):
-    p = '' if home else 'index.html'
-    return f'''<header class="topbar"><div class="wrap">
-  <a class="mark" href="{p or '#top'}">Apex <span>Contour and Glow</span></a>
-  <nav aria-label="Main"><a href="{p}#planner">Face planner</a><a href="{p}#treatments">Treatments</a><a href="{p}#results">Results</a><a href="compare.html">Compare</a><a href="{p}#book">Contact</a></nav>
-  <a class="btn lt" href="{p}#book">Book</a>
-</div></header>'''
-
-def footer():
-    return f'''<footer class="foot">
-  <img class="orn-div" src="assets/img/orn/divider.svg" alt="">
-  <p class="mark">Apex <span>Contour and Glow</span></p>
-  <p>{E(SETTINGS['clinic'])}</p>
-  <p>LINE <a href="{LINE_URL}">{LINE_ID}</a> · <a href="tel:{PHONE.replace('-', '')}">{PHONE}</a></p>{f'''
-  <p class="fine">{E(SETTINGS['permit'])}</p>''' if SETTINGS['permit'] else ''}
-  <p class="fine">{E(SETTINGS['footer_note'])}</p>
-  <p class="fine"><a href="privacy.html">Privacy policy</a></p>
-</footer>'''
-
-def divider():
-    return '<img class="orn-div" src="assets/img/orn/divider.svg" alt="">'
-
-def scripts():
-    return f'<script src="assets/js/lux.js?v={JS_V}"></script>'
-
-
 def cols(n, opts=(4, 3, 5)):
     """How many per row so the rows come out full, or as close as they can (the short row is centred)."""
     for c in opts:
@@ -153,3 +112,65 @@ def inl(s):
     h = E(s)
     h = re.sub(r'\[([^\]\n]+)\]\(((?:https?://|mailto:|tel:|/|#)[^\s()]*)\)', r'<a href="\2">\1</a>', h)
     return re.sub(r'\*\*([^*\n]+?)\*\*', r'<strong>\1</strong>', h)
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# The Apex design (16 Nov 2026): the same base styles, header, curves and footer as apexsurgeryhospital.com
+# (assets/css/apex.css) with Contour and Glow's own parts in assets/css/cg.css and assets/js/cg.js.
+import json as _json
+_ICONS = _json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icons.json')))
+CG_CSS_V = 1; CG_JS_V = 1
+CURVE = ('<svg viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true" focusable="false">'
+         '<path class="sx-fill" d="M0 90V54C190 20 400 6 640 30S1090 88 1440 32V90Z"/><path class="sx-stitch" d="M0 46C190 12 400 -2 640 22S1090 80 1440 24"/></svg>')
+
+def ic(name, cls=''):
+    """An icon from the Apex set: line icons by name ('arrow-right'), brand marks as 'brand:line'."""
+    if name.startswith('brand:'):
+        d = _ICONS.get('b_' + name[6:], '')
+        return f'<svg class="i br {cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="{d}"/></svg>'
+    return f'<svg class="i l {cls}" viewBox="0 0 24 24" aria-hidden="true">{_ICONS.get("l_" + name, "")}</svg>'
+
+def head2(title, desc):
+    return f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{E(title)}</title>
+<meta name="description" content="{E(desc)}">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1F0A30">
+<link rel="preload" href="assets/fonts/LINESeed-Rg-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/LINESeed-Bd-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/apex.css?v={CG_CSS_V}">
+<link rel="stylesheet" href="assets/css/cg.css?v={CG_CSS_V}">
+</head>'''
+
+def header2(home=False):
+    p = '' if home else 'index.html'
+    nav = [(f'{p}#planner', 'Face planner'), (f'{p}#treatments', 'Treatments'), (f'{p}#layers', 'Skin layers'), (f'{p}#results', 'Results'), ('compare.html', 'Compare'), (f'{p}#book', 'Contact')]
+    links = ''.join(f'<a href="{h}">{E(t)}</a>' for h, t in nav)
+    return f'''<header class="hdr"><a class="skip" href="#main">Skip to content</a><div class="hdr-in">
+  <a class="hdr-logo" href="{p or '#main'}" aria-label="Apex Contour and Glow"><span class="logo-txt cg-logo">APEX<small>Contour and Glow</small></span></a>
+  <nav class="hdr-nav" aria-label="Main">{links}</nav>
+  <div class="hdr-right"><a class="btn btn-plum btn-sm" href="{p}#book">{ic('message-circle')}Consultation</a><button type="button" class="burger" aria-label="Menu" data-sheet>{ic('menu')}</button></div>
+</div></header>
+<dialog class="sheet" id="sheet" aria-label="Menu"><div class="sheet-top"><span class="logo-txt light">APEX<small>Contour and Glow</small></span><button type="button" class="close" aria-label="Close" data-close>{ic('x')}</button></div>
+  <nav>{''.join(f'<a href="{h}">{E(t)}{ic("arrow-right")}</a>' for h, t in nav)}</nav>
+  <div class="sheet-cta"><a class="btn btn-light" href="{p}#book">{ic('message-circle')}Consultation</a><a class="btn btn-ghost" href="{LINE_URL}">{ic('brand:line')}LINE {E(LINE_ID)}</a></div>
+</dialog>'''
+
+def footer2():
+    tx = ''.join(f'<a href="{k}.html">{E(TX[k]["name"])}</a>' for k in ORDER)
+    permit = f'<p class="ftr-lic">{E(SETTINGS["permit"])}</p>' if SETTINGS['permit'] else ''
+    return f'''<footer class="ftr sx-join" data-tone="night"><div class="wrap"><div class="ftr-top cg-ftr">
+  <div class="brand"><span class="logo-txt light">APEX<small>Contour and Glow</small></span><p>{E(SETTINGS['clinic'])}</p>{permit}</div>
+  <div><h2 class="ftr-h">Treatments</h2>{tx}</div>
+  <div><h2 class="ftr-h">Tools</h2><a href="index.html#planner">Face planner</a><a href="index.html#layers">Skin layers</a><a href="compare.html">Compare two treatments</a><a href="index.html#results">Before and after</a></div>
+  <div><h2 class="ftr-h">Contact</h2><a href="{LINE_URL}">{ic('brand:line')}LINE {E(LINE_ID)}</a><a href="tel:{PHONE.replace('-', '')}">{ic('phone')}{E(PHONE)}</a><a href="index.html#book">{ic('calendar')}Book a consultation</a></div>
+</div>
+<div class="ftr-bot cg-bot"><span>{E(SETTINGS['footer_note'])}</span><span><a href="privacy.html">Privacy policy</a></span></div></div>
+<p class="cg-mark" aria-hidden="true">APEX</p></footer>'''
+
+def scripts2():
+    return f'<script src="assets/js/cg.js?v={CG_JS_V}"></script>'

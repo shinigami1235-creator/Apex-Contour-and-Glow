@@ -260,3 +260,33 @@ PRIVACY = {
   ]
  ]
 }
+
+# Each treatment's short symbol, what it is made of, and the layers of the face it works in (keys of LAYERS).
+# The depths are the usual ones from each product's instructions; the doctor picks the depth for each point.
+TAGS = {
+    'botox':      ('Bt', 'Botulinum toxin', ['muscle']),
+    'filler':     ('Ha', 'Hyaluronic acid gel', ['fat', 'bone']),
+    'harmonyca':  ('Hc', 'HA with calcium hydroxylapatite', ['fat']),
+    'radiesse':   ('Ra', 'Calcium hydroxylapatite', ['fat', 'bone']),
+    'sculptra':   ('Sc', 'Poly-L-lactic acid', ['fat', 'bone']),
+    'juvelook':   ('Jv', 'PDLLA with HA', ['dermis']),
+    'profhilo':   ('Pf', 'Hyaluronic acid', ['fat']),
+    'skinvive':   ('Sv', 'Hyaluronic acid microdroplets', ['dermis']),
+    'vitaran':    ('Vt', 'Polynucleotides', ['dermis']),
+    'nucleofill': ('Nf', 'PDRN polynucleotides', ['dermis']),
+    'celeb-skin': ('Cs', 'Facial meso program', ['dermis']),
+    'meso':       ('Ms', 'HA, vitamins and nutrients', ['dermis']),
+}
+
+# The layers of the face, from the surface down, for the Skin layers section of the home page.
+LAYERS = {
+    'h2': 'Skin', 'h2_em': 'layers', 'eyebrow': 'How deep each one works',
+    'p': 'Each treatment works at its own depth. Pick a layer to see what goes there.',
+    'layers': [
+        ['surface', 'Surface', 'The outer skin. Nothing is injected here; it shows the change made underneath.'],
+        ['dermis', 'Dermis', 'The layer that holds collagen and water. Skin boosters go here for texture, fine lines and glow.'],
+        ['fat', 'Fat', 'The fat pads that give the face its fullness. Volume and lifting treatments go here.'],
+        ['muscle', 'Muscle', 'The muscles that pull the skin into lines. Botox relaxes them.'],
+        ['bone', 'Bone', 'The cheekbones, jaw and chin. Filler placed on the bone shapes and lifts from the base.'],
+    ],
+}

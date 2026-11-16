@@ -1,115 +1,159 @@
-# Builds one page per treatment from tools/tx_content.py. Edit the content file, then run: python3 tools/build_tx.py
+# Builds one page per treatment from tools/tx_content.py, in the Apex design (apex.css plus cg.css).
+# Edit the content file, then run: python3 tools/build_tx.py
 import os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 from tx_art import icon
-from layout import E, ROOT, head, header, footer, divider, scripts, cols
-ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII']
+from site_content import TAGS, LAYERS
+from layout import E, ROOT, LINE_ID, LINE_URL, PHONE, head2, header2, footer2, scripts2, ic, CURVE
+
+LAYER_NAME = {k: n for k, n, _ in LAYERS['layers']}
+
+
+def consult_band():
+    return f'''<section class="section night" id="book"><div class="wrap"><div class="consult-band rv">
+  <div class="cb-copy"><p class="eyebrow on-night">Consult</p><h2 class="h-xl">Book a consultation</h2><p class="lead">Send your details on LINE or call, and Apex sets a day with you.</p></div>
+  <div class="cb-acts"><a class="cb-big" href="index.html#book">{ic('message-circle')}<span><b>Book a consultation</b><small>Pick a treatment and a day</small></span>{ic('arrow-right')}</a>
+    <a class="cb-row" href="{LINE_URL}">{ic('brand:line')}<span><b>Chat on LINE</b><small>{E(LINE_ID)}</small></span></a>
+    <a class="cb-row" href="tel:{PHONE.replace('-', '')}">{ic('phone')}<span><b>Call the clinic</b><small>{E(PHONE)}</small></span></a></div>
+</div></div></section>'''
+
+
+def results(slug, t):
+    R = t.get('results')
+    if not R:
+        return ''
+    if R['mode'] == 'slider':
+        lb, la = R.get('labels', ('Before', 'After'))
+        src = lambda i, s: f'assets/img/{R["set"]}-{i}-{s}.webp'
+        thumbs = ''.join(f'<button type="button" class="{"on" if i == 1 else ""}" data-b="{src(i, "before")}" data-a="{src(i, "after")}" data-l="{E(lb)} | {E(la)}" aria-label="Case {i}"><img src="{src(i, "after")}" alt="" loading="lazy"></button>'
+                         for i in range(1, R['n'] + 1)) if R['n'] > 1 else ''
+        return f'''<section class="section washed" id="results"><div class="wrap">
+  <div class="shead"><div><p class="eyebrow rv">Results</p><h2 class="h-xl rv">Before and after</h2></div></div>
+  <div class="cg-res rv">
+    <div class="cg-ba-card"><div class="ba" id="ba" style="aspect-ratio:{R.get("ar", "540/680")}">
+      <img class="after" src="{src(1, "after")}" alt="After {E(t["name"])}">
+      <img class="before" src="{src(1, "before")}" alt="Before {E(t["name"])}">
+      <span class="line" aria-hidden="true"></span><span class="knob" aria-hidden="true">{ic('move-horizontal')}</span>
+      <span class="tag tb">{E(lb)}</span><span class="tag ta">{E(la)}</span>
+      <input class="range" type="range" min="0" max="100" value="50" aria-label="Move the line between before and after">
+    </div></div>
+    <div class="cg-res-side">
+      <p class="lead">{E(R.get("caption", t["name"] + " at Apex. Drag the line across the photo to compare."))}</p>
+      <div class="thumbs" id="thumbs">{thumbs}</div>
+      <div class="tools"><button type="button" class="btn btn-plum btn-sm" data-ba="play">{ic('play')}Play again</button></div>
+      <p class="note">Individual results vary.</p>
+    </div>
+  </div>
+</div></section>'''
+    imgs = ''.join(f'<button type="button" class="gal-item rv" data-full="assets/img/{R["set"]}-g{i}.webp"><img src="assets/img/{R["set"]}-g{i}.webp" alt="{E(t["name"])} result {i}" loading="lazy"></button>'
+                   for i in range(1, R['n'] + 1))
+    return f'''<section class="section washed" id="results"><div class="wrap">
+  <div class="shead"><div><p class="eyebrow rv">Results</p><h2 class="h-xl rv">Before and after</h2></div><p class="note rv">{E(R.get("caption", t["name"] + " at Apex. Tap a photo to see it large."))}</p></div>
+  <div class="cg-gallery">{imgs}</div><p class="note">Individual results vary.</p>
+</div></section>'''
+
 
 def page(slug, t):
+    sym, material, layers = TAGS[slug]
     facts = ''.join(f'<div><dt>{E(a)}</dt><dd>{E(b)}</dd></div>' for a, b in t['facts'])
-    how = ''.join(f'<li class="gilt sm"><span class="n">{ROMAN[i]}</span><p>{E(p)}</p></li>' for i, (k, h, p) in enumerate(t['how']))
-    alts = ''.join(f'<li><b>{E(a)}</b><span>{E(b)}</span>' + (f'<a href="{c}">{E(d)}</a>' if c else '') + '</li>' for a, b, c, d in t['not_for'])
-    cards = lambda items: ''.join(f'<li><b>{E(a)}</b><em>{E(u)}</em></li>' for a, u in items)
+    frm = (f'<p class="el-from"><span>From</span><b>{E(t["price_from"])}</b><small>{E(t["price_note"])}</small></p>' if t.get('price_from')
+           else f'<p class="el-from"><small>{E(t["price_note"])}</small></p>')
+    lay = ''.join(f'<a class="chip" href="index.html#layers">{E(LAYER_NAME[k])}</a>' for k in layers)
+    hook = ''.join(f'<p class="{"lead " if i == 0 else ""}sh-p rv">{E(x)}</p>' for i, x in enumerate(t['hook']))
+    how = ''.join(f'<li class="rv" data-d="{i * 70}"><span class="vs-n">{i + 1}</span><b>{E(h)}</b><p>{E(p)}</p></li>' for i, (k, h, p) in enumerate(t['how']))
+    alts = ''.join(f'<li><b>{E(a)}</b><span>{E(b)}</span>' + (f'<a class="link-arrow" href="{c}">{E(d)} {ic("arrow-right")}</a>' if c else '') + '</li>' for a, b, c, d in t['not_for'])
+    cards = lambda items: ''.join(f'<li class="rv"><b>{E(a)}</b><span>{E(u)}</span></li>' for a, u in items)
     face = [(lab, u) for lab, u, *_ in t['face']]
-    body_html = f'<h3 class="grp">Body</h3><ul class="where-grid">{cards(t["body"])}</ul>' if t.get('body') else ''
-    face_h = '<h3 class="grp">Face</h3>' if t.get('body') else ''
-    before = ''.join(f'<li>{icon(k)}<div><b>{E(h)}</b><span>{E(p)}</span></div></li>' for k, h, p in t['care']['before'])
-    after = ''.join(f'<span class="when">{E(w)}</span><ul>' + ''.join(f'<li>{icon(k)}<div><span>{E(x)}</span></div></li>' for k, x in items) + '</ul>' for w, items in t['care']['after'])
-    urgent = f'<p class="urgent">{E(t["care"]["urgent"])}</p>' if t['care'].get('urgent') else ''
-    visit = ''.join(f'<li class="gilt sm"><span class="n">{ROMAN[k]}</span><h3>{E(a)}</h3><p>{E(b)}</p></li>' for k, (a, b) in enumerate(t['fitting']))
+    areas = (f'<h3 class="cg-gh"><b>Face</b></h3>' if t.get('body') else '') + f'<ul class="cg-areas">{cards(face)}</ul>'
+    if t.get('body'):
+        areas += f'<h3 class="cg-gh"><b>Body</b></h3><ul class="cg-areas">{cards(t["body"])}</ul>'
+    visit = ''.join(f'<li><span class="vs-n">{k + 1}</span><div><b>{E(a)}</b><p>{E(b)}</p></div></li>' for k, (a, b) in enumerate(t['fitting']))
     tl = ''.join(f'<li><b>{E(a)}</b><span>{E(b)}</span></li>' for a, b in t['timeline'])
     pr = t['prices']
     rows = ''.join('<tr>' + ''.join(f'<td class="num">{E(c)}</td>' if 'baht' in c else f'<td>{E(c)}</td>' for c in r) + '</tr>' for r in pr['rows'])
     heads = ''.join(f'<th>{E(h)}</th>' for h in pr['head'])
-    table = f'<table class="price-table"><thead><tr>{heads}</tr></thead><tbody>{rows}</tbody></table>' if pr['rows'] else ''
-    pkgs = ''.join(f'<div class="pkg gilt sm"><p class="kicker">Package</p><h3>{E(a)}</h3><p class="amt">{E(b)}</p></div>' for a, b in pr['invitations'])
-    faq = ''.join(f'<details><summary>{E(q)}</summary><p>{E(a)}</p></details>' for q, a in t['faq'])
-    frm = (f'<p class="from">From {E(t["price_from"])}<small>{E(t["price_note"])}</small></p>' if t.get('price_from')
-           else f'<p class="from"><small>{E(t["price_note"])}</small></p>')
-    R = t.get('results'); results = ''
-    if R and R['mode'] == 'slider':
-        lb, la = R.get('labels', ('Before', 'After'))
-        thumbs = ''.join(f'<button type="button" data-i="{i}" class="{"on" if i == 1 else ""}"><img src="assets/img/{R["set"]}-{i}-after.webp" alt="{E(t["name"])} case {i}" loading="lazy"></button>' for i in range(1, R['n'] + 1)) if R['n'] > 1 else ''
-        results = f'''<section class="sec lav-2" id="results"><div class="wrap res gilt">
-  <div class="ba-stage"><div class="mirror"><div class="glass ba" id="ba" data-set="{R["set"]}">
-    <img src="assets/img/{R["set"]}-1-after.webp" alt="After {E(t["name"])}" class="after">
-    <img src="assets/img/{R["set"]}-1-before.webp" alt="Before {E(t["name"])}" class="before">
-    <span class="sheen" aria-hidden="true"></span><span class="line" aria-hidden="true"></span>
-    <input class="range" type="range" min="0" max="100" value="50" aria-label="Move the line between before and after">
-  </div></div><div class="plaques"><span class="pl-b">{E(lb)}</span><span class="pl-a">{E(la)}</span></div></div>
-  <div><h2>Before <em>and after</em></h2>
-    <p>{E(R.get("caption", t["name"] + " at Apex. Drag the line across the photo to compare."))}</p>
-    <div class="thumbs" id="thumbs" style="--tc:{R["n"]}">{thumbs}</div>
-    <div class="tools"><button type="button" class="btn" data-ba="play">Play again</button></div>
-    <p class="fine">Individual results vary.</p></div>
-</div></section>'''
-    elif R:
-        imgs = ''.join(f'<button type="button" class="gal-item" data-full="assets/img/{R["set"]}-g{i}.webp"><img src="assets/img/{R["set"]}-g{i}.webp" alt="{E(t["name"])} result {i}" loading="lazy"></button>' for i in range(1, R['n'] + 1))
-        results = f'''<section class="sec" id="results"><div class="wrap">
-  <div class="sec-head"><h2>Before <em>and after</em></h2>{divider()}
-  <p>{E(R.get("caption", t["name"] + " at Apex. Tap a photo to see it large."))}</p></div>
-  <div class="gallery" style="--cols:{cols(R['n'])}">{imgs}</div><p class="fine center">Individual results vary.</p>
-</div></section>'''
+    table = f'<div class="cg-price rv"><table><thead><tr>{heads}</tr></thead><tbody>{rows}</tbody></table></div>' if pr['rows'] else ''
+    pkgs = ''.join(f'<div class="cg-pkg rv"><p class="eyebrow">Package</p><b>{E(a)}</b><span>{E(b)}</span></div>' for a, b in pr['invitations'])
+    before = ''.join(f'<li>{icon(k, "i")}<div><b>{E(h)}</b><span>{E(p)}</span></div></li>' for k, h, p in t['care']['before'])
+    after = ''.join(f'<p class="cg-when">{E(w)}</p><ul>' + ''.join(f'<li>{icon(k, "i")}<div><span>{E(x)}</span></div></li>' for k, x in items) + '</ul>' for w, items in t['care']['after'])
+    urgent = f'<p class="cg-urgent">{ic("heart-pulse")}<span>{E(t["care"]["urgent"])}</span></p>' if t['care'].get('urgent') else ''
+    faq = ''.join(f'<details><summary>{E(q)}<span class="pm">{ic("chevron-down")}</span></summary><div class="ans"><p>{E(a)}</p></div></details>' for q, a in t['faq'])
     src = ''.join(f'<li>{E(x)}</li>' for x in t['sources'])
-    hook = ''.join(f'<p>{E(x)}</p>' for x in t['hook'])
-    return head(f'{t["name"]} at Apex | Apex Contour and Glow', t['hook'][0]) + f'''
+    return head2(f'{t["name"]} at Apex | Apex Contour and Glow', t['hook'][0]) + f'''
 <body class="tx-page">
-{header()}
-<main>
-<section class="tx-hero"><div class="wrap">
-  <div>
-    <p class="crumb"><a href="index.html#treatments">Treatments</a> · {E(t["half"])}</p>
-    <h1>{E(t["name"])}</h1>
-    {hook}
+{header2()}
+<main id="main">
+<section class="svc-head has-curve cg-tx-head" data-tone="night">
+  <div class="phead-lines" aria-hidden="true"></div>
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Home</a>{ic('chevron-down', 'cr')}<a href="index.html#treatments">Treatments</a>{ic('chevron-down', 'cr')}<span aria-current="page">{E(t["name"])}</span></nav>
+    <div class="sh-grid">
+      <div class="sh-copy">
+        <p class="eyebrow on-night rv">{E(t["half"])} · {E(material)}</p>
+        <h1 class="display-s rv" data-d="60">{E(t["name"])}</h1>
+        {hook}
+        <div class="sh-acts rv" data-d="180"><a class="btn btn-light" href="#book">{ic('message-circle')}Consultation</a><a class="btn btn-ghost btn-sm" href="compare.html?a={slug}">{ic('sliders-horizontal')}Compare with another</a></div>
+      </div>
+      <aside class="cg-el rv" data-d="120">
+        <div class="el-tile"><span class="el-no">{t["no"]:02d}</span><b class="el-sym">{E(sym)}</b><span class="el-name">{E(t["name"])}</span><span class="el-mat">{E(material)}</span></div>
+        <div class="el-side"><dl class="el-facts">{facts}</dl>{frm}<div class="el-lay"><span>Works in</span>{lay}</div></div>
+      </aside>
+    </div>
   </div>
-  <aside class="facts gilt">
-    <dl>{facts}</dl>
-    {frm}
-    <a class="btn solid" href="index.html#book">Book a consultation</a>
-    <a class="cmp" href="compare.html?a={slug}">Compare with another treatment</a>
-  </aside>
+  <div class="sx sx-c" aria-hidden="true">{CURVE}</div>
+</section>
+
+<section class="section"><div class="wrap">
+  <div class="shead"><div><p class="eyebrow rv">{E(t["name"])}</p><h2 class="h-xl rv">How it works</h2></div></div>
+  <div class="cg-how-wrap">
+    <ol class="cg-how">{how}</ol>
+    <aside class="cg-not rv"><p class="eyebrow">Not suited for</p><ul>{alts}</ul></aside>
+  </div>
 </div></section>
-<section class="sec lav-2"><div class="wrap">
-  <div class="sec-head"><h2>How it <em>works</em></h2>{divider()}</div>
-  <ol class="how">{how}</ol>
-  <div class="alt gilt sm"><h3>Not suited for</h3><ul>{alts}</ul></div>
+
+<section class="section washed"><div class="wrap">
+  <div class="shead"><div><p class="eyebrow rv">Where it goes</p><h2 class="h-xl rv">Treatment areas</h2></div><p class="note rv">{E(t["areas_note"])}</p></div>
+  {areas}
 </div></section>
-<section class="sec where"><div class="wrap">
-  <div class="sec-head"><h2>Treatment <em>areas</em></h2>{divider()}</div>
-  {face_h}<ul class="where-grid">{cards(face)}</ul>{body_html}
-  <p class="note center">{E(t["areas_note"])}</p>
+
+<section class="section"><div class="wrap cg-visit">
+  <div><p class="eyebrow rv">Your visit</p><h2 class="h-xl rv">On the day</h2>
+    <aside class="recov cg-tl rv"><p class="eyebrow">When you see results</p><ol class="recov-line">{tl}</ol><p class="note">Individual results vary.</p></aside></div>
+  <ol class="cg-steps rv">{visit}</ol>
 </div></section>
-<section class="sec lav"><div class="wrap">
-  <div class="sec-head"><h2>Your <em>visit</em></h2>{divider()}</div>
-  <ol class="visit">{visit}</ol>
+
+{results(slug, t)}
+
+<section class="section" id="prices"><div class="wrap">
+  <div class="shead"><div><p class="eyebrow rv">Prices</p><h2 class="h-xl rv">{E(t["name"])} prices</h2></div><p class="note rv">{E(pr["note"])}</p></div>
+  <div class="cg-prices{'' if pkgs and table else ' solo'}">{table}{f'<div class="cg-pkgs">{pkgs}</div>' if pkgs else ''}</div>
 </div></section>
-<section class="sec"><div class="wrap">
-  <div class="sec-head"><h2>When you <em>see results</em></h2>{divider()}</div>
-  <ol class="tl" style="--n:{len(t['timeline'])}">{tl}</ol>
+
+<section class="section washed"><div class="wrap">
+  <div class="shead"><div><p class="eyebrow rv">Care</p><h2 class="h-xl rv">Before and after your visit</h2></div></div>
+  <div class="cg-care">
+    <div class="rv"><h3>Before you come</h3><ul>{before}</ul></div>
+    <div class="rv" data-d="80"><h3>After you leave</h3>{after}{urgent}</div>
+  </div>
 </div></section>
-{results}
-<section class="sec lav-2" id="prices"><div class="wrap">
-  <div class="sec-head"><h2>{E(t["name"])} <em>prices</em></h2>{divider()}</div>
-  <div class="price-wrap{'' if pkgs and table else ' solo'}">{table}<div class="pkgs">{pkgs}</div></div>
-  <p class="note center">{E(pr["note"])}</p>
+
+<section class="section faq-s"><div class="wrap">
+  <h2 class="h-l faq-h rv">Questions about {E(t["name"])}</h2>
+  <div class="faq-grid2"><div class="faq">{faq}</div>
+    <aside class="faq-cta washed rv"><span class="fc-ic">{ic('brand:line')}</span><b class="h-s">Ask on LINE</b><p>Send a photo of the area and Apex replies with what suits it.</p>
+      <a class="btn btn-plum" href="{LINE_URL}">{ic('brand:line')}LINE {E(LINE_ID)}</a></aside></div>
+  <div class="cg-src"><p class="eyebrow">Sources</p><ol>{src}</ol></div>
 </div></section>
-<section class="sec lav"><div class="wrap">
-  <div class="sec-head"><h2>Before and after <em>your visit</em></h2>{divider()}</div>
-  <div class="care"><div class="gilt sm"><h3>Before you come</h3><ul>{before}</ul></div><div class="gilt sm"><h3>After you leave</h3>{after}{urgent}</div></div>
-</div></section>
-<section class="sec"><div class="wrap">
-  <div class="sec-head"><h2>Questions</h2>{divider()}</div>
-  <div class="faq-list">{faq}</div>
-  <p class="center cta"><a class="btn solid" href="index.html#book">Book a consultation</a></p>
-</div></section>
-<section class="sources"><div class="wrap"><h3>Sources</h3><ol>{src}</ol></div></section>
+
+{consult_band()}
 </main>
-{footer()}
-{scripts()}
+{footer2()}
+{scripts2()}
 </body>
 </html>
 '''
+
 
 if __name__ == '__main__':
     for slug, t in TX.items():

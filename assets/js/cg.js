@@ -1,27 +1,48 @@
-// Apex Contour and Glow: the before and after line, the photo viewer, the face planner and the booking form.
+// Apex Contour and Glow: reveal on scroll, the menu, the face planner, skin layers, before and after, and the booking form.
 (() => {
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const A = window.CG_ASSETS || 'assets/';
+
+  // ---- parts fade up as they come into view (the Apex sites' .rv) ----
+  const rv = [...document.querySelectorAll('.rv')];
+  rv.forEach(el => { if (el.dataset.d) el.style.transitionDelay = el.dataset.d + 'ms'; });
+  if (still || !('IntersectionObserver' in window)) rv.forEach(el => el.classList.add('in'));
+  else { const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' }); rv.forEach(el => io.observe(el)); }
+
+  // ---- header: hides on the way down, comes back on the way up; the menu sheet on phones ----
+  const hdr = document.querySelector('.hdr');
+  let lastY = scrollY;
+  addEventListener('scroll', () => { const y = scrollY; if (hdr) hdr.classList.toggle('hide', y > 240 && y > lastY); lastY = y; }, { passive: true });
+  const sheet = document.getElementById('sheet');
+  if (sheet) {
+    document.querySelectorAll('[data-sheet]').forEach(b => b.addEventListener('click', () => { sheet.showModal(); requestAnimationFrame(() => sheet.classList.add('open')); }));
+    const close = () => { sheet.classList.remove('open'); setTimeout(() => sheet.close(), 450); };
+    sheet.querySelectorAll('[data-close], nav a, .sheet-cta a').forEach(b => b.addEventListener('click', close));
+    sheet.addEventListener('cancel', e => { e.preventDefault(); close(); });
+  }
+
+  // ---- skin layers: pick a layer, see what works there ----
+  document.querySelectorAll('.ly').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.ly').forEach(x => x.setAttribute('aria-pressed', x === b));
+    document.querySelectorAll('.ly-card').forEach(c => { c.hidden = c.dataset.ly !== b.dataset.ly; });
+  }));
 
   // ---- before and after: drag the line, or let it sweep across once when it comes into view ----
   const ba = document.getElementById('ba');
   if (ba) {
-    const before = ba.querySelector('.before'), after = ba.querySelector('.after'), range = ba.querySelector('.range'), set_ = ba.dataset.set;
+    const before = ba.querySelector('.before'), after = ba.querySelector('.after'), range = ba.querySelector('.range');
+    const tb = ba.querySelector('.tb'), ta = ba.querySelector('.ta');
     let run = 0, drag = false;
-    const plB = document.querySelector('.pl-b'), plA = document.querySelector('.pl-a');
-    const set = v => {
-      v = Math.max(0, Math.min(100, v)); before.style.clipPath = `inset(0 ${100 - v}% 0 0)`; ba.style.setProperty('--x', v + '%'); range.value = v;
-      if (plB) { plB.classList.toggle('on', v > 60); plA.classList.toggle('on', v < 40); }
-    };
+    const set = v => { v = Math.max(0, Math.min(100, v)); before.style.clipPath = `inset(0 ${100 - v}% 0 0)`; ba.style.setProperty('--x', v + '%'); range.value = v; };
     const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
     const play = () => {
       const id = ++run; if (still) { set(50); return; }
-      ba.classList.remove('shine'); void ba.offsetWidth; ba.classList.add('shine');
       const keys = [[0, 100], [600, 100], [2400, 0], [3000, 0], [4100, 50]], t0 = performance.now();
       const step = now => {
         if (id !== run) return;
         const t = now - t0; let k = 0; while (k < keys.length - 2 && t > keys[k + 1][0]) k++;
-        const [ta, va] = keys[k], [tb, vb] = keys[k + 1], u = Math.min(1, Math.max(0, (t - ta) / (tb - ta)));
+        const [ta_, va] = keys[k], [tb_, vb] = keys[k + 1], u = Math.min(1, Math.max(0, (t - ta_) / (tb_ - ta_)));
         set(va + (vb - va) * ease(u));
         if (t < keys[keys.length - 1][0]) requestAnimationFrame(step);
       };
@@ -38,10 +59,22 @@
     const again = document.querySelector('[data-ba="play"]'); if (again) again.addEventListener('click', play);
     let seen = false;
     new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && !seen) { seen = true; setTimeout(play, 300); } }), { threshold: .5 }).observe(ba);
-    document.querySelectorAll('#thumbs button').forEach(b => b.addEventListener('click', () => {
+    // each thumbnail carries its own before and after photo and labels
+    const load = b => {
       document.querySelectorAll('#thumbs button').forEach(x => x.classList.toggle('on', x === b));
       run++;
-      Promise.all([before, after].map((img, k) => new Promise(r => { img.onload = r; img.onerror = r; img.src = `assets/img/${set_}-${b.dataset.i}-${k ? 'after' : 'before'}.webp`; }))).then(play);
+      const [lb, la] = (b.dataset.l || 'Before | After').split(' | ');
+      if (tb) tb.textContent = lb; if (ta) ta.textContent = la;
+      Promise.all([[before, b.dataset.b], [after, b.dataset.a]].map(([img, src]) => new Promise(r => { img.onload = r; img.onerror = r; img.src = src; }))).then(play);
+    };
+    document.querySelectorAll('#thumbs button').forEach(b => b.addEventListener('click', () => load(b)));
+    // the treatment chips above switch the set of cases
+    const read = document.getElementById('ba-read');
+    document.querySelectorAll('#results .chips [data-set]').forEach(c => c.addEventListener('click', () => {
+      document.querySelectorAll('#results .chips [data-set]').forEach(x => x.setAttribute('aria-pressed', x === c));
+      const k = c.dataset.set, first = [...document.querySelectorAll('#thumbs button')].filter(b => { b.hidden = b.dataset.set !== k; return !b.hidden; })[0];
+      if (read) { read.href = (window.CG_URLS || {})[k] || k + '.html'; read.firstChild.textContent = 'Read about ' + c.textContent + ' '; }
+      if (first) load(first);
     }));
   }
 
@@ -92,29 +125,17 @@
     location.href = `https://line.me/R/oaMessage/${encodeURIComponent(window.CG_LINE || '@apexbeauty')}/?${encodeURIComponent(text)}`;
   });
 
-  // ---- face planner: the 3D head in the gold oval, the areas beside it, and the filler head in the second tab ----
+  // ---- face planner: the 3D head, the area buttons under it and the card beside it ----
   const hero = document.getElementById('planner');
   if (!hero || !window.CG_ZONES) return;
   const { zones, names, verts, pts, fill, info } = window.CG_ZONES;
-  const stage = hero.querySelector('.planner'), host = document.getElementById('planner-head');
+  const stage = hero.querySelector('.cg-stage'), host = document.getElementById('planner-head');
   const list = hero.querySelector('.picks .list'), empty = hero.querySelector('.picks .empty');
   const leads = hero.querySelector('.leads'), ctx = leads.getContext('2d');
-  const btn = {}; hero.querySelectorAll('.zcol .fz').forEach(b => { btn[b.dataset.z] = b; });
   const narrow = matchMedia('(max-width: 700px)');
-  const GOLD = '#f0d397';
+  const GOLD = '#f6b6d2';
   let head = null, picked = null, hovered = null, showing = 0, onScreen = false;
   let lookYaw = -.15, lookPitch = .04, pitchNow = .04;
-
-  // until the head loads, the labels sit evenly down each side
-  const spread = () => {
-    if (narrow.matches) { Object.values(btn).forEach(b => { b.style.top = ''; }); return; }
-    for (const side of ['l', 'r']) {
-      const bs = [...hero.querySelectorAll('.zcol.' + side + ' .fz')], h = stage.clientHeight;
-      bs.forEach((b, i) => { b.style.top = (h * (.2 + .6 * i / Math.max(1, bs.length - 1))) + 'px'; });
-    }
-  };
-  spread();
-  narrow.addEventListener('change', spread);
 
   // each area turns the head to the angle that shows it best
   const BEST = { forehead: [0, .1], brows: [0, .05], eyes: [.6, 0], temples: [.95, .02], undereyes: [.3, .05], cheeks: [.65, 0],
@@ -153,22 +174,20 @@
     list.querySelector('.txc').style.setProperty('--cols', cols);
     list.querySelector('.txc').innerHTML = (zones[z] || []).map(e =>
       `<li><a href="${(window.CG_URLS || {})[e.slug] || e.slug + '.html'}"><span class="top"><b>${esc(e.name)}</b><span class="pr">${/\d/.test(e.price) ? 'from ' + esc(e.price) : esc(e.price)}</span></span>` +
-      `<span class="amt">${e.note ? esc(e.note) : '&nbsp;'}</span><span class="go">Read more</span></a></li>`).join('');
+      (e.note ? `<span class="amt">${esc(e.note)}</span>` : '') + `</a></li>`).join('');
     empty.hidden = true; list.hidden = false;
   };
   hero.querySelectorAll('.fz').forEach(b => {
-    b.addEventListener('pointerenter', () => { hovered = b.dataset.z; if (b.parentElement.classList.contains('r')) side = 1; else if (b.parentElement.classList.contains('l')) side = -1; lookAt(hovered); });
+    b.addEventListener('pointerenter', () => { hovered = b.dataset.z; lookAt(hovered); });
     b.addEventListener('pointerleave', () => { hovered = null; lookAt(picked); });
     b.addEventListener('click', () => {
       picked = b.dataset.z;
-      if (b.parentElement.classList.contains('r')) side = 1; else if (b.parentElement.classList.contains('l')) side = -1;
       show(picked); pickList(picked); emit('apex_area_pick', { area: picked });
       hero.querySelectorAll('.fz').forEach(x => x.setAttribute('aria-pressed', x === b));
     });
   });
 
-  // gold points mark where filler goes (round) and where Botox goes (diamond), on both sides of the face;
-  // a gold thread runs from each label to the nearest point of its area
+  // points mark where filler goes (round) and where Botox goes (diamond), on both sides of the face
   const draw = () => {
     if (!head) return;
     const sr = stage.getBoundingClientRect(), hr = host.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
@@ -180,9 +199,9 @@
       if (p.f < .12) return;
       const r = (many ? 2.4 : 3.2) + (many ? .4 : .8) * Math.sin(t * 3 + k), a = Math.min(1, p.f * 1.3), hr = r * (many ? 2 : 3.4);
       const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, hr);
-      g.addColorStop(0, `rgba(255,236,190,${(many ? .3 : .55) * a})`); g.addColorStop(1, 'rgba(240,211,151,0)');
+      g.addColorStop(0, `rgba(255,200,226,${(many ? .3 : .55) * a})`); g.addColorStop(1, 'rgba(204,51,102,0)');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, hr, 0, 7); ctx.fill();
-      ctx.fillStyle = kind === 't' ? `rgba(255,255,255,${a})` : `rgba(246,220,160,${a})`;
+      ctx.fillStyle = kind === 't' ? `rgba(255,255,255,${a})` : `rgba(255,170,210,${a})`;
       ctx.beginPath();
       if (kind === 't') { ctx.moveTo(p.x, p.y - r); ctx.lineTo(p.x + r, p.y); ctx.lineTo(p.x, p.y + r); ctx.lineTo(p.x - r, p.y); ctx.closePath(); }
       else ctx.arc(p.x, p.y, r * .8, 0, 7);
@@ -191,38 +210,19 @@
     const zone = hovered || picked;
     const zp = zone && pts[zone] ? pts[zone].map(([v, kind]) => ({ ...at(v), kind })) : [];
     zp.forEach((p, k) => mark(p, p.kind, k, zp.length > 10));
-    if (narrow.matches) return;
-    for (const sd of ['l', 'r']) {
-      const keys = Object.keys(btn).filter(k => btn[k].parentElement.classList.contains(sd));
-      const its = keys.map(k => {
-        // the point of this area that faces the viewer best, on this label's side when it can be seen
-        const cand = (pts[k] || [[verts[k]]]).map(([v]) => at(v)).filter(p => p.f > .15);
-        const p = cand.length ? cand.reduce((a, b) => ((sd === 'l' ? -b.x : b.x) + 60 * b.f > (sd === 'l' ? -a.x : a.x) + 60 * a.f ? b : a)) : at(verts[k]);
-        return { k, p };
-      }).sort((a, b) => a.p.y - b.p.y);
-      let last = -1e9;
-      for (const it of its) {
-        const b = btn[it.k], h = b.offsetHeight + 8, y = Math.max(it.p.y, last + h); last = y;
-        b.style.top = (y - b.offsetHeight / 2) + 'px';
-        const br = b.getBoundingClientRect(), lx = sd === 'l' ? br.right - sr.left + 4 : br.left - sr.left - 4;
-        const on = it.k === zone, al = Math.min(1, (.18 + .45 * it.p.f) * (on ? 2 : 1));
-        ctx.strokeStyle = `rgba(227,197,142,${al})`; ctx.lineWidth = on ? 1.3 : .7;
-        ctx.beginPath(); ctx.moveTo(lx, y); ctx.lineTo(lx + (sd === 'l' ? 14 : -14), y); ctx.lineTo(it.p.x, it.p.y); ctx.stroke();
-        if (!on) { ctx.fillStyle = `rgba(240,211,151,${.25 + .5 * it.p.f})`; ctx.beginPath(); ctx.arc(it.p.x, it.p.y, 2, 0, 7); ctx.fill(); }
-      }
-    }
   };
   const start = () => {
     if (head !== null) return; head = false;
     import('./../features/filler/head.js?v=22').then(m => m.createHead(host, {
-      base: window.CG_ASSETS || 'assets/', features: true, soft: true, wipe: 0, yaw: -.15, morph: 0, maleMorph: .8, zoom: .74,
+      base: A, features: true, soft: true, wipe: 0, yaw: -.15, morph: 0, maleMorph: .8, zoom: .74,
       onTurn: y => { lookYaw = y; },
       visible: () => onScreen && !stage.hidden,
       onFrame: () => { if (head) { head.setYaw(lookYaw + (still ? 0 : Math.sin(performance.now() / 6000) * .05)); pitchNow += (lookPitch - pitchNow) * .06; head.setPitch(pitchNow); } draw(); }
     })).then(h => { head = h; stage.classList.add('live'); draw(); }).catch(() => { head = null; stage.classList.add('flat'); });
   };
   new IntersectionObserver(es => es.forEach(e => { onScreen = e.isIntersecting; if (onScreen) start(); }), { rootMargin: '200px' }).observe(stage);
-  addEventListener('resize', () => { spread(); draw(); });
+  addEventListener('resize', () => draw());
+  list.querySelector('.pk-x').addEventListener('click', () => { picked = null; showing++; if (head) { head.setPlan([]); } lookAt(null); list.hidden = true; empty.hidden = false; hero.querySelectorAll('.fz').forEach(x => x.setAttribute('aria-pressed', false)); });
 
   // one head for everything: women or men, and the filler before or after
   hero.querySelectorAll('[data-sex]').forEach(b => b.addEventListener('click', () => {
