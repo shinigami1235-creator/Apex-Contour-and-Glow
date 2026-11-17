@@ -383,7 +383,7 @@
 .dr-grid .dr-ph{aspect-ratio:4/3.6}
 
 /* ---------- branches ---------- */
-.cg-branches{margin-top:clamp(28px,4vw,48px);padding:clamp(20px,2.6vw,32px);border-radius:var(--r-l);background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(201,179,221,.18)}
+.cg-branches{margin-top:clamp(28px,4vw,48px);padding:clamp(20px,2.6vw,32px);overflow:hidden;border-radius:var(--r-l);background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(201,179,221,.18)}
 .br-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 28px;align-items:end;margin-bottom:18px}
 .br-head h3{margin:0 0 6px;font-size:26px;letter-spacing:-.02em}
 .br-head p{margin:0;color:var(--on-night-2);font-size:15.5px}
@@ -393,7 +393,7 @@
 .br-search input{height:40px;width:200px;padding:0 14px;border-radius:var(--pill);border:1px solid rgba(201,179,221,.35);background:rgba(255,255,255,.08);color:#fff;font-size:15px}
 .br-search input::placeholder{color:var(--on-night-2)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.br-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-height:420px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.br-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .br-list li{display:grid;gap:2px;padding:14px 16px;border-radius:var(--r-m);background:rgba(255,255,255,.07)}
 .br-list b{font-size:16px;color:#fff}
 .br-list small{font-size:12.5px;color:var(--on-night-2)}
@@ -419,8 +419,7 @@
   .dr-grid .dr-card{scroll-snap-align:start}
 }
 @media (max-width:560px){
-  .br-list{grid-template-columns:1fr;max-height:360px}
-  .br-search input{width:100%}.br-search{flex:1}
+  .br-list{grid-template-columns:1fr}
   .dr-row{grid-auto-columns:78%}
 }
 .br-acts a,.dr-tx a,.cg-soc a{text-decoration:none!important}
@@ -430,3 +429,24 @@
 .br-head{grid-template-columns:minmax(0,1fr)}
 .br-tools{justify-content:flex-start}
 .br-head p{max-width:60ch}
+
+/* spacing fixes from the phone check (17 Nov): the form column never grows past the card, and the branch tools line up */
+.cg-form{grid-template-columns:minmax(0,1fr)}
+.cg-form input:not([type=checkbox]),.cg-form select{width:100%;min-width:0;display:block}
+.cg-form input[type=date]{-webkit-appearance:none;appearance:none;text-align:left;line-height:46px}
+.cg-form input[type=date]::-webkit-date-and-time-value{text-align:left}
+.br-tools .chips{margin:0;padding:0;flex-wrap:wrap;overflow:visible}
+.br-search{flex:1 1 200px;min-width:0}
+.br-search input{width:100%;height:44px}
+.br-near{height:44px;flex:none}
+.br-more{margin:14px auto 0;display:flex}
+.br-more[hidden]{display:none}
+@media (max-width:560px){
+  .br-tools{display:grid;grid-template-columns:minmax(0,1fr) auto}
+  /* the tabs scroll sideways, edge to edge of the card, starting in line with the heading */
+  .br-tools .chips{grid-column:1/-1;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px;scroll-padding:0 20px}
+  .br-tools .chips::-webkit-scrollbar{display:none}
+  .br-tools .chip{flex:none}
+}
+.el-no{position:static;margin-bottom:auto;padding-bottom:6px}
+.cg-areas li{padding-right:38px}

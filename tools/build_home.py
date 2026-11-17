@@ -18,7 +18,7 @@ def tile(k, i):
     t = TX[k]; sym, mat, _ = TAGS[k]
     return (f'<a class="svc-tile cg-tile rv" data-d="{i * 50}" href="{k}.html"><span class="st-glow" aria-hidden="true"></span>'
             f'<span class="st-ic cg-sym" aria-hidden="true">{sym}</span><span class="st-name">{E(t["name"])}</span>'
-            f'<span class="st-en">{E(mat)}</span><span class="cg-from">{E("From " + short_price(k) if any(c.isdigit() for c in short_price(k)) else short_price(k))}</span>'
+            f'<span class="st-en">{E(mat)}</span><span class="cg-from">{E("From " + short_price(k) if any(c.isdigit() for c in short_price(k)) and not short_price(k).startswith('About') else short_price(k))}</span>'
             f'<span class="st-go">{ic("arrow-up-right")}</span></a>')
 
 groups = ''.join(
@@ -182,6 +182,7 @@ html = head2(H['seo_title'], H['seo_desc']) + f'''
         <label class="br-search"><span class="sr">{E(B['find'])}</span><input type="search" placeholder="{E(B['search'])}" autocomplete="off"></label>
         <button type="button" class="btn btn-ghost btn-sm br-near">{ic('map-pin')}{E(B['near'])}</button></div></div>
     <ul class="br-list">{branch_list}</ul>
+    <button type="button" class="btn btn-ghost btn-sm br-more" hidden>{E(B['more'])}</button>
   </div></div>
 </section>
 </main>

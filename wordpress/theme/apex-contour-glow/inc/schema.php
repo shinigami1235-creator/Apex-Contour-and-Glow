@@ -77,7 +77,7 @@ function apex_schema( string $type ): array {
 			apex_f( 'consent', 'text', 'Consent box', [ 'h' => 'The sentence beside the tick box people must tick before sending' ] ), apex_f( 'privacy', 'text', 'Privacy policy link', [ 'h' => 'Also used in the footer' ] ),
 			apex_f( 'branch', 'text', 'Branch box label' ), apex_f( 'branch_any', 'text', 'Branch box, first choice', [ 'h' => 'For people who leave the branch to Apex' ] ),
 			apex_f( 'find', 'text', 'Branch finder heading' ), apex_f( 'find_p', 'textarea', 'Branch finder text' ),
-			apex_f( 'near', 'text', 'Nearest branch button' ), apex_f( 'search', 'text', 'Search box example', [ 'h' => 'A branch name shown in the empty box, for example Central Rama 9' ] ),
+			apex_f( 'near', 'text', 'Nearest branch button' ), apex_f( 'more', 'text', 'Show all branches button' ), apex_f( 'search', 'text', 'Search box example', [ 'h' => 'A branch name shown in the empty box, for example Central Rama 9' ] ),
 			apex_f( 'groups', 'repeater', 'Branch groups', [ 'list' => true, 'fixed' => 3, 'h' => 'The tabs above the branch list', 'f' => [ apex_f( 'g', 'text', 'Key', [ 'keep' => true ] ), apex_f( 'l', 'text', 'Tab' ) ] ] ) ] ] ),
 	];
 

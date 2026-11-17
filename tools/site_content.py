@@ -43,7 +43,7 @@ HOME = {
              'consent': 'I agree to Apex keeping these details to arrange my visit.', 'privacy': 'Privacy policy',
              'branch': 'Branch', 'branch_any': 'The one Apex suggests',
              'find': 'Find a branch', 'find_p': 'Call the branch nearest you, or pick it in the form and Apex books you in there.',
-             'near': 'Nearest to me', 'search': 'Central Rama 9',
+             'near': 'Nearest to me', 'more': 'Show all branches', 'search': 'Rama 9',
              'groups': [['bangkok', 'Bangkok and nearby'], ['province', 'Other provinces'], ['hospital', 'Surgery hospitals']]},
     'doctors': {'eyebrow': 'Your doctors', 'h2': 'Doctors trained in', 'h2_em': 'injectables',
                 'p': 'Every treatment is done by a licensed Apex doctor. Each card shows the doctor\'s licence number and the treatments they trained in.',
@@ -203,7 +203,7 @@ PRIVACY = {
   ],
   [
    "p",
-   "The booking form asks for your name, phone number, the treatment you are interested in and a day that suits you. We keep these details to arrange your visit and delete them after 365 days. Sending the form also opens LINE with the same details filled in, and anything you send in LINE is covered by LINE's own privacy policy."
+   "The booking form asks for your name, phone number, the treatment you are interested in, the branch you prefer and a day that suits you. We keep these details to arrange your visit and delete them after 365 days. Sending the form also opens LINE with the same details filled in, and anything you send in LINE is covered by LINE's own privacy policy."
   ],
   [
    "h2",

@@ -170,7 +170,7 @@ function apex_render_home( array $S ): string {
 		$price = $T[ $k ]['summary']['from'];
 		$p = apex_short_price( $price );
 		if ( strpos( $price, 'typical' ) !== false ) $p = 'About ' . $p;
-		return preg_match( '/\d/', $p ) ? 'From ' . $p : $p;
+		return preg_match( '/\d/', $p ) && ! str_starts_with( $p, 'About' ) ? 'From ' . $p : $p;
 	};
 	$groups = '';
 	foreach ( $H['treatments']['halves'] as [ $half, $sub ] ) {
@@ -354,6 +354,7 @@ function apex_render_home( array $S ): string {
         <label class="br-search"><span class="sr">{$e( $B['find'] )}</span><input type="search" placeholder="{$e( $B['search'] )}" autocomplete="off"></label>
         <button type="button" class="btn btn-ghost btn-sm br-near">{$ic( 'map-pin' )}{$e( $B['near'] )}</button></div></div>
     <ul class="br-list">$branch_list</ul>
+    <button type="button" class="btn btn-ghost btn-sm br-more" hidden>{$e( $B['more'] )}</button>
   </div></div>
 </section>
 </main>

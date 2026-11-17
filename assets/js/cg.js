@@ -163,12 +163,18 @@
   if (brBox) {
     const items = [...brBox.querySelectorAll('.br-list li')], tabs = [...brBox.querySelectorAll('[data-g]')].filter(b => b.tagName === 'BUTTON');
     const input = brBox.querySelector('input[type=search]'), list = brBox.querySelector('.br-list');
-    let group = (tabs[0] || {}).dataset ? tabs[0].dataset.g : '', here = null;
+    let group = (tabs[0] || {}).dataset ? tabs[0].dataset.g : '', here = null, all = false;
+    // the first few of the group, and the rest behind Show all, so the list never needs its own scroll
+    const more = brBox.querySelector('.br-more'), few = matchMedia('(max-width: 560px)');
     const show = () => {
       const q = input.value.trim().toLowerCase();
-      items.forEach(li => { li.hidden = q ? !li.querySelector('b').textContent.toLowerCase().includes(q) : (!here && li.dataset.g !== group); });
+      let n = 0; const cap = q || all ? 1e9 : (few.matches ? 5 : 9);
+      items.forEach(li => { const on = q ? li.querySelector('b').textContent.toLowerCase().includes(q) : (here || li.dataset.g === group); li.hidden = !on || ++n > cap; });
+      more.hidden = n <= cap;
     };
-    tabs.forEach(b => b.addEventListener('click', () => { group = b.dataset.g; here = null; input.value = ''; tabs.forEach(x => x.setAttribute('aria-pressed', x === b)); items.forEach(li => li.classList.remove('near')); show(); }));
+    more.addEventListener('click', () => { all = true; show(); });
+    few.addEventListener('change', show);
+    tabs.forEach(b => b.addEventListener('click', () => { group = b.dataset.g; here = null; all = false; input.value = ''; tabs.forEach(x => x.setAttribute('aria-pressed', x === b)); items.forEach(li => li.classList.remove('near')); show(); }));
     input.addEventListener('input', show);
     const near = brBox.querySelector('.br-near');
     if (!('geolocation' in navigator)) near.hidden = true;
@@ -178,7 +184,7 @@
       items.forEach(li => { li.d = li.dataset.lat ? km(here, [+li.dataset.lat, +li.dataset.lng]) : 1e9; let s = li.querySelector('.dist'); if (!s) { s = document.createElement('small'); s.className = 'dist'; li.querySelector('b').after(s); } s.textContent = li.d < 1e9 ? `About ${li.d < 10 ? li.d.toFixed(1) : Math.round(li.d)} km away` : ''; });
       items.sort((a, b) => a.d - b.d).forEach(li => list.appendChild(li));
       items.forEach((li, i) => li.classList.toggle('near', i === 0));
-      tabs.forEach(x => x.setAttribute('aria-pressed', false)); input.value = ''; show(); list.scrollTop = 0;
+      tabs.forEach(x => x.setAttribute('aria-pressed', false)); input.value = ''; all = false; show();
       const sel = form && form.querySelector('select[name=branch]');
       if (sel) sel.value = items[0].querySelector('b').textContent;
     }, () => { near.disabled = true; }, { timeout: 8000, maximumAge: 600000 }));
