@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 from tx_art import icon
 from site_content import TAGS, LAYERS
-from layout import E, ROOT, LINE_ID, LINE_URL, PHONE, head2, header2, footer2, scripts2, ic, CURVE
+from layout import E, ROOT, LINE_ID, LINE_URL, PHONE, head2, header2, footer2, scripts2, ic, CURVE, doc_card, doctors_for
 
 LAYER_NAME = {k: n for k, n, _ in LAYERS['layers']}
 
@@ -63,8 +63,8 @@ def page(slug, t):
     hook = ''.join(f'<p class="{"lead " if i == 0 else ""}sh-p rv">{E(x)}</p>' for i, x in enumerate(t['hook']))
     how = ''.join(f'<li class="rv" data-d="{i * 70}"><span class="vs-n">{i + 1}</span><b>{E(h)}</b><p>{E(p)}</p></li>' for i, (k, h, p) in enumerate(t['how']))
     alts = ''.join(f'<li><b>{E(a)}</b><span>{E(b)}</span>' + (f'<a class="link-arrow" href="{c}">{E(d)} {ic("arrow-right")}</a>' if c else '') + '</li>' for a, b, c, d in t['not_for'])
-    cards = lambda items: ''.join(f'<li class="rv"><b>{E(a)}</b><span>{E(u)}</span></li>' for a, u in items)
-    face = [(lab, u) for lab, u, *_ in t['face']]
+    cards = lambda items: ''.join(f'<li class="rv"><b>{E(r[0])}</b><span>{E(r[1])}</span>' + (f'<em>{E(r[2])}</em>' if len(r) > 2 and r[2] else '') + '</li>' for r in items)
+    face = t['face']
     areas = (f'<h3 class="cg-gh"><b>Face</b></h3>' if t.get('body') else '') + f'<ul class="cg-areas">{cards(face)}</ul>'
     if t.get('body'):
         areas += f'<h3 class="cg-gh"><b>Body</b></h3><ul class="cg-areas">{cards(t["body"])}</ul>'
@@ -121,7 +121,10 @@ def page(slug, t):
   <div><p class="eyebrow rv">Your visit</p><h2 class="h-xl rv">On the day</h2>
     <aside class="recov cg-tl rv"><p class="eyebrow">When you see results</p><ol class="recov-line">{tl}</ol><p class="note">Individual results vary.</p></aside></div>
   <ol class="cg-steps rv">{visit}</ol>
-</div></section>
+</div>
+<div class="wrap tx-docs"><div class="shead"><div><p class="eyebrow rv">Your doctor</p><h3 class="h-l rv">Apex doctors</h3></div><a class="link-arrow rv" href="index.html#doctors">See all doctors {ic('arrow-right')}</a></div>
+  <div class="dr-grid">{''.join(doc_card(d, ' rv') for d in doctors_for(slug))}</div></div>
+</section>
 
 {results(slug, t)}
 

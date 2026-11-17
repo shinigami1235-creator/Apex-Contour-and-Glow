@@ -1,7 +1,7 @@
 <?php
 /**
  * The admin forms, built from inc/schema.php: a "Details" box on every treatment and before and after case,
- * and Apex settings (site settings, home page, Compare, face planner), each in English and Thai.
+ * and Apex settings (site settings, home page, Compare, face planner, doctors and branches, privacy policy), each in English and Thai.
  */
 defined( 'ABSPATH' ) || exit;
 
@@ -160,6 +160,7 @@ function apex_settings_pages(): array {
 		'settings' => [ __( 'Site settings', 'apex' ), __( 'The site name, LINE, phone and footer on every page.', 'apex' ) ],
 		'home'     => [ __( 'Home page', 'apex' ), __( 'The headings and text of each part of the home page. The treatments, prices and photos come from Treatments and Before and after.', 'apex' ) ],
 		'compare'  => [ __( 'Compare', 'apex' ), __( 'The row names of the comparison table and the pairs shown under Often compared. Each treatment\'s values are in its Summary.', 'apex' ) ],
+		'clinic'   => [ __( 'Doctors and branches', 'apex' ), __( 'The doctor cards on the home page and treatment pages, and the branches in the branch finder and the booking form.', 'apex' ) ],
 		'privacy'  => [ __( 'Privacy policy', 'apex' ), __( 'The privacy policy page. Apex\'s DPO should approve any change.', 'apex' ) ],
 		'planner'  => [ __( 'Face planner', 'apex' ), __( 'The names on the area buttons beside the 3D face. Which treatments show for an area comes from each treatment\'s Face areas.', 'apex' ) ],
 	];

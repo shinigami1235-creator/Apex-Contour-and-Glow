@@ -2,7 +2,7 @@
 /**
  * The booking form.
  *
- * POST /wp-json/apex/v1/book   name, phone, treatment, preferred day and consent. Saved as a private Enquiry,
+ * POST /wp-json/apex/v1/book   name, phone, treatment, branch, preferred day and consent. Saved as a private Enquiry,
  *                              and the team is emailed a link to it (never the person's details). The page then
  *                              opens LINE with the same message, as the static site does.
  * Enquiries › Settings         who gets the emails and how long enquiries are kept.
@@ -46,10 +46,12 @@ function apex_book_submit( WP_REST_Request $req ) {
 	if ( ! apex_rate_ok( 'book', 6, HOUR_IN_SECONDS ) ) return new WP_Error( 'apex_rate', 'Too many requests from this connection. Please send your details on LINE.', [ 'status' => 429 ] );
 	$s = fn( $k, $n = 200 ) => mb_substr( sanitize_text_field( apex_str( $f[ $k ] ?? '' ) ), 0, $n );
 	$names = array_map( fn( $t ) => $t['name'], apex_site( apex_default_lang() )['tx'] );
+	$branches = array_column( apex_site( apex_default_lang() )['clinic']['branches'] ?? [], 0 );
 	$v = [
 		'name' => $s( 'name', 100 ),
 		'phone' => $s( 'phone', 40 ),
 		'treatment' => in_array( $s( 'treatment', 80 ), $names, true ) ? $s( 'treatment', 80 ) : 'Not sure yet',
+		'branch' => in_array( $s( 'branch', 120 ), $branches, true ) ? $s( 'branch', 120 ) : '',
 		'day' => preg_match( '/^\d{4}-\d{2}-\d{2}$/', apex_str( $f['day'] ?? '' ) ) ? $f['day'] : '',
 		'lang' => ( $f['lang'] ?? '' ) === 'th' ? 'th' : 'en',
 	];
@@ -68,7 +70,7 @@ function apex_book_submit( WP_REST_Request $req ) {
 	$to = array_filter( array_map( 'trim', explode( ',', (string) apex_forms_opt( 'recipients', get_option( 'admin_email' ) ) ) ), 'is_email' );
 	if ( $to ) {
 		// no name or phone number in the email: they stay behind the staff login
-		$lines = [ 'A booking request arrived on the Apex Contour and Glow website.', '', 'Reference: C' . $id, 'Treatment: ' . $v['treatment'], 'Preferred day: ' . ( $v['day'] ?: 'not given' ), '', 'Open it (staff login needed): ' . admin_url( 'post.php?post=' . $id . '&action=edit' ) ];
+		$lines = [ 'A booking request arrived on the Apex Contour and Glow website.', '', 'Reference: C' . $id, 'Treatment: ' . $v['treatment'], 'Branch: ' . ( $v['branch'] ?: 'the one Apex suggests' ), 'Preferred day: ' . ( $v['day'] ?: 'not given' ), '', 'Open it (staff login needed): ' . admin_url( 'post.php?post=' . $id . '&action=edit' ) ];
 		wp_mail( $to, '[Apex Contour and Glow] Booking request C' . $id, implode( "\n", $lines ) );
 	}
 	return [ 'ok' => true, 'ref' => 'C' . $id ];
@@ -76,12 +78,13 @@ function apex_book_submit( WP_REST_Request $req ) {
 
 /* ---------- Enquiries in the admin ---------- */
 function apex_lead_statuses(): array { return [ 'new' => __( 'New', 'apex' ), 'replied' => __( 'Replied', 'apex' ), 'booked' => __( 'Booked', 'apex' ), 'closed' => __( 'Closed', 'apex' ) ]; }
-add_filter( 'manage_apex_lead_posts_columns', fn() => [ 'cb' => '<input type="checkbox">', 'title' => __( 'Enquiry', 'apex' ), 'apex_name' => __( 'Name', 'apex' ), 'apex_phone' => __( 'Phone', 'apex' ), 'apex_tx' => __( 'Treatment', 'apex' ), 'apex_day' => __( 'Preferred day', 'apex' ), 'apex_status' => __( 'Status', 'apex' ), 'date' => __( 'Received', 'apex' ) ] );
+add_filter( 'manage_apex_lead_posts_columns', fn() => [ 'cb' => '<input type="checkbox">', 'title' => __( 'Enquiry', 'apex' ), 'apex_name' => __( 'Name', 'apex' ), 'apex_phone' => __( 'Phone', 'apex' ), 'apex_tx' => __( 'Treatment', 'apex' ), 'apex_branch' => __( 'Branch', 'apex' ), 'apex_day' => __( 'Preferred day', 'apex' ), 'apex_status' => __( 'Status', 'apex' ), 'date' => __( 'Received', 'apex' ) ] );
 add_action( 'manage_apex_lead_posts_custom_column', function ( $col, $id ) {
 	$v = (array) get_post_meta( $id, 'apex_fields', true );
 	if ( $col === 'apex_name' ) echo esc_html( $v['name'] ?? '' );
 	if ( $col === 'apex_phone' ) echo esc_html( $v['phone'] ?? '' );
 	if ( $col === 'apex_tx' ) echo esc_html( $v['treatment'] ?? '' );
+	if ( $col === 'apex_branch' ) echo esc_html( $v['branch'] ?? '' );
 	if ( $col === 'apex_day' ) echo esc_html( $v['day'] ?? '' );
 	if ( $col === 'apex_status' ) echo esc_html( apex_lead_statuses()[ get_post_meta( $id, 'apex_status', true ) ?: 'new' ] ?? '' );
 }, 10, 2 );
@@ -97,7 +100,7 @@ add_action( 'load-post.php', function () {
 function apex_lead_box( WP_Post $p ): void {
 	$v = (array) get_post_meta( $p->ID, 'apex_fields', true );
 	$c = (array) get_post_meta( $p->ID, 'apex_consent', true );
-	$rows = [ __( 'Name', 'apex' ) => $v['name'] ?? '', __( 'Phone', 'apex' ) => $v['phone'] ?? '', __( 'Treatment', 'apex' ) => $v['treatment'] ?? '', __( 'Preferred day', 'apex' ) => $v['day'] ?? '', __( 'Page language', 'apex' ) => $v['lang'] ?? '', __( 'Consent', 'apex' ) => ( $c['at'] ?? '' ) . ' · ' . ( $c['text'] ?? '' ) ];
+	$rows = [ __( 'Name', 'apex' ) => $v['name'] ?? '', __( 'Phone', 'apex' ) => $v['phone'] ?? '', __( 'Treatment', 'apex' ) => $v['treatment'] ?? '', __( 'Branch', 'apex' ) => $v['branch'] ?? '', __( 'Preferred day', 'apex' ) => $v['day'] ?? '', __( 'Page language', 'apex' ) => $v['lang'] ?? '', __( 'Consent', 'apex' ) => ( $c['at'] ?? '' ) . ' · ' . ( $c['text'] ?? '' ) ];
 	echo '<table class="widefat striped"><tbody>';
 	foreach ( $rows as $k => $x ) echo '<tr><th style="width:160px">' . esc_html( $k ) . '</th><td>' . esc_html( (string) $x ) . '</td></tr>';
 	echo '</tbody></table><p class="description">' . esc_html__( 'The same message also opened in LINE on the person\'s phone, so it may be in the LINE chat too.', 'apex' ) . '</p>';
@@ -205,7 +208,7 @@ function apex_forms_page(): void {
 	if ( ! empty( $_SERVER['HTTP_CF_CONNECTING_IP'] ) && ! defined( 'APEX_IP_HEADER' ) ) echo '<div class="notice notice-warning"><p>' . esc_html__( 'This site is behind Cloudflare and APEX_IP_HEADER is not set in wp-config.php, so the limit of 6 requests an hour applies to all visitors together. Add define( \'APEX_IP_HEADER\', \'HTTP_CF_CONNECTING_IP\' ); as the handover says.', 'apex' ) . '</p></div>';
 	echo '<div class="wrap"><h1>' . esc_html__( 'Enquiry settings', 'apex' ) . '</h1><form method="post"><table class="form-table">';
 	wp_nonce_field( 'apex_forms', 'apex_forms_nonce' );
-	echo '<tr><th><label for="f-r">' . esc_html__( 'Send booking requests to', 'apex' ) . '</label></th><td><input id="f-r" class="regular-text" name="f[recipients]" value="' . esc_attr( (string) ( $o['recipients'] ?? '' ) ) . '"><p class="description">' . esc_html__( 'Email addresses, separated by commas. Empty sends them to the site admin address. The email carries the treatment and day only; the name and phone number stay behind the staff login.', 'apex' ) . '</p></td></tr>';
+	echo '<tr><th><label for="f-r">' . esc_html__( 'Send booking requests to', 'apex' ) . '</label></th><td><input id="f-r" class="regular-text" name="f[recipients]" value="' . esc_attr( (string) ( $o['recipients'] ?? '' ) ) . '"><p class="description">' . esc_html__( 'Email addresses, separated by commas. Empty sends them to the site admin address. The email carries the treatment, branch and day only; the name and phone number stay behind the staff login.', 'apex' ) . '</p></td></tr>';
 	echo '<tr><th><label for="f-k">' . esc_html__( 'Keep enquiries for (days)', 'apex' ) . '</label></th><td><input id="f-k" type="number" min="0" class="small-text" name="f[keep_days]" value="' . esc_attr( (string) ( $o['keep_days'] ?? 365 ) ) . '"><p class="description">' . esc_html__( 'Older enquiries are deleted automatically. 0 keeps them until someone deletes them. The privacy policy says 365, so change it there too.', 'apex' ) . '</p></td></tr>';
 	echo '</table>';
 	submit_button();

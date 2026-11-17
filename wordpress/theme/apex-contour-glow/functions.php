@@ -24,7 +24,7 @@
  */
 defined( 'ABSPATH' ) || exit;
 
-define( 'APEX_VERSION', '0.2.0' );   // keep in step with Version in style.css
+define( 'APEX_VERSION', '0.3.0' );   // keep in step with Version in style.css
 add_filter( 'update_footer', fn( $t ) => 'Apex Contour and Glow theme ' . APEX_VERSION . ' · ' . $t, 20 );
 define( 'APEX_DIR', __DIR__ );
 define( 'APEX_URI', get_template_directory_uri() );

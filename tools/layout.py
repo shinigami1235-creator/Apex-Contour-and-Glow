@@ -8,7 +8,7 @@ E = html.escape
 HEAD_V = 18
 LINE_ID = SETTINGS['line_id']; PHONE = SETTINGS['phone']
 LINE_URL = 'https://line.me/R/ti/p/' + LINE_ID
-ORDER = ['botox', 'filler', 'harmonyca', 'radiesse', 'sculptra', 'juvelook', 'profhilo', 'skinvive', 'vitaran', 'nucleofill', 'celeb-skin', 'meso']
+ORDER = ['botox', 'filler', 'harmonyca', 'radiesse', 'sculptra', 'bio-lift', 'juvelook', 'profhilo', 'skinvive', 'vitaran', 'nucleofill', 'rejuran', 'celeb-skin', 'meso']
 ASK = 'Ask your doctor'
 
 # what each treatment is, best for, first change, how long it lasts, sessions, downtime, starting price
@@ -25,9 +25,15 @@ C = {
  'vitaran': ('Polynucleotide booster made from trout DNA', 'Dry or rough skin, acne marks and thin skin under the eyes', 'Hydrated in 3 to 7 days, smoother in 2 to 4 weeks', 'About 6 to 12 months with repeats', '2 to 4, about 4 weeks apart', 'Bumps for 1 to 3 days', '5,900 baht'),
  'nucleofill': ('PDRN polynucleotide gel made in Italy', 'Skin texture and moisture, under-eyes, neck and hands', ASK, 'About 6 to 12 months', '2 to 4, every 2 or 4 weeks', 'Bruising or swelling for 1 to 2 days', 'Ask us'),
  'celeb-skin': ('Apex skin program built on facial meso', 'Skin you want hydrated, smooth and bright', 'Your doctor plans it', 'Your doctor plans it', 'Your doctor plans it', 'Small bumps that settle', 'Ask us'),
+ 'bio-lift': ('Liquid PCL that builds your own collagen', 'Skin that has lost firmness, wrinkles from age, dull tired skin', '2 to 4 weeks', 'About 6 to 12 months a cycle', '3, 4 weeks apart', 'Swelling or itching for 2 to 3 days', 'Ask us'),
+ 'rejuran': ('Polynucleotide booster made from salmon DNA', 'Shallow acne scars, large pores, dull or dry skin', '1 to 2 weeks', 'About 4 to 6 months', '3 to 4, every 2 to 4 weeks', 'Bumps for 1 to 3 days', 'Ask us'),
  'meso': ('Hyaluronic acid, vitamins and nutrients placed in the skin', 'Dry, dull, rough or tired skin', 'Some people feel hydrated after the first visit', 'About 3 months for hydration formulas', 'Often 3, 4 weeks apart', 'None, small bumps settle', '1,990 baht'),
 }
 PAIRS = {
+ 'bio-lift|sculptra': 'Both build collagen. Sculptra is poly-L-lactic acid and suits hollows, while Bio Lift is a liquid PCL that spreads evenly through the face.',
+ 'bio-lift|profhilo': 'Profhilo is hyaluronic acid that hydrates, while Bio Lift is PCL that builds collagen.',
+ 'rejuran|vitaran': 'Both are polynucleotide boosters. Rejuran\'s PN comes from salmon and Vitaran\'s from trout.',
+ 'meso|rejuran': 'Rejuran repairs the skin with PN while meso adds vitamins and nutrients for glow.',
  'botox|filler': 'Botox softens lines from movement while filler fills hollows and folds, so the two are often booked together.',
  'celeb-skin|vitaran': 'Apex has packages that pair Vitaran with Celeb Skin.',
  'celeb-skin|meso': 'Celeb Skin is built on facial meso and adds other brightening treatments.',
@@ -64,18 +70,24 @@ def _codes():
     vol = {k: float(v) for k, v in re.findall(r'\b(\w+): \{vol:([\d.]+)', js)}
     return at, vol
 
+def _units(note):
+    # '5 to 15 a side' reads as '5 to 15 units a side'
+    if 'unit' in note: return note
+    return note.replace(' a side', ' units a side') if ' a side' in note else note + ' units'
+
 def zones():
     from areas import TOXIN, ZONE_POINTS
     at, vol = _codes()
     z = {k[0]: [] for k in ZONES}; z['skin'] = []
     for slug in ORDER:
         t = TX[slug]
-        for lab, note, *_ in list(t['face']) + list(t['body']):
+        for row in list(t['face']) + list(t['body']):
+            lab, note, own = row[0], row[1], (row[2] if len(row) > 2 else '')
             a = AREA.get(lab)
             if a and not any(e['slug'] == slug for e in z[a]):
                 p = C[slug][6]
-                short = ' '.join(p.replace(',', '#', 1).split(',')[0].replace('#', ',').split()[:2]) if 'baht' in p else p
-                z[a].append(dict(slug=slug, name=t['name'], note=(note + (' units' if slug == 'botox' and 'unit' not in note else '')) if note[:1].isdigit() else '', price=short))
+                short = own or (' '.join(p.replace(',', '#', 1).split(',')[0].replace('#', ',').split()[:2]) if 'baht' in p else p)
+                z[a].append(dict(slug=slug, name=t['name'], note=_units(note) if slug == 'botox' and note[:1].isdigit() else (note if note[:1].isdigit() else ''), price=short))
     names = {k[0]: k[1] for k in ZONES}; names['skin'] = 'The whole face'
     pts, fill, info = {}, {}, {}
     for key, d in ZONE_POINTS.items():
@@ -119,7 +131,7 @@ def inl(s):
 # (assets/css/apex.css) with Contour and Glow's own parts in assets/css/cg.css and assets/js/cg.js.
 import json as _json
 _ICONS = _json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icons.json')))
-CG_CSS_V = 5; CG_JS_V = 8
+CG_CSS_V = 7; CG_JS_V = 10
 CURVE = ('<svg viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true" focusable="false">'
          '<path class="sx-fill" d="M0 90V54C190 20 400 6 640 30S1090 88 1440 32V90Z"/><path class="sx-stitch" d="M0 46C190 12 400 -2 640 22S1090 80 1440 24"/></svg>')
 
@@ -148,7 +160,7 @@ def head2(title, desc):
 
 def header2(home=False):
     p = '' if home else 'index.html'
-    nav = [(f'{p}#planner', 'Face planner'), (f'{p}#treatments', 'Treatments'), (f'{p}#layers', 'Skin layers'), (f'{p}#results', 'Results'), ('compare.html', 'Compare'), (f'{p}#book', 'Contact')]
+    nav = [(f'{p}#planner', 'Face planner'), (f'{p}#treatments', 'Treatments'), (f'{p}#layers', 'Skin layers'), (f'{p}#results', 'Results'), (f'{p}#doctors', 'Doctors'), ('compare.html', 'Compare'), (f'{p}#book', 'Contact')]
     links = ''.join(f'<a href="{h}">{E(t)}</a>' for h, t in nav)
     return f'''<header class="hdr"><a class="skip" href="#main">Skip to content</a><div class="hdr-in">
   <a class="hdr-logo" href="{p or '#main'}" aria-label="Apex Contour and Glow"><span class="logo-txt cg-logo">APEX<small>Contour and Glow</small></span></a>
@@ -160,13 +172,41 @@ def header2(home=False):
   <div class="sheet-cta"><a class="btn btn-light" href="{p}#book">{ic('message-circle')}Consultation</a><a class="btn btn-ghost" href="{LINE_URL}">{ic('brand:line')}LINE {E(LINE_ID)}</a></div>
 </dialog>'''
 
+def socials():
+    return '<p class="cg-soc">' + ''.join(f'<a href="{E(u)}" aria-label="{E(k.capitalize() if k != "x" else "X")}: {E(n)}" rel="noopener">{ic("brand:" + k)}</a>' for k, n, u in SETTINGS['socials']) + '</p>'
+
+def doc_card(d, cls=''):
+    """One doctor: photo, role, name, nickname and licence, medical school, and the treatments they trained in."""
+    slug, name, nick, role, school, lic, treats, img = d
+    tx = [k for k in ORDER if k in treats]
+    chips = ''.join(f'<li><a href="{k}.html">{E(TX[k]["name"])}</a></li>' for k in tx[:4]) + (f'<li class="more">+{len(tx) - 4}</li>' if len(tx) > 4 else '')
+    return (f'<article class="dr-card{cls}"><div class="dr-ph"><img src="{img}" alt="{E(name)}" loading="lazy" width="480" height="600"></div>'
+            f'<div class="dr-body"><p class="dr-role">{E(role)}</p><h3 class="dr-name">{E(name)}</h3>'
+            f'<p class="dr-nick">{E(nick)}{" · " if nick else ""}Licence {E(lic)}</p><p class="dr-school">{E(school)}</p>'
+            + (f'<ul class="dr-tx">{chips}</ul>' if chips else '') + '</div></article>')
+
+def doctors_for(slug, n=3):
+    """The doctors shown on a treatment page: those trained in it, rotated by the page's place in ORDER so pages
+    show different doctors, then dermatologists, then anyone, until there are n."""
+    from site_content import CLINIC
+    D = CLINIC['doctors']
+    m = [d for d in D if slug in d[6]]
+    if len(m) > n:
+        r = (ORDER.index(slug) * n if slug in ORDER else 0) % len(m)
+        m = m[r:] + m[:r]
+    out = m[:n]
+    for d in [d for d in D if 'ermatolog' in d[3]] + D:
+        if len(out) >= n: break
+        if d not in out: out.append(d)
+    return out
+
 def footer2():
     tx = ''.join(f'<a href="{k}.html">{E(TX[k]["name"])}</a>' for k in ORDER)
     permit = f'<p class="ftr-lic">{E(SETTINGS["permit"])}</p>' if SETTINGS['permit'] else ''
     return f'''<footer class="ftr sx-join" data-tone="night"><div class="wrap"><div class="ftr-top cg-ftr">
-  <div class="brand"><span class="logo-txt light">APEX<small>Contour and Glow</small></span><p>{E(SETTINGS['clinic'])}</p>{permit}</div>
+  <div class="brand"><span class="logo-txt light">APEX<small>Contour and Glow</small></span><p>{E(SETTINGS['clinic'])}</p><p class="cg-addr">{E(SETTINGS['address'])}</p><p class="cg-since">{E(SETTINGS['founded'])}</p>{permit}{socials()}</div>
   <div><h2 class="ftr-h">Treatments</h2>{tx}</div>
-  <div><h2 class="ftr-h">Tools</h2><a href="index.html#planner">Face planner</a><a href="index.html#layers">Skin layers</a><a href="compare.html">Compare two treatments</a><a href="index.html#results">Before and after</a></div>
+  <div><h2 class="ftr-h">Tools</h2><a href="index.html#planner">Face planner</a><a href="index.html#layers">Skin layers</a><a href="compare.html">Compare two treatments</a><a href="index.html#results">Before and after</a><a href="index.html#doctors">Doctors</a><a href="index.html#branches">Find a branch</a></div>
   <div><h2 class="ftr-h">Contact</h2><a href="{LINE_URL}">{ic('brand:line')}LINE {E(LINE_ID)}</a><a href="tel:{PHONE.replace('-', '')}">{ic('phone')}{E(PHONE)}</a><a href="index.html#book">{ic('calendar')}Book a consultation</a></div>
 </div>
 <div class="ftr-bot cg-bot"><span>{E(SETTINGS['footer_note'])}</span><span><a href="privacy.html">{E(HOME['book']['privacy'])}</a></span></div></div>

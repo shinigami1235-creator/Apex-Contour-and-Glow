@@ -5,7 +5,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(SITE, 'tools'))
 from tx_content import TX
-from site_content import SETTINGS, HOME, PRIVACY, TAGS
+from site_content import SETTINGS, HOME, PRIVACY, TAGS, CLINIC
 from tx_art import ICON
 from layout import ORDER, ROWS, C, PAIRS, ZONES, AREA, zones, _ICONS, CURVE
 from skin_art import band, needle
@@ -13,7 +13,7 @@ from skin_art import band, needle
 def treatment(k, i):
     t = dict(TX[k])
     t.pop('banner', None)
-    t['face'] = [list(r[:2]) for r in t['face']]   # the design ignores anything after the area and the amount
+    t['face'] = [list(r[:3]) + [''] * (3 - len(r[:3])) for r in t['face']]   # area, amount, price for that area
     t['key'] = k
     t['order'] = i
     t['summary'] = {r[0]: v for r, v in zip(ROWS, C[k])}
@@ -26,6 +26,7 @@ out = {
     'settings': SETTINGS,
     'home': HOME,
     'privacy': PRIVACY,
+    'clinic': CLINIC,
     'treatments': [treatment(k, i) for i, k in enumerate(ORDER)],
     'compare': {'rows': [list(r) for r in ROWS],
                 'pairs': [dict(zip(('a', 'b'), k.split('|')), note=v) for k, v in PAIRS.items()]},

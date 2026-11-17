@@ -13,8 +13,9 @@ TX['botox'] = dict(
   not_for=[('Deep folds and hollows','They come from lost volume, so filler is the treatment for them.','filler.html','Pair it with Filler'),
            ('Fat','Botox relaxes muscle and leaves fat as it is.',None,None),
            ('Bone','A jaw that is wide from bone stays the same width.',None,None)],
-  face=[('Forehead','10 to 20 units',200,96,'R'),('Between the brows','15 to 25',200,150,'L'),("Crow's feet",'5 to 15 a side',300,182,'R'),
-        ('Jaw','20 to 30 a side',112,300,'L'),('Mouth corners','2 to 5 a side',232,318,'R'),('Chin','4 to 8',200,374,'L')],
+  # area, amount, and a price for that area when Apex lists one (empty uses the starting price)
+  face=[('Forehead','10 to 20 units',''),('Between the brows','15 to 25',''),("Crow's feet",'5 to 15 a side',''),('Under-eyes','2 to 5 a side',''),
+        ('Jaw','24 to 36 a side',''),('Mouth corners','2 to 5 a side',''),('Chin','4 to 8','')],
   body=[('Neck and face lift','about 20 to 40'),('Shoulders','20 to 50 a side'),('Calves','50 to 100 a side'),('Underarm sweat','about 50 a side')],
   areas_note="The units are typical amounts, and your doctor sets the dose for your muscle. 50 units covers one or two face areas, and 100 units covers both sides of the jaw or the forehead, frown and crow's feet together.",
   fitting=[('Muscle check','Your doctor watches you frown, smile and clench to find the muscle behind the problem.'),
@@ -59,8 +60,9 @@ TX['filler'] = dict(
   not_for=[('Lines from movement','Frown lines and crow\'s feet come from muscle, so Botox suits them better.','botox.html','See Botox'),
            ('Some delicate areas','Between the brows, parts of the nose and the upper eyelids are done only after a careful check.',None,None),
            ('Old lumpy filler','Your doctor checks what is left of earlier filler before adding more.',None,None)],
-  face=[('Under-eyes','1 to 2 cc for both'),('Temples','1 to 2 cc a side'),('Cheeks','1 to 2 cc a side'),('Smile lines','1 to 2 cc for both'),
-        ('Lips','0.5 to 1 cc'),('Chin','1 to 2 cc'),('Jawline','1 to 2 cc a side'),('Forehead','2 to 4 cc')],
+  face=[('Under-eyes','1 to 2 cc for both','12,900 baht a cc'),('Temples','1 to 3 cc a side','12,900 baht a cc'),('Cheeks','1 to 4 cc a side','12,900 baht a cc'),
+        ('Smile lines','1 to 2 cc, 3 to 4 cc if deep','12,900 baht a cc'),('Lips','0.5 to 1 cc','9,900 baht'),('Chin','1 to 2 cc','12,900 baht a cc'),
+        ('Jawline','1 to 2 cc a side','20,000 baht a cc'),('Forehead','1 to 3 cc','20,000 baht a cc')],
   body=[],
   areas_note="The amounts are typical. Two areas together usually take 2 to 6 cc, and a large plan can be split over more than one visit.",
   fitting=[('Your face first','Your doctor looks at the whole face and picks the areas, the gel and the amount for each.'),
@@ -218,7 +220,7 @@ TX['sculptra'] = dict(
 )
 
 TX['juvelook'] = dict(
-  name='Juvelook', no=6, half='Contour',
+  name='Juvelook', no=7, half='Contour',
   hook=["Juvelook mixes PDLLA, a collagen builder, with hyaluronic acid. The hyaluronic acid hydrates the skin in the first weeks, and the PDLLA builds collagen slowly after that.",
         "It suits fine lines, uneven texture, open pores and some acne scars. Made by VAIM in Korea."],
   facts=[('Bumps settle','in 1 to 3 days'),('Collagen shows','at 4 to 8 weeks'),('Sessions','usually 2 to 3'),('Top-up','every 6 to 12 months')],
@@ -262,7 +264,7 @@ TX['juvelook'] = dict(
 )
 
 TX['profhilo'] = dict(
-  name='Profhilo', no=7, half='Glow',
+  name='Profhilo', no=8, half='Glow',
   hook=["Profhilo is 64 mg of hyaluronic acid that hasn't been cross-linked, so it spreads evenly through the skin and hydrates it from inside.",
         "It suits dry, dull skin, early fine lines and skin that has started to sag, and it keeps the shape of your face as it is."],
   facts=[('Time in the chair','10 to 15 minutes'),('Points','5 on each side'),('Sessions','2, a month apart'),('Lasts','about 6 to 12 months')],
@@ -300,9 +302,9 @@ TX['profhilo'] = dict(
 )
 
 TX['skinvive'] = dict(
-  name='Skinvive', no=8, half='Glow',
+  name='Skinvive', no=9, half='Glow',
   hook=["Skinvive is a hyaluronic acid gel placed in the skin to hydrate it. It improves how the skin looks and feels and keeps the shape of the face as it is.",
-        "It suits dry or dull skin, early crow's feet, rough texture and dark tone under the eyes."],
+        "It suits dry or dull skin, early crow's feet, rough texture and dark tone under the eyes. Made by Allergan, and sold as Juvederm Volite outside the US."],
   facts=[('Amount','1 to 2 cc an area'),('Downtime','none'),('Marks fade in','1 to 2 days'),('Lasts','about 6 to 9 months')],
   price_from='12,900 baht', price_note='first-time trial',
   lead="Skinvive holds water in the skin, and fine lines soften.",
@@ -342,7 +344,7 @@ TX['skinvive'] = dict(
 )
 
 TX['vitaran'] = dict(
-  name='Vitaran', no=9, half='Glow',
+  name='Vitaran', no=10, half='Glow',
   hook=["Vitaran is a Korean skin booster made of polynucleotides, the PN taken from trout DNA. It holds water in the skin and supports the cells that make collagen and elastin.",
         "It suits dry or rough skin, acne marks, early fine lines and thin skin under the eyes. Made by BR Pharm."],
   facts=[('Feels hydrated','in 3 to 7 days'),('Smoother skin','in 2 to 4 weeks'),('Sessions','2 to 4, about 4 weeks apart'),('Time in the chair','15 to 30 minutes')],
@@ -386,7 +388,7 @@ TX['vitaran'] = dict(
 )
 
 TX['nucleofill'] = dict(
-  name='Nucleofill', no=10, half='Glow',
+  name='Nucleofill', no=11, half='Glow',
   hook=["Nucleofill is a polynucleotide gel from Promoitalia in Milan. Its main ingredient is PDRN, and the gel works on the skin itself.",
         "It comes in four gels, for the face, the skin around the eyes, the body and the scalp."],
   facts=[('Made by','Promoitalia, Italy'),('Sessions','2 to 4, every 2 or 4 weeks'),('Bruising and swelling','1 to 2 days'),('Lasts','about 6 to 12 months')],
@@ -421,7 +423,7 @@ TX['nucleofill'] = dict(
 )
 
 TX['celeb-skin'] = dict(
-  name='Celeb Skin', no=11, half='Glow',
+  name='Celeb Skin', no=13, half='Glow',
   hook=["Celeb Skin is Apex's own skin program. It is built on facial meso and adds other treatments that brighten the skin.",
         "Your doctor checks your skin and picks the treatments for you under the Apex Protocol."],
   facts=[('Built on','facial meso'),('Planned by','your doctor'),('Pairs with','Vitaran'),('Aim','hydrated, smooth, bright skin')],
@@ -461,7 +463,7 @@ TX['celeb-skin'] = dict(
 )
 
 TX['meso'] = dict(
-  name='Meso', no=12, half='Glow',
+  name='Meso', no=14, half='Glow',
   hook=["Meso places hyaluronic acid, vitamins and other skin nutrients into the skin with a fine needle. The name refers to the technique, which has been in use since 1958, and the formula changes with your skin.",
         "It suits dry, dull or rough skin, shallow lines from dehydration and skin that looks tired."],
   facts=[('Downtime','none'),('Sessions','often 3, 4 weeks apart'),('Hydration lasts','about 3 months'),('Formula','picked for your skin')],
@@ -503,3 +505,94 @@ TX['meso'] = dict(
   results=None,
   sources=['Apex Medical Center, "Facial mesotherapy", apexmedicalcenter.co.th/mesotherapy'],
 )
+
+TX['bio-lift'] = dict(
+  name='Bio Lift', no=6, half='Contour',
+  hook=["Bio Lift uses Gouri, a liquid PCL (polycaprolactone) from Korea that builds your own collagen. It has no particles in it, so it spreads evenly through the skin of the face instead of sitting in one spot.",
+        "It suits skin that has lost firmness, wrinkles that come with age, and dull, tired skin, for people who want a fresher face without filler. Made by Dexlevo."],
+  facts=[('Each session','2 cc'),('Sessions','3, 4 weeks apart'),('Change shows','in 2 to 4 weeks'),('Lasts','about 6 to 12 months a cycle')],
+  price_from=None, price_note='Ask us for the Apex price',
+  lead="Bio Lift firms the skin from within, a little more with each session.",
+  how=[('','The plan','Your doctor checks your skin and plans a cycle of three sessions.'),
+       ('','The injection','2 cc of Gouri goes into the skin across the face, where the liquid spreads evenly.'),
+       ('','The collagen','The PCL prompts the skin to make new collagen over the following weeks.')],
+  not_for=[('Volume','Bio Lift firms the skin and adds no volume, so a hollow or a fold needs filler.','filler.html','See Filler'),
+           ('Pregnancy or breastfeeding','Wait until after.',None,None),
+           ('A PCL allergy or a weak immune system','Tell your doctor, since Bio Lift isn\'t used then.',None,None)],
+  face=[('Whole face, for firmness','2 cc a session',''),('Cheeks','',''),('Smile lines','',''),('Jawline','','')],
+  body=[('Neck',''),('Back of the hands','')],
+  areas_note="One session uses 2 cc, and a cycle is 3 sessions. Your doctor may repeat the cycle once or twice, 3 to 6 months apart.",
+  fitting=[('The plan','Your doctor checks your skin and your medicines, and plans the cycle.'),
+           ('A clean face','Come without makeup, and the area is cleaned before the injection.'),
+           ('The injection','Your doctor spreads 2 cc across the planned areas.'),
+           ('Day 1','Mild swelling, itching or redness can show, and settles in 2 to 3 days.'),
+           ('The next session','The next one is 4 weeks later, and the cycle has three.')],
+  timeline=[('Day 1 to 3','Any swelling or redness settles'),('Week 1 to 2','Itching or redness can come back for a few days'),
+            ('Week 2 to 4','Skin starts to look firmer'),('Month 2 to 3','The cycle finishes and collagen keeps building'),
+            ('Month 6 to 12','Time for the next cycle')],
+  prices=dict(head=['Program','What it covers'], rows=[['Bio Lift cycle','3 sessions of 2 cc, 4 weeks apart']],
+              invitations=[], note='Ask us for the price on LINE @apexbeauty.'),
+  care=dict(before=[('talk','Tell your doctor','Any illness, allergy or medicine, especially blood thinners and painkillers like aspirin or ibuprofen.'),
+                    ('noglass','No alcohol','Skip it, and swimming, for 24 hours before.'),
+                    ('wash','A clean face','Come without makeup.'),
+                    ('pill','For allergies','If you react easily, ask your doctor about an antihistamine 30 minutes before.')],
+            after=[('First 24 hours',[('hand','Keep from touching the area'),('noglass','No alcohol')]),
+                   ('The first days',[('clock','No sun, sauna or heat'),('dumbbell','No hard exercise')]),
+                   ('Day 7 to 10',[('calendar','Some itching or redness can come back for 2 to 3 days')])],
+            urgent='Call us straight away if the swelling keeps growing, or the skin turns hot, painful or pale.'),
+  faq=[('How many sessions do I need?','Three, 4 weeks apart, which makes one cycle.'),
+       ('When will I see it?','In 2 to 4 weeks, and the skin keeps firming over the cycle.'),
+       ('How long does it last?','About 6 to 12 months for each cycle.'),
+       ('Where can it go?','The face, the neck and the back of the hands.'),
+       ('How is it different from filler?','Filler adds volume in one spot, and Bio Lift spreads through the skin and builds collagen.'),
+       ('How is it different from Sculptra?','Both build collagen. Sculptra is poly-L-lactic acid and suits hollows, and Gouri is a liquid that spreads evenly.')],
+  results=None,
+  sources=['Apex Medical Center, "Bio Lift", apexmedicalcenter.co.th/en/service/bio-lift',
+           'Dexlevo, Gouri product information on liquid PCL and CESABP technology'],
+)
+
+TX['rejuran'] = dict(
+  name='Rejuran', no=12, half='Glow',
+  hook=["Rejuran is a Korean skin booster made of polynucleotides, the PN taken from salmon DNA. It goes into the dermis and supports the skin as it repairs, making new collagen and elastin.",
+        "It suits shallow acne scars, large pores, dull or dry skin and skin worn by sun and pollution. Made by PharmaResearch."],
+  facts=[('Skin improves','in 1 to 2 weeks'),('Sessions','3 to 4, every 2 to 4 weeks'),('Lasts','about 4 to 6 months'),('Bumps settle in','1 to 3 days')],
+  price_from=None, price_note='Ask us for the Apex price',
+  lead="Rejuran repairs the skin, a little more with each session.",
+  how=[('','The plan','Your doctor checks your skin and picks the Rejuran type for each area.'),
+       ('','Numbing cream','It stays on for about 30 minutes, and a small needle places the PN in the dermis.'),
+       ('','The repair','The PN supports new cells, collagen and elastin over the following weeks.')],
+  not_for=[('Volume','Rejuran works on skin quality, and filler adds volume.','filler.html','See Filler'),
+           ('Deep scars','Rejuran helps shallow to medium acne scars, and deep pits may need other treatments as well.',None,None),
+           ('A fish allergy','The PN comes from salmon, so tell your doctor about any fish allergy.',None,None)],
+  face=[('Whole face','Rejuran',''),('Acne scars','Rejuran S',''),('Around the eyes','Rejuran I',''),('Under-eyes','Rejuran I',''),('Cheeks','pores and texture','')],
+  body=[('Neck','Rejuran')],
+  areas_note="Rejuran comes in types: Rejuran for the whole face, Rejuran I for the thin skin around the eyes, Rejuran S for scars, and Rejuran HB with hyaluronic acid and a numbing agent.",
+  fitting=[('The plan','Your doctor checks your skin, allergies and any laser you had, and picks the type and areas.'),
+           ('Numbing cream','The face is cleaned and numbing cream stays on for about 30 minutes.'),
+           ('The injection','A small needle places the PN in the dermis at planned points.'),
+           ('Day 1','Small bumps and red marks settle in 1 to 3 days.'),
+           ('The next session','Most courses have 3 to 4 sessions, 2 to 4 weeks apart.')],
+  timeline=[('Day 1 to 3','Bumps and red marks settle'),('Week 1 to 2','Skin starts to look better'),
+            ('Week 2 to 4','The next session'),('Month 2 to 3','The course finishes, with the full change'),
+            ('Month 4 to 6','Time for an upkeep session')],
+  prices=dict(head=['Type','Made for'], rows=[['Rejuran','Whole face, for dull or dry skin and pores'],['Rejuran I','Around the eyes'],['Rejuran S','Acne scars'],['Rejuran HB','With hyaluronic acid and a numbing agent']],
+              invitations=[], note='Ask us for the price on LINE @apexbeauty.'),
+  care=dict(before=[('talk','Tell your doctor','Any allergy including to fish, sensitive skin, illness, and any laser or skin treatment you had.'),
+                    ('pill','Blood thinners','Aspirin, vitamin E and fish oil raise bruising, so ask your doctor about stopping them a week before. Never stop a regular medicine on your own.'),
+                    ('noglass','No alcohol or smoking','Skip both for 24 hours before.'),
+                    ('wash','A clean face','Come without makeup.')],
+            after=[('First 24 hours',[('wash','No makeup, and no AHA, BHA or retinol'),('hand','Keep from touching or massaging')]),
+                   ('First 2 to 3 days',[('dumbbell','No hard exercise'),('clock','No sauna or spa heat'),('noglass','No alcohol or smoking')]),
+                   ('After that',[('glass','Drink plenty of water'),('wash','Gentle moisturiser and SPF 30 or more'),('calendar','Laser can follow after 1 to 2 weeks')])],
+            urgent='Call us straight away if the swelling keeps growing, or the skin turns hot, painful or pale.'),
+  faq=[('Does it hurt?','A light sting, since numbing cream goes on for about 30 minutes first.'),
+       ('How many sessions do I need?','Usually 3 to 4, every 2 to 4 weeks, then an upkeep session every 3 to 6 months.'),
+       ('How long does it last?','About 4 to 6 months.'),
+       ('Can I have laser after it?','Yes, after 1 to 2 weeks.'),
+       ('How is it different from Botox?','Rejuran repairs the skin over months while Botox relaxes a muscle for a few months.'),
+       ('How is it different from meso?','Rejuran repairs the skin with PN while meso adds vitamins and nutrients for glow.')],
+  results=None,
+  sources=['Apex Medical Center, "Rejuran program", apexmedicalcenter.co.th/rejuran',
+           'PharmaResearch, Rejuran product range: Rejuran, Rejuran I, Rejuran S and Rejuran HB'],
+)
+

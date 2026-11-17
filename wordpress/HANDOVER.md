@@ -97,9 +97,10 @@ The preview site's addresses (`botox.html`, `compare.html?a=botox&b=filler`) for
 - **Treatments:** each treatment page, from the opening paragraphs and facts box to prices, packages, areas, the visit steps, the results timeline, care, questions and sources. Its Summary feeds the home page tiles, Compare and the face planner cards. Its Symbol, What it is made of and Skin layers fields fill the tile on the home page and its own page, and the Skin layers section. Its Face areas decide which face planner areas show it.
 - **Before and after:** one entry per case, linked to its treatment, with a before and an after photo. A photo grid case has only the after photo. The treatment's own "Before and after" box says whether its cases show as one photo with a line to drag or as a photo grid.
 - **Apex settings:**
-  - Site settings: the site name, clinic line, LINE ID, phone, permit number and footer note.
-  - Home page: the headings and text of every part of the home page, the Skin layers text, which treatment opens the before and after, and the booking form wording.
+  - Site settings: the site name, clinic line, LINE ID, phone, permit number, address, the since line, the social accounts and the footer note.
+  - Home page: the headings and text of every part of the home page, the Skin layers text, the Doctors heading, which treatment opens the before and after, and the booking form and branch finder wording.
   - Compare: the row names and the "Often compared" pairs with their notes.
+  - Doctors and branches: each doctor's card (photo, name, licence number and the treatments they trained in) and each branch's phone, map link and position for Nearest to me. A treatment page shows three doctors whose Treatments list holds its key.
   - Face planner: the names on the area buttons. Where each area sits on the 3D face is set by the research behind it (the MD Codes and published Botox injection guides), so it is not editable.
   - Privacy policy: the policy text, block by block. Apex's DPO should approve any change.
 - Uploads are saved as WebP at quality 82, which loads faster. Settings › Media turns this off.
@@ -165,5 +166,6 @@ For the developer: the static design is the source of the styles, scripts and 3D
 |---|---|---|---|
 | 0.1.0 | 15 Nov 2026 | First build, not yet sent to IT. English only. | Yes, the first time. |
 | 0.2.0 | 16 Nov 2026 | New design, matching the Apex Surgery site. Adds the Skin layers section and the Symbol, What it is made of and Skin layers fields on each treatment. | Yes, since the new fields come from the package. |
+| 0.3.0 | 17 Nov 2026 | Content from apexmedicalcenter.co.th: prices for each face area, the Doctors section and three doctors on every treatment page, the branch finder and a Branch box on the booking form, the address and social accounts in the footer, and new Bio Lift and Rejuran pages. Adds Apex settings › Doctors and branches. Enquiries now show the branch. | Yes, since the doctors, branches and two new treatments come from the package. |
 
 Thank you. Send me anything that does not match this and I will fix it.

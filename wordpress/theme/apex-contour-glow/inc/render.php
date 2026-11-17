@@ -67,7 +67,7 @@ function apex_head( string $title, string $desc ): string {
 }
 function apex_header( array $S, bool $home = false ): string {
 	$p = $home ? '' : 'index.html';
-	$nav = [ [ "$p#planner", 'Face planner' ], [ "$p#treatments", 'Treatments' ], [ "$p#layers", 'Skin layers' ], [ "$p#results", 'Results' ], [ 'compare.html', 'Compare' ], [ "$p#book", 'Contact' ] ];
+	$nav = [ [ "$p#planner", 'Face planner' ], [ "$p#treatments", 'Treatments' ], [ "$p#layers", 'Skin layers' ], [ "$p#results", 'Results' ], [ "$p#doctors", 'Doctors' ], [ 'compare.html', 'Compare' ], [ "$p#book", 'Contact' ] ];
 	$links = ''; $sheet = '';
 	foreach ( $nav as [ $h, $t ] ) { $links .= '<a href="' . $h . '">' . apex_e( $t ) . '</a>'; $sheet .= '<a href="' . $h . '">' . apex_e( $t ) . apex_ic( 'arrow-right' ) . '</a>'; }
 	$line = apex_line_url( $S ); $lid = apex_e( $S['settings']['line_id'] );
@@ -81,14 +81,48 @@ function apex_header( array $S, bool $home = false ): string {
 		. '  <div class="sheet-cta"><a class="btn btn-light" href="' . $p . '#book">' . apex_ic( 'message-circle' ) . 'Consultation</a><a class="btn btn-ghost" href="' . $line . '">' . apex_ic( 'brand:line' ) . 'LINE ' . $lid . '</a></div>' . "\n"
 		. '</dialog>';
 }
+/** The clinic's social accounts as brand icons (tools/layout.py socials()). */
+function apex_socials( array $S ): string {
+	$o = '';
+	foreach ( $S['settings']['socials'] as [ $k, $n, $u ] ) $o .= '<a href="' . apex_e( $u ) . '" aria-label="' . apex_e( $k !== 'x' ? ucfirst( $k ) : 'X' ) . ': ' . apex_e( $n ) . '" rel="noopener">' . apex_ic( 'brand:' . $k ) . '</a>';
+	return '<p class="cg-soc">' . $o . '</p>';
+}
+/** One doctor card (tools/layout.py doc_card()). */
+function apex_doc_card( array $S, array $d, string $cls = '' ): string {
+	[ $slug, $name, $nick, $role, $school, $lic, $treats, $img ] = $d;
+	$tx = array_values( array_filter( $S['order'], fn( $k ) => in_array( $k, $treats, true ) ) );
+	$chips = '';
+	foreach ( array_slice( $tx, 0, 4 ) as $k ) $chips .= '<li><a href="' . $k . '.html">' . apex_e( $S['tx'][ $k ]['name'] ) . '</a></li>';
+	if ( count( $tx ) > 4 ) $chips .= '<li class="more">+' . ( count( $tx ) - 4 ) . '</li>';
+	return '<article class="dr-card' . $cls . '"><div class="dr-ph"><img src="' . apex_e( apex_img( $img ) ) . '" alt="' . apex_e( $name ) . '" loading="lazy" width="480" height="600"></div>'
+		. '<div class="dr-body"><p class="dr-role">' . apex_e( $role ) . '</p><h3 class="dr-name">' . apex_e( $name ) . '</h3>'
+		. '<p class="dr-nick">' . apex_e( $nick ) . ( $nick !== '' ? ' · ' : '' ) . 'Licence ' . apex_e( $lic ) . '</p><p class="dr-school">' . apex_e( $school ) . '</p>'
+		. ( $chips !== '' ? '<ul class="dr-tx">' . $chips . '</ul>' : '' ) . '</div></article>';
+}
+/** The doctors on a treatment page (tools/layout.py doctors_for()): trained in it, rotated by the page's place, then dermatologists, then anyone. */
+function apex_doctors_for( array $S, string $slug, int $n = 3 ): array {
+	$D = $S['clinic']['doctors'];
+	$m = array_values( array_filter( $D, fn( $d ) => in_array( $slug, $d[6], true ) ) );
+	if ( count( $m ) > $n ) {
+		$i = array_search( $slug, $S['order'], true );
+		$r = ( $i === false ? 0 : $i * $n ) % count( $m );
+		$m = array_merge( array_slice( $m, $r ), array_slice( $m, 0, $r ) );
+	}
+	$out = array_slice( $m, 0, $n );
+	foreach ( array_merge( array_values( array_filter( $D, fn( $d ) => strpos( $d[3], 'ermatolog' ) !== false ) ), $D ) as $d ) {
+		if ( count( $out ) >= $n ) break;
+		if ( ! in_array( $d, $out, true ) ) $out[] = $d;
+	}
+	return $out;
+}
 function apex_footer( array $S ): string {
 	$s = $S['settings'];
 	$tx = ''; foreach ( $S['order'] as $k ) $tx .= '<a href="' . $k . '.html">' . apex_e( $S['tx'][ $k ]['name'] ) . '</a>';
 	$permit = $s['permit'] !== '' ? '<p class="ftr-lic">' . apex_e( $s['permit'] ) . '</p>' : '';
 	return '<footer class="ftr sx-join" data-tone="night"><div class="wrap"><div class="ftr-top cg-ftr">' . "\n"
-		. '  <div class="brand"><span class="logo-txt light">APEX<small>Contour and Glow</small></span><p>' . apex_e( $s['clinic'] ) . '</p>' . $permit . '</div>' . "\n"
+		. '  <div class="brand"><span class="logo-txt light">APEX<small>Contour and Glow</small></span><p>' . apex_e( $s['clinic'] ) . '</p><p class="cg-addr">' . apex_e( $s['address'] ) . '</p><p class="cg-since">' . apex_e( $s['founded'] ) . '</p>' . $permit . apex_socials( $S ) . '</div>' . "\n"
 		. '  <div><h2 class="ftr-h">Treatments</h2>' . $tx . '</div>' . "\n"
-		. '  <div><h2 class="ftr-h">Tools</h2><a href="index.html#planner">Face planner</a><a href="index.html#layers">Skin layers</a><a href="compare.html">Compare two treatments</a><a href="index.html#results">Before and after</a></div>' . "\n"
+		. '  <div><h2 class="ftr-h">Tools</h2><a href="index.html#planner">Face planner</a><a href="index.html#layers">Skin layers</a><a href="compare.html">Compare two treatments</a><a href="index.html#results">Before and after</a><a href="index.html#doctors">Doctors</a><a href="index.html#branches">Find a branch</a></div>' . "\n"
 		. '  <div><h2 class="ftr-h">Contact</h2><a href="' . apex_line_url( $S ) . '">' . apex_ic( 'brand:line' ) . 'LINE ' . apex_e( $s['line_id'] ) . '</a><a href="' . apex_tel( $S ) . '">' . apex_ic( 'phone' ) . apex_e( $s['phone'] ) . '</a><a href="index.html#book">' . apex_ic( 'calendar' ) . 'Book a consultation</a></div>' . "\n"
 		. '</div>' . "\n"
 		. '<div class="ftr-bot cg-bot"><span>' . apex_e( $s['footer_note'] ) . '</span><span><a href="privacy.html">' . apex_e( $S['home']['book']['privacy'] ) . '</a></span></div></div>' . "\n"
@@ -114,13 +148,13 @@ function apex_zones( array $S ): array {
 	foreach ( $S['order'] as $slug ) {
 		$t = $S['tx'][ $slug ];
 		foreach ( array_merge( $t['face'], $t['body'] ) as $row ) {
-			[ $lab, $note ] = [ $row[0] ?? '', $row[1] ?? '' ];
+			[ $lab, $note, $own ] = [ $row[0] ?? '', $row[1] ?? '', $row[2] ?? '' ];
 			$a = $P['area_of'][ $lab ] ?? null;
 			if ( ! $a || in_array( $slug, array_column( $z[ $a ], 'slug' ), true ) ) continue;
 			$isnum = $note !== '' && ctype_digit( $note[0] );
 			$z[ $a ][] = [ 'slug' => $slug, 'name' => $t['name'],
-				'note' => $isnum ? $note . ( $slug === 'botox' && strpos( $note, 'unit' ) === false ? ' units' : '' ) : '',
-				'price' => apex_short_price( $t['summary']['from'] ) ];
+				'note' => ! $isnum ? '' : ( $slug !== 'botox' || strpos( $note, 'unit' ) !== false ? $note : ( strpos( $note, ' a side' ) !== false ? str_replace( ' a side', ' units a side', $note ) : $note . ' units' ) ),
+				'price' => $own !== '' ? $own : apex_short_price( $t['summary']['from'] ) ];
 		}
 	}
 	$names = [];
@@ -190,6 +224,22 @@ function apex_render_home( array $S ): string {
 	};
 	$book_opts = '<option>Not sure yet</option>';
 	foreach ( $S['order'] as $k ) $book_opts .= '<option>' . apex_e( $T[ $k ]['name'] ) . '</option>';
+	// doctors and branches
+	$B = $H['book']; $C = $S['clinic'];
+	$doctors = ''; foreach ( $C['doctors'] as $d ) $doctors .= apex_doc_card( $S, $d, ' rv' );
+	$branch_opts = '<option value="">' . apex_e( $B['branch_any'] ) . '</option>'; $gname = []; $branch_tabs = '';
+	foreach ( $B['groups'] as $i => [ $g, $gl ] ) {
+		$gname[ $g ] = $gl;
+		$branch_opts .= '<optgroup label="' . apex_e( $gl ) . '">';
+		foreach ( $C['branches'] as $b ) if ( $b[1] === $g ) $branch_opts .= '<option>' . apex_e( $b[0] ) . '</option>';
+		$branch_opts .= '</optgroup>';
+		$branch_tabs .= '<button type="button" class="chip" data-g="' . $g . '" aria-pressed="' . ( $i === 0 ? 'true' : 'false' ) . '">' . apex_e( $gl ) . '</button>';
+	}
+	$branch_list = '';
+	foreach ( $C['branches'] as $b ) $branch_list .= '<li data-g="' . $b[1] . '" data-lat="' . $b[4] . '" data-lng="' . $b[5] . '"><b>' . apex_e( $b[0] ) . '</b><small>' . apex_e( $gname[ $b[1] ] ?? '' ) . '</small>'
+		. '<span class="br-acts"><a href="tel:' . str_replace( [ '-', ' ' ], '', $b[2] ) . '">' . apex_ic( 'phone' ) . apex_e( $b[2] ) . '</a>'
+		. ( $b[3] !== '' ? '<a href="' . apex_e( $b[3] ) . '" rel="noopener">' . apex_ic( 'map-pin' ) . 'Map</a>' : '' ) . '</span></li>';
+	$DR = $H['doctors'];
 	$hero = $H['hero'];
 	$e = 'apex_e'; $h = 'apex_h'; $ic = 'apex_ic'; $img = fn( $x ) => apex_e( apex_img( $x ) );
 	$h1 = apex_e( $hero['h1'] ) . ( $hero['h1_em'] !== '' ? ' ' . apex_e( $hero['h1_em'] ) : '' );
@@ -263,7 +313,15 @@ function apex_render_home( array $S ): string {
   </div>
 </section>
 
-<section class="section washed has-sx" id="visit" data-tone="wash"><div class="sx sx-b sx-light-wash" aria-hidden="true"></div>
+<section class="section washed has-sx" id="doctors" data-tone="wash"><div class="sx sx-b sx-light-wash" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="shead"><div><p class="eyebrow rv">{$e( $DR['eyebrow'] )}</p><h2 class="h-xl rv">{$h( $DR )}</h2><p class="muted rv">{$e( $DR['p'] )}</p></div><a class="link-arrow rv" href="{$e( $DR['check_url'] )}" rel="noopener">{$e( $DR['check'] )} {$ic( 'arrow-up-right' )}</a></div>
+    <div class="dr-row" tabindex="0" aria-label="Doctors">$doctors</div>
+    <div class="dr-nav"><button type="button" class="dr-prev" aria-label="Previous doctors">{$ic( 'arrow-right' )}</button><button type="button" class="dr-next" aria-label="Next doctors">{$ic( 'arrow-right' )}</button></div>
+  </div>
+</section>
+
+<section class="section has-sx" id="visit" data-tone="light"><div class="sx sx-b sx-wash-light" aria-hidden="true"></div>
   <div class="wrap cg-visit">
     <div><p class="eyebrow rv">Your visit</p><h2 class="h-xl rv">{$h( $H['visit'] )}</h2><p class="lead rv">{$e( $H['visit']['foot'] )}</p>
       <form class="cg-cmp rv" action="compare.html"><p class="eyebrow">{$h( $H['compare'] )}</p>
@@ -282,12 +340,20 @@ function apex_render_home( array $S ): string {
       <label>Your name<input name="name" autocomplete="name" placeholder="Ploy Srisuk" required></label>
       <label>Phone<input name="phone" type="tel" autocomplete="tel" placeholder="081 234 5678"></label>
       <label>Treatment<select name="treatment">$book_opts</select></label>
+      <label>{$e( $B['branch'] )}<select name="branch">$branch_opts</select></label>
       <label>Preferred day<input name="day" type="date"></label>
       <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
       <label class="consent"><input type="checkbox" name="consent" required><span>{$e( $H['book']['consent'] )} <a href="privacy.html">{$e( $H['book']['privacy'] )}</a></span></label>
       <button class="btn btn-light" type="submit">{$ic( 'brand:line' )}Send on LINE</button>
       <p class="note">{$e( $H['book']['fine'] )}</p>
     </form>
+  </div>
+  <div class="cg-branches rv" id="branches">
+    <div class="br-head"><div><h3>{$e( $B['find'] )}</h3><p>{$e( $B['find_p'] )}</p></div>
+      <div class="br-tools"><div class="chips" role="group" aria-label="{$e( $B['find'] )}">$branch_tabs</div>
+        <label class="br-search"><span class="sr">{$e( $B['find'] )}</span><input type="search" placeholder="{$e( $B['search'] )}" autocomplete="off"></label>
+        <button type="button" class="btn btn-ghost btn-sm br-near">{$ic( 'map-pin' )}{$e( $B['near'] )}</button></div></div>
+    <ul class="br-list">$branch_list</ul>
   </div></div>
 </section>
 </main>
@@ -365,6 +431,7 @@ HTML;
 }
 function apex_render_tx( array $S, string $slug ): string {
 	$t = $S['tx'][ $slug ]; $H = $S['home'];
+	$docs = ''; foreach ( apex_doctors_for( $S, $slug ) as $d ) $docs .= apex_doc_card( $S, $d, ' rv' );
 	$lname = []; foreach ( $H['layers']['layers'] as [ $k, $n ] ) $lname[ $k ] = $n;
 	$e = 'apex_e'; $ic = 'apex_ic';
 	$facts = ''; foreach ( $t['facts'] as [ $a, $b ] ) $facts .= '<div><dt>' . apex_e( $a ) . '</dt><dd>' . apex_e( $b ) . '</dd></div>';
@@ -374,7 +441,7 @@ function apex_render_tx( array $S, string $slug ): string {
 	$hook = ''; foreach ( $t['hook'] as $i => $x ) $hook .= '<p class="' . ( $i === 0 ? 'lead ' : '' ) . 'sh-p rv">' . apex_e( $x ) . '</p>';
 	$how = ''; foreach ( $t['how'] as $i => [ $k, $hh, $p ] ) $how .= '<li class="rv" data-d="' . ( $i * 70 ) . '"><span class="vs-n">' . ( $i + 1 ) . '</span><b>' . apex_e( $hh ) . '</b><p>' . apex_e( $p ) . '</p></li>';
 	$alts = ''; foreach ( $t['not_for'] as [ $a, $b, $c, $d ] ) $alts .= '<li><b>' . apex_e( $a ) . '</b><span>' . apex_e( $b ) . '</span>' . ( $c !== '' ? '<a class="link-arrow" href="' . $c . '">' . apex_e( $d ) . ' ' . apex_ic( 'arrow-right' ) . '</a>' : '' ) . '</li>';
-	$cards = function ( array $items ) { $o = ''; foreach ( $items as [ $a, $u ] ) $o .= '<li class="rv"><b>' . apex_e( $a ) . '</b><span>' . apex_e( $u ) . '</span></li>'; return $o; };
+	$cards = function ( array $items ) { $o = ''; foreach ( $items as $r ) $o .= '<li class="rv"><b>' . apex_e( $r[0] ?? '' ) . '</b><span>' . apex_e( $r[1] ?? '' ) . '</span>' . ( ( $r[2] ?? '' ) !== '' ? '<em>' . apex_e( $r[2] ) . '</em>' : '' ) . '</li>'; return $o; };
 	$areas = ( $t['body'] ? '<h3 class="cg-gh"><b>Face</b></h3>' : '' ) . '<ul class="cg-areas">' . $cards( $t['face'] ) . '</ul>';
 	if ( $t['body'] ) $areas .= '<h3 class="cg-gh"><b>Body</b></h3><ul class="cg-areas">' . $cards( $t['body'] ) . '</ul>';
 	$visit = ''; foreach ( $t['fitting'] as $k => [ $a, $b ] ) $visit .= '<li><span class="vs-n">' . ( $k + 1 ) . '</span><div><b>' . apex_e( $a ) . '</b><p>' . apex_e( $b ) . '</p></div></li>';
@@ -440,7 +507,10 @@ function apex_render_tx( array $S, string $slug ): string {
   <div><p class="eyebrow rv">Your visit</p><h2 class="h-xl rv">On the day</h2>
     <aside class="recov cg-tl rv"><p class="eyebrow">When you see results</p><ol class="recov-line">$tl</ol><p class="note">Individual results vary.</p></aside></div>
   <ol class="cg-steps rv">$visit</ol>
-</div></section>
+</div>
+<div class="wrap tx-docs"><div class="shead"><div><p class="eyebrow rv">Your doctor</p><h3 class="h-l rv">Apex doctors</h3></div><a class="link-arrow rv" href="index.html#doctors">See all doctors {$ic( 'arrow-right' )}</a></div>
+  <div class="dr-grid">$docs</div></div>
+</section>
 
 $results
 

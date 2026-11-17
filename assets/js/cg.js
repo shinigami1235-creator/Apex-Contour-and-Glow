@@ -132,7 +132,7 @@
     e.preventDefault();
     const f = new FormData(form), day = f.get('day');
     const text = [`Hello Apex, I'd like to book a consultation.`, `Name: ${f.get('name')}`, f.get('phone') && `Phone: ${f.get('phone')}`,
-      `Treatment: ${f.get('treatment')}`, day && `Preferred day: ${day}`].filter(Boolean).join('\n');
+      `Treatment: ${f.get('treatment')}`, f.get('branch') && `Branch: ${f.get('branch')}`, day && `Preferred day: ${day}`].filter(Boolean).join('\n');
     emit('apex_book_submit', { treatment: f.get('treatment') });
     if (window.CG_BOOK) {
       const btn = form.querySelector('button[type=submit]'); btn.disabled = true;
@@ -146,6 +146,44 @@
     }
     location.href = `https://line.me/R/oaMessage/${encodeURIComponent(window.CG_LINE || '@apexbeauty')}/?${encodeURIComponent(text)}`;
   });
+
+  // ---- doctors: the row scrolls a card at a time with the arrows ----
+  const drRow = document.querySelector('.dr-row');
+  if (drRow) {
+    const prev = document.querySelector('.dr-prev'), next = document.querySelector('.dr-next');
+    const step = () => (drRow.querySelector('.dr-card') || {}).offsetWidth + 14 || 260;
+    const ends = () => { prev.disabled = drRow.scrollLeft < 8; next.disabled = drRow.scrollLeft + drRow.clientWidth > drRow.scrollWidth - 8; };
+    prev.addEventListener('click', () => drRow.scrollBy({ left: -step(), behavior: still ? 'auto' : 'smooth' }));
+    next.addEventListener('click', () => drRow.scrollBy({ left: step(), behavior: still ? 'auto' : 'smooth' }));
+    drRow.addEventListener('scroll', ends, { passive: true }); ends();
+  }
+
+  // ---- branches: a group at a time, a search box, and nearest first when the visitor shares where they are ----
+  const brBox = document.getElementById('branches');
+  if (brBox) {
+    const items = [...brBox.querySelectorAll('.br-list li')], tabs = [...brBox.querySelectorAll('[data-g]')].filter(b => b.tagName === 'BUTTON');
+    const input = brBox.querySelector('input[type=search]'), list = brBox.querySelector('.br-list');
+    let group = (tabs[0] || {}).dataset ? tabs[0].dataset.g : '', here = null;
+    const show = () => {
+      const q = input.value.trim().toLowerCase();
+      items.forEach(li => { li.hidden = q ? !li.querySelector('b').textContent.toLowerCase().includes(q) : (!here && li.dataset.g !== group); });
+    };
+    tabs.forEach(b => b.addEventListener('click', () => { group = b.dataset.g; here = null; input.value = ''; tabs.forEach(x => x.setAttribute('aria-pressed', x === b)); items.forEach(li => li.classList.remove('near')); show(); }));
+    input.addEventListener('input', show);
+    const near = brBox.querySelector('.br-near');
+    if (!('geolocation' in navigator)) near.hidden = true;
+    near.addEventListener('click', () => navigator.geolocation.getCurrentPosition(p => {
+      here = [p.coords.latitude, p.coords.longitude];
+      const rad = x => x * Math.PI / 180, km = (a, b) => 12742 * Math.asin(Math.sqrt(Math.sin(rad(b[0] - a[0]) / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(rad(b[1] - a[1]) / 2) ** 2));
+      items.forEach(li => { li.d = li.dataset.lat ? km(here, [+li.dataset.lat, +li.dataset.lng]) : 1e9; let s = li.querySelector('.dist'); if (!s) { s = document.createElement('small'); s.className = 'dist'; li.querySelector('b').after(s); } s.textContent = li.d < 1e9 ? `About ${li.d < 10 ? li.d.toFixed(1) : Math.round(li.d)} km away` : ''; });
+      items.sort((a, b) => a.d - b.d).forEach(li => list.appendChild(li));
+      items.forEach((li, i) => li.classList.toggle('near', i === 0));
+      tabs.forEach(x => x.setAttribute('aria-pressed', false)); input.value = ''; show(); list.scrollTop = 0;
+      const sel = form && form.querySelector('select[name=branch]');
+      if (sel) sel.value = items[0].querySelector('b').textContent;
+    }, () => { near.disabled = true; }, { timeout: 8000, maximumAge: 600000 }));
+    show();
+  }
 
   // ---- face planner: the 3D head, the area buttons under it and the card beside it ----
   const hero = document.getElementById('planner');

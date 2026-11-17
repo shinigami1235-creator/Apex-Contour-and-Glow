@@ -5,9 +5,9 @@ import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from tx_content import TX
 from skin_art import band, needle
-from site_content import HOME, TAGS, LAYERS
+from site_content import HOME, TAGS, LAYERS, CLINIC
 H = HOME
-from layout import E, ROOT, ORDER, C, ZONES, LINE_ID, LINE_URL, PHONE, zones, head2, header2, footer2, scripts2, ic, CURVE
+from layout import E, ROOT, ORDER, C, ZONES, LINE_ID, LINE_URL, PHONE, zones, head2, header2, footer2, scripts2, ic, CURVE, doc_card
 
 def short_price(k):
     price = C[k][6]
@@ -58,6 +58,17 @@ steps = ''.join(f'<li><span class="vs-n">{i + 1}</span><div><b>{E(a)}</b><p>{E(b
 def pick(name, sel):
     return f'<select name="{name}">' + ''.join(f'<option value="{k}"{" selected" if k == sel else ""}>{E(TX[k]["name"])}</option>' for k in ORDER) + '</select>'
 book_opts = '<option>Not sure yet</option>' + ''.join(f'<option>{E(TX[k]["name"])}</option>' for k in ORDER)
+# doctors and branches (tools/site_content.py CLINIC)
+B = H['book']; GROUPS = B['groups']
+doctors = ''.join(doc_card(d, ' rv') for d in CLINIC['doctors'])
+branch_opts = f'<option value="">{E(B["branch_any"])}</option>' + ''.join(
+    f'<optgroup label="{E(gl)}">' + ''.join(f'<option>{E(b[0])}</option>' for b in CLINIC['branches'] if b[1] == g) + '</optgroup>' for g, gl in GROUPS)
+gname = dict((g, gl) for g, gl in GROUPS)
+branch_list = ''.join(
+    f'<li data-g="{b[1]}" data-lat="{b[4]}" data-lng="{b[5]}"><b>{E(b[0])}</b><small>{E(gname.get(b[1], ""))}</small>'
+    f'<span class="br-acts"><a href="tel:{b[2].replace("-", "").replace(" ", "")}">{ic("phone")}{E(b[2])}</a>'
+    + (f'<a href="{E(b[3])}" rel="noopener">{ic("map-pin")}Map</a>' if b[3] else '') + '</span></li>' for b in CLINIC['branches'])
+branch_tabs = ''.join(f'<button type="button" class="chip" data-g="{g}" aria-pressed="{"true" if i == 0 else "false"}">{E(gl)}</button>' for i, (g, gl) in enumerate(GROUPS))
 h = lambda d: f'{E(d["h2"])} {E(d["h2_em"])}'
 
 html = head2(H['seo_title'], H['seo_desc']) + f'''
@@ -130,7 +141,15 @@ html = head2(H['seo_title'], H['seo_desc']) + f'''
   </div>
 </section>
 
-<section class="section washed has-sx" id="visit" data-tone="wash"><div class="sx sx-b sx-light-wash" aria-hidden="true"></div>
+<section class="section washed has-sx" id="doctors" data-tone="wash"><div class="sx sx-b sx-light-wash" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="shead"><div><p class="eyebrow rv">{E(H['doctors']['eyebrow'])}</p><h2 class="h-xl rv">{h(H['doctors'])}</h2><p class="muted rv">{E(H['doctors']['p'])}</p></div><a class="link-arrow rv" href="{E(H['doctors']['check_url'])}" rel="noopener">{E(H['doctors']['check'])} {ic('arrow-up-right')}</a></div>
+    <div class="dr-row" tabindex="0" aria-label="Doctors">{doctors}</div>
+    <div class="dr-nav"><button type="button" class="dr-prev" aria-label="Previous doctors">{ic('arrow-right')}</button><button type="button" class="dr-next" aria-label="Next doctors">{ic('arrow-right')}</button></div>
+  </div>
+</section>
+
+<section class="section has-sx" id="visit" data-tone="light"><div class="sx sx-b sx-wash-light" aria-hidden="true"></div>
   <div class="wrap cg-visit">
     <div><p class="eyebrow rv">Your visit</p><h2 class="h-xl rv">{h(H['visit'])}</h2><p class="lead rv">{E(H['visit']['foot'])}</p>
       <form class="cg-cmp rv" action="compare.html"><p class="eyebrow">{E(H['compare']['h2'])} {E(H['compare']['h2_em'])}</p>
@@ -149,12 +168,20 @@ html = head2(H['seo_title'], H['seo_desc']) + f'''
       <label>Your name<input name="name" autocomplete="name" placeholder="Ploy Srisuk" required></label>
       <label>Phone<input name="phone" type="tel" autocomplete="tel" placeholder="081 234 5678"></label>
       <label>Treatment<select name="treatment">{book_opts}</select></label>
+      <label>{E(B['branch'])}<select name="branch">{branch_opts}</select></label>
       <label>Preferred day<input name="day" type="date"></label>
       <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
       <label class="consent"><input type="checkbox" name="consent" required><span>{E(H['book']['consent'])} <a href="privacy.html">{E(H['book']['privacy'])}</a></span></label>
       <button class="btn btn-light" type="submit">{ic('brand:line')}Send on LINE</button>
       <p class="note">{E(H['book']['fine'])}</p>
     </form>
+  </div>
+  <div class="cg-branches rv" id="branches">
+    <div class="br-head"><div><h3>{E(B['find'])}</h3><p>{E(B['find_p'])}</p></div>
+      <div class="br-tools"><div class="chips" role="group" aria-label="{E(B['find'])}">{branch_tabs}</div>
+        <label class="br-search"><span class="sr">{E(B['find'])}</span><input type="search" placeholder="{E(B['search'])}" autocomplete="off"></label>
+        <button type="button" class="btn btn-ghost btn-sm br-near">{ic('map-pin')}{E(B['near'])}</button></div></div>
+    <ul class="br-list">{branch_list}</ul>
   </div></div>
 </section>
 </main>

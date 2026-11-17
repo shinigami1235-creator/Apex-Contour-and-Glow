@@ -22,7 +22,7 @@ class Apex_CLI {
 	/** The packaged content as the design object WordPress should hold, after the same cleaning a save does. */
 	private function expected( array $d ): array {
 		$S = [];
-		$opt = [ 'settings' => $d['settings'], 'home' => $d['home'], 'compare' => $d['compare'], 'privacy' => $d['privacy'],
+		$opt = [ 'settings' => $d['settings'], 'home' => $d['home'], 'compare' => $d['compare'], 'privacy' => $d['privacy'], 'clinic' => $d['clinic'] ?? [],
 			'planner' => [ 'zones' => array_map( fn( $z ) => [ 'key' => $z['key'], 'label' => $z['label'] ], $d['planner']['zones'] ) ] ];
 		foreach ( $opt as $name => $vals ) {
 			$S[ $name ] = [];
@@ -112,7 +112,7 @@ class Apex_CLI {
 			$d = $this->pack( $lang );
 			if ( ! $d ) { WP_CLI::log( "No content-$lang.json, skipped $lang" ); continue; }
 			apex_with_lang( $lang, function () use ( $d, $lang, &$done ) {
-				foreach ( [ 'settings', 'home', 'compare', 'privacy' ] as $o ) apex_write_opt( $o, $lang, $d[ $o ], true );
+				foreach ( [ 'settings', 'home', 'compare', 'privacy', 'clinic' ] as $o ) apex_write_opt( $o, $lang, $d[ $o ] ?? [], true );
 				apex_write_opt( 'planner', $lang, [ 'zones' => array_map( fn( $z ) => [ 'key' => $z['key'], 'label' => $z['label'] ], $d['planner']['zones'] ) ], true );
 				$keep = [];
 				foreach ( $d['treatments'] as $t ) {
@@ -156,7 +156,7 @@ class Apex_CLI {
 		foreach ( APEX_LANGS as $lang ) {
 			$S = apex_build_site( $lang );
 			if ( ! $S['tx'] ) continue;
-			$out = [ 'format' => 1, 'lang' => $lang, 'settings' => $S['settings'], 'home' => $S['home'], 'treatments' => array_values( $S['tx'] ), 'compare' => $S['compare'], 'planner' => $S['planner'], 'privacy' => $S['privacy'], 'cases' => $S['cases'] ];
+			$out = [ 'format' => 1, 'lang' => $lang, 'settings' => $S['settings'], 'home' => $S['home'], 'treatments' => array_values( $S['tx'] ), 'compare' => $S['compare'], 'planner' => $S['planner'], 'privacy' => $S['privacy'], 'clinic' => $S['clinic'], 'cases' => $S['cases'] ];
 			file_put_contents( "$dir/content-$lang.json", wp_json_encode( $out, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
 			WP_CLI::log( "Wrote $dir/content-$lang.json" );
 		}
@@ -171,7 +171,7 @@ class Apex_CLI {
 			if ( ! $d ) continue;
 			$want = $this->expected( $d );
 			$have = apex_with_lang( $lang, fn() => apex_build_site( $lang ) );
-			foreach ( [ 'settings', 'home', 'compare', 'planner', 'privacy' ] as $o ) { $n++; if ( $want[ $o ] != $have[ $o ] ) $diffs[] = "$lang $o: " . $this->first_diff( $want[ $o ], $have[ $o ] ); }
+			foreach ( [ 'settings', 'home', 'compare', 'planner', 'privacy', 'clinic' ] as $o ) { $n++; if ( $want[ $o ] != $have[ $o ] ) $diffs[] = "$lang $o: " . $this->first_diff( $want[ $o ], $have[ $o ] ); }
 			foreach ( $want['tx'] as $k => $t ) {
 				$n++;
 				if ( ! isset( $have['tx'][ $k ] ) ) { $diffs[] = "$lang treatment $k: missing"; continue; }

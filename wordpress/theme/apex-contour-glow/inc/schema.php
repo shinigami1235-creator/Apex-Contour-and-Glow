@@ -35,6 +35,11 @@ function apex_schema( string $type ): array {
 		apex_f( 'line_id', 'text', 'LINE ID', [ 'h' => 'With the @, for example @apexbeauty. The booking form opens a LINE chat with this account.' ] ),
 		apex_f( 'phone', 'text', 'Phone', [ 'h' => 'As it should be shown, for example 080-500-0123' ] ),
 		apex_f( 'permit', 'text', 'Advertising permit number', [ 'h' => 'From the สบส. approval. Shown in the footer once filled in.' ] ),
+		apex_f( 'address', 'textarea', 'Address', [ 'h' => 'The head office address in the footer' ] ),
+		apex_f( 'founded', 'text', 'Since line', [ 'h' => 'In the footer, for example Apex has looked after skin and faces since 1995.' ] ),
+		apex_f( 'socials', 'repeater', 'Social accounts', [ 'list' => true, 'h' => 'Shown as icons in the footer, in this order', 'f' => [
+			apex_f( 'k', 'select', 'Network', [ 'o' => [ 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'tiktok' => 'TikTok', 'youtube' => 'YouTube', 'whatsapp' => 'WhatsApp', 'x' => 'X', 'line' => 'LINE' ] ] ),
+			apex_f( 'n', 'text', 'Account name' ), apex_f( 'u', 'url', 'Link' ) ] ] ),
 		apex_f( 'footer_note', 'textarea', 'Footer note' ),
 	];
 
@@ -61,12 +66,19 @@ function apex_schema( string $type ): array {
 			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part' ),
 			apex_f( 'set', 'select', 'Treatment shown', [ 'o' => 'treatments', 'h' => 'Its before and after cases go in the photo with the line' ] ),
 			apex_f( 'p', 'textarea', 'Text' ), apex_pair( 'stats', 'Facts under the photos', 'Label', 'Value' ), apex_f( 'fine', 'text', 'Small print' ) ] ] ),
+		apex_f( 'doctors', 'group', 'Doctors', [ 'h' => 'The doctors themselves are in Doctors and branches', 'f' => [
+			apex_f( 'eyebrow', 'text', 'Small line above the heading' ), apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part' ), apex_f( 'p', 'textarea', 'Line under the heading' ),
+			apex_f( 'check', 'text', 'Licence check link text' ), apex_f( 'check_url', 'url', 'Licence check link', [ 'h' => 'The Medical Council search, https://checkmd.tmc.or.th/' ] ) ] ] ),
 		apex_f( 'compare', 'group', 'Compare', [ 'f' => [
 			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part' ),
 			apex_f( 'a', 'select', 'First treatment picked', [ 'o' => 'treatments' ] ), apex_f( 'b', 'select', 'Second treatment picked', [ 'o' => 'treatments' ] ) ] ] ),
 		apex_f( 'book', 'group', 'Book a consultation', [ 'f' => [
 			apex_f( 'h2', 'text', 'Heading' ), apex_f( 'h2_em', 'text', 'Heading, second part' ), apex_f( 'p', 'textarea', 'Text' ), apex_f( 'fine', 'text', 'Small print under the button' ),
-			apex_f( 'consent', 'text', 'Consent box', [ 'h' => 'The sentence beside the tick box people must tick before sending' ] ), apex_f( 'privacy', 'text', 'Privacy policy link', [ 'h' => 'Also used in the footer' ] ) ] ] ),
+			apex_f( 'consent', 'text', 'Consent box', [ 'h' => 'The sentence beside the tick box people must tick before sending' ] ), apex_f( 'privacy', 'text', 'Privacy policy link', [ 'h' => 'Also used in the footer' ] ),
+			apex_f( 'branch', 'text', 'Branch box label' ), apex_f( 'branch_any', 'text', 'Branch box, first choice', [ 'h' => 'For people who leave the branch to Apex' ] ),
+			apex_f( 'find', 'text', 'Branch finder heading' ), apex_f( 'find_p', 'textarea', 'Branch finder text' ),
+			apex_f( 'near', 'text', 'Nearest branch button' ), apex_f( 'search', 'text', 'Search box example', [ 'h' => 'A branch name shown in the empty box, for example Central Rama 9' ] ),
+			apex_f( 'groups', 'repeater', 'Branch groups', [ 'list' => true, 'fixed' => 3, 'h' => 'The tabs above the branch list', 'f' => [ apex_f( 'g', 'text', 'Key', [ 'keep' => true ] ), apex_f( 'l', 'text', 'Tab' ) ] ] ) ] ] ),
 	];
 
 	/* ---------- treatments ---------- */
@@ -90,7 +102,8 @@ function apex_schema( string $type ): array {
 		apex_f( 'lead', 'textarea', 'How it works, opening line' ),
 		apex_f( 'how', 'repeater', 'How it works', [ 'list' => true, 'f' => [ apex_f( 'icon', 'text', 'Icon', [ 'h' => 'Leave empty' ] ), apex_f( 'h', 'text', 'Heading (not shown)' ), apex_f( 'p', 'textarea', 'Text' ) ] ] ),
 		apex_f( 'not_for', 'repeater', 'Not suited for', [ 'list' => true, 'f' => [ apex_f( 'a', 'text', 'Heading' ), apex_f( 'b', 'textarea', 'Text' ), apex_f( 'h', 'text', 'Link', [ 'h' => 'Another treatment\'s page, for example filler.html. Leave empty for none.' ] ), apex_f( 'x', 'text', 'Link text' ) ] ] ),
-		apex_pair( 'face', 'Face areas', 'Area', 'Amount', [ 'h' => 'The area names link the treatment to the face planner: Forehead, Between the brows, Crow\'s feet, Under-eyes, Temples, Cheeks, Smile lines, Lips, Chin, Jawline, Neck, Whole face' ] ),
+		apex_f( 'face', 'repeater', 'Face areas', [ 'list' => true, 'h' => 'The area names link the treatment to the face planner: Forehead, Between the brows, Crow\'s feet, Under-eyes, Temples, Cheeks, Smile lines, Lips, Chin, Jawline, Neck, Whole face', 'f' => [
+			apex_f( 'a', 'text', 'Area' ), apex_f( 'b', 'textarea', 'Amount' ), apex_f( 'c', 'text', 'Price for this area', [ 'h' => 'For example 12,900 baht a cc. Leave empty to show the starting price.' ] ) ] ] ),
 		apex_pair( 'body', 'Body areas', 'Area', 'Amount' ),
 		apex_f( 'areas_note', 'textarea', 'Note under the areas' ),
 		apex_pair( 'fitting', 'Your visit', 'Step', 'Text' ),
@@ -132,6 +145,17 @@ function apex_schema( string $type ): array {
 	/* ---------- face planner area names, one copy per language ---------- */
 	$S['planner'] = [
 		apex_f( 'zones', 'repeater', 'Areas', [ 'fixed' => 11, 'h' => 'The names on the buttons beside the 3D face. Where each sits on the face is fixed by the research behind it.', 'f' => [ apex_f( 'key', 'text', 'Key', [ 'keep' => true ] ), apex_f( 'label', 'text', 'Button' ) ] ] ),
+	];
+	/* ---------- doctors and branches, one copy per language ---------- */
+	$S['clinic'] = [
+		apex_f( 'doctors', 'repeater', 'Doctors', [ 'list' => true, 'h' => 'In the order shown on the home page. Each treatment page shows three doctors trained in it.', 'f' => [
+			apex_f( 'slug', 'text', 'Key', [ 'keep' => true ] ), apex_f( 'name', 'text', 'Name' ), apex_f( 'nick', 'text', 'Nickname', [ 'h' => 'For example Dr. Yui' ] ),
+			apex_f( 'role', 'text', 'Role', [ 'h' => 'For example Dermatologist' ] ), apex_f( 'school', 'text', 'Medical school' ), apex_f( 'lic', 'text', 'Licence number' ),
+			apex_f( 'treats', 'lines', 'Treatments', [ 'h' => 'Treatment keys, one per line, for example botox' ] ), apex_f( 'img', 'image', 'Photo', [ 'h' => 'Portrait, 480 by 600' ] ) ] ] ),
+		apex_f( 'branches', 'repeater', 'Branches', [ 'list' => true, 'h' => 'The branch finder and the branch box on the booking form', 'f' => [
+			apex_f( 'name', 'text', 'Name' ), apex_f( 'group', 'select', 'Group', [ 'o' => [ 'bangkok' => 'Bangkok and nearby', 'province' => 'Other provinces', 'hospital' => 'Surgery hospitals' ] ] ),
+			apex_f( 'phone', 'text', 'Phone' ), apex_f( 'map', 'url', 'Google Maps link' ),
+			apex_f( 'lat', 'text', 'Latitude', [ 'h' => 'For Nearest to me, for example 13.758714' ] ), apex_f( 'lng', 'text', 'Longitude', [ 'h' => 'For example 100.566306' ] ) ] ] ),
 	];
 	/* ---------- privacy policy, one copy per language ---------- */
 	$S['privacy'] = [
